@@ -170,6 +170,7 @@ simulation/wheelset_workshop/process_runs/
 *.rej
 *.wav
 *.zip
+!experiments/reference/amr-f62c064.zip
 *.tar.gz
 *.7z
 **/win-x64/
