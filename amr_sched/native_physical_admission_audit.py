@@ -44,8 +44,11 @@ def inspect_physical_membership(owner, robot_id, *, expected_routes, now):
                 "UNBOUND_OR_MISSING_POSE_"+rid)
         require(gate.fault in {'operator fleet pause','runtime restarted; reconciliation required'},
                 "PAUSE_FAULT_NOT_LATCHED_"+rid)
-        require(gate.command is None and gate.stopped and gate.state=='idle',
+        # STOPPED feedback deliberately retains the latched fault state: the
+        # scheduler MUST NOT mistake a stop acknowledgement for un-latching.
+        require(gate.command is None and gate.stopped and gate.state in ('idle','fault'),
                 "MOTION_OR_STOP_UNCONFIRMED_"+rid)
+        require(not gate._outbox, "PENDING_CANCEL_OR_MOVE_COMMAND_"+rid)
         require(not getattr(node,"persistence_failed",True) and
                 not getattr(node,"native_pending",True) and
                 getattr(node,"goal_handle",object()) is None and
