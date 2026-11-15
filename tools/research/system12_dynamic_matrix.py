@@ -18,7 +18,7 @@ from amr_sched.simulation import Simulator,SimulationConfig
 from amr_sched.native_fleet_admission import NativeFleetAdmission
 from amr_sched.native_joint_production import (NativeJointProduction,ProductionOperation,ResourceChoice)
 
-def one(release_tick, policy):
+def one(release_tick, policy, *, p1_duration=50):
     net=build_demo_network()
     tasks=[Task('K0','D','W1',release_step=0),
            Task('K1','B2','W5',release_step=release_tick)]
@@ -32,7 +32,7 @@ def one(release_tick, policy):
     prod=NativeJointProduction(sim,[
         ProductionOperation('P0',('K0',),(ResourceChoice('W1','C0','T0'),),90),
         ProductionOperation('P1',('K1',),(ResourceChoice('W5','C0','T1'),
-                              ResourceChoice('W4','C1','T1')),50)],fleet=fleet)
+                              ResourceChoice('W4','C1','T1')),p1_duration)],fleet=fleet)
     # Clairvoyant static production selection is a stronger, explicitly
     # labelled reference. It does not activate the unavailable A1 early.
     if policy=='PRECOMMITTED_FLEX':
@@ -95,7 +95,7 @@ def one(release_tick, policy):
                 task_records[kit]['complete_step']<=prod.started[k]
                     for kit in op.kits)) for k,op in prod.operations.items()))
     if not valid:raise AssertionError('transport/production invariant failure')
-    return dict(release_tick=release_tick,policy=policy,finished=complete,
+    return dict(release_tick=release_tick,policy=policy,p1_duration=p1_duration,finished=complete,
         makespan_step=sim._step_cursor,transport_completed=result.summary()['tasks_completed'],
         production_completed=sum(v is not None for v in prod.finished.values()),
         collision_events=result.collision_events,source='native_software_simulation',
