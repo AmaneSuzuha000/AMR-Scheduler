@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_wiping_station">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_wiping_station/meshes/wiping_station.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>-0.57 -1.92 0.69 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.14 1.38</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <pose>-0.57 -0.99 0.69 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.14 1.38</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <pose>-0.57 0.99 0.69 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.14 1.38</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_3">
+        <pose>-0.57 1.92 0.69 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.14 1.38</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_4">
+        <pose>0.62 -1.33 1.18 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.3 0.44 0.32</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_5">
+        <pose>0.62 1.33 1.18 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.3 0.44 0.32</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_6">
+        <pose>0.02 -1.94 0.29 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.47 0.39 0.5</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_7">
+        <pose>2 2.3 0.35 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.47 0.32 0.66</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

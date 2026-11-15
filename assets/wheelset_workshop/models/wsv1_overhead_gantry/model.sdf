@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_overhead_gantry">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_overhead_gantry/meshes/overhead_gantry.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>-6 -8 1.9 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.23 0.23 3.8</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <pose>-6 8 1.9 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.23 0.23 3.8</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <pose>6 -8 1.9 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.23 0.23 3.8</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_3">
+        <pose>6 8 1.9 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.23 0.23 3.8</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

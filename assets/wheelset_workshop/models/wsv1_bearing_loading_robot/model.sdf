@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_bearing_loading_robot">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_bearing_loading_robot/meshes/bearing_loading_robot.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0.1 0 1.275 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.2 0.62 2.55</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

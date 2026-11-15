@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_wheelset_agv">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_wheelset_agv/meshes/wheelset_agv.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 0 0.138 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.7 1.5 0.266</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
