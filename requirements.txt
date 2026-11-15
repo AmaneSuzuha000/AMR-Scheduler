@@ -1,0 +1,22 @@
+# Runtime dependencies
+# The scheduling core (amr_sched/) uses only the standard library.
+# Everything below is needed for visualization, the web console, and the tests.
+
+matplotlib>=3.8
+numpy>=1.26
+scipy>=1.11
+
+# Web console (web/server.py)
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.0
+
+# Tests
+pytest>=8.0
+Pillow>=10.0         # Tests/test_animation.py reads the generated GIF
+
+# HTTP client for fastapi.testclient.
+# starlette >= 1.0 looks for "httpx2" first and falls back to "httpx" with a
+# deprecation warning. Both work, so accept either; pinning one of them would
+# break as soon as starlette drops the fallback.
+httpx>=0.27
