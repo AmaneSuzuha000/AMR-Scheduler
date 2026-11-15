@@ -48,6 +48,8 @@ def test_full_preflight_never_grants_physical_motion():
     ('unverified_parking','NO_VERIFIED_BUFFER_PARKING'),
     ('committed_task','COMMITTED_ROBOT_MOTION_OR_CARGO'),
     ('unsettled_handling','UNSETTLED_HANDLING_R1'),
+    ('divergent_pose','LIVE_POSE_DIVERGES_FROM_OWNER_R1'),
+    ('lost_pin','MISSING_PERMANENT_PARKING_PIN'),
 ])
 def test_physical_candidate_fails_closed(case,expected):
     owner=paused_fixture()
@@ -61,6 +63,8 @@ def test_physical_candidate_fails_closed(case,expected):
         n=owner.sim.network.node('W')
         owner.sim.network.nodes['W']=Node(n.node_id,n.x,n.y,NodeKind.AISLE,n.capacity)
     if case=='committed_task':owner.sim.agvs[0].cur_task='T1'
+    if case=='divergent_pose':owner.sim.executions['R1'].pose['x'] += 3.0
+    if case=='lost_pin':owner.sim._res.transfer_pins('R1',[])
     if case=='unsettled_handling':
         from types import SimpleNamespace
         owner.sim.handlings['R1']=SimpleNamespace(command={'operation':'LOAD'},completed=False)
