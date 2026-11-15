@@ -27,6 +27,10 @@ def inspect_physical_membership(owner, robot_id, *, expected_routes, now):
     robot=next((a for a in sim.agvs if a.agv_id==robot_id),None)
     require(robot is not None,"ROBOT_MISSING")
     if robot:
+        # A namespace-matching pose alone is insufficient: permanent occupancy
+        # ownership must also refer to the confirmed parking node.
+        pins=sim._res.pins().get('nodes',{})
+        require(robot.agv_id in pins.get(robot.cur_node,()),'MISSING_PERMANENT_PARKING_PIN')
         require(robot.cur_node in sim.network.nodes and
                 sim.network.node(robot.cur_node).kind is NodeKind.BUFFER,
                 "NO_VERIFIED_BUFFER_PARKING")
@@ -37,6 +41,11 @@ def inspect_physical_membership(owner, robot_id, *, expected_routes, now):
         require(not any(t.assigned_agv==robot_id and t.status.value != 'completed' for t in sim.tasks),
                 "CARGO_OR_ASSIGNED_TASK_COMMITMENT")
     for rid,gate in sim.executions.items():
+        agv=next((a for a in sim.agvs if a.agv_id==rid),None)
+        if agv is not None and agv.cur_node in sim.network.nodes and gate.pose is not None:
+            expected=sim.network.node(agv.cur_node)
+            require(math.dist((gate.pose['x'],gate.pose['y']),(expected.x,expected.y))<=gate.tolerance,
+                    'LIVE_POSE_DIVERGES_FROM_OWNER_'+rid)
         node=getattr(owner,"nodes",{}).get(rid)
         if node is None:
             require(False,"MISSING_ADAPTER_"+rid);continue
