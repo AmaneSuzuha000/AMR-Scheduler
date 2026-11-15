@@ -12,6 +12,7 @@ def paused_fixture():
         assert fleet_report(sim,robot,'POSE',now=0.)['accepted']
         gate=sim.executions[robot]
         gate.fail('operator fleet pause')
+        assert gate.drain_commands()  # transport consumed CANCEL before STOPPED acknowledgement
         assert fleet_report(sim,robot,'STOPPED',now=.1)['accepted']
     sim._operator_paused=True
     # Synthetic *declared* parking nodes for the isolated positive readiness test.
