@@ -1319,6 +1319,8 @@ class Simulator:
         occupancy, the various counters, the event list, and the trajectory.
         ``test_reset_is_idempotent`` locks this invariant down.
         """
+        if getattr(self, '_native_production', None) is not None:
+            raise RuntimeError('production commitments are bound; create a fresh Simulator before resetting')
         if getattr(self, '_fleet_admission', None) is not None:
             raise RuntimeError('fleet membership is bound; create a fresh Simulator before resetting')
         if any(gate.bound for gate in self.executions.values()):
@@ -1428,6 +1430,9 @@ class Simulator:
         self._assign_step(step)
         self._refresh_node_holds(step)
         self._advance_step(step)
+        prod = getattr(self, '_native_production', None)
+        if prod is not None:
+            prod.advance(step + 1)  # only after actual, confirmed delivery state
         self._record(step)
         if step % 500 == 0 and step > 0:
             self._res.purge_before(step)
@@ -1473,7 +1478,9 @@ class Simulator:
 
 
     def _all_done(self) -> bool:
-        return all(t.status in (TaskStatus.COMPLETED, TaskStatus.FAILED) for t in self.tasks)
+        transport_done = all(t.status in (TaskStatus.COMPLETED, TaskStatus.FAILED) for t in self.tasks)
+        prod = getattr(self, '_native_production', None)
+        return transport_done and (prod is None or prod.all_finished())
 
     def _occupancy_check(self) -> None:
         seen: dict[str, list[str]] = {}
