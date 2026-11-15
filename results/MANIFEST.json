@@ -1,0 +1,1010 @@
+{
+ "allocation.csv": {
+  "columns": [
+   "n_tasks",
+   "n_agvs",
+   "dispatch",
+   "assign",
+   "strategy",
+   "seed",
+   "tasks_completed",
+   "makespan_s",
+   "on_time_rate",
+   "urgent_on_time_rate",
+   "mean_urgent_response_steps",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "planning_retries",
+   "hard_failures",
+   "collision_events",
+   "wall_clock_s"
+  ],
+  "means": {
+   "agv_utilization": 0.9422,
+   "collision_events": 0.0,
+   "conflict_wait_steps": 1170.2844,
+   "hard_failures": 0.0,
+   "makespan_s": 4138.0567,
+   "mean_urgent_response_steps": 1370.5064,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.1831,
+   "planning_retries": 1.8656,
+   "seed": 4.5,
+   "tasks_completed": 56.6667,
+   "urgent_on_time_rate": 0.2157
+  },
+  "rows": 900,
+  "sha256": "66a17f3d3935aa8e"
+ },
+ "baseline.csv": {
+  "columns": [
+   "strategy",
+   "planner",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "tasks_completed",
+   "makespan_s",
+   "on_time_rate",
+   "urgent_on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "collision_events",
+   "hard_failures",
+   "deadlock_breaks"
+  ],
+  "means": {
+   "agv_utilization": 0.937,
+   "collision_events": 0.0,
+   "conflict_wait_steps": 967.1222,
+   "deadlock_breaks": 0.2833,
+   "hard_failures": 0.0,
+   "makespan_s": 3965.35,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.227,
+   "seed": 2.0,
+   "tasks_completed": 56.6667,
+   "urgent_on_time_rate": 0.4242
+  },
+  "rows": 180,
+  "sha256": "dc683592d5c513e3"
+ },
+ "baseline_events.csv": {
+  "columns": [
+   "strategy",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "makespan_s",
+   "on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "conflict_wait_events",
+   "tasks_completed"
+  ],
+  "means": {
+   "agv_utilization": 0.937,
+   "conflict_wait_events": 37.6333,
+   "conflict_wait_steps": 967.1222,
+   "makespan_s": 3965.35,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.227,
+   "seed": 2.0,
+   "tasks_completed": 56.6667
+  },
+  "rows": 180,
+  "sha256": "1f706aaf22427256"
+ },
+ "capacity_regime.csv": {
+  "columns": [
+   "strategy",
+   "aisle_capacity",
+   "n_agvs",
+   "seed",
+   "horizon_steps",
+   "tasks_total",
+   "tasks_completed",
+   "throughput_per_ks",
+   "completion_rate",
+   "conflict_wait_steps",
+   "deadlock_breaks",
+   "collision_events",
+   "hard_failures",
+   "distance_m"
+  ],
+  "means": {
+   "aisle_capacity": 1.5,
+   "collision_events": 0.0,
+   "completion_rate": 0.9996,
+   "conflict_wait_steps": 2597.35,
+   "deadlock_breaks": 12.0611,
+   "distance_m": 19544.8711,
+   "hard_failures": 0.0,
+   "horizon_steps": 60000.0,
+   "n_agvs": 4.0,
+   "seed": 4.5,
+   "tasks_completed": 99.9556,
+   "tasks_total": 100.0,
+   "throughput_per_ks": 1.666
+  },
+  "rows": 180,
+  "sha256": "89f895f4c1ebf6fd"
+ },
+ "corridor_occupancy.csv": {
+  "columns": [
+   "n_agvs",
+   "busiest_edge",
+   "busiest_edge_occupancy",
+   "mean_edge_occupancy",
+   "busiest_node",
+   "busiest_node_occupancy",
+   "edges_over_half",
+   "steps"
+  ],
+  "means": {
+   "busiest_edge_occupancy": 0.4804,
+   "busiest_node_occupancy": 0.1151,
+   "edges_over_half": 1.0,
+   "mean_edge_occupancy": 0.1851,
+   "n_agvs": 4.0,
+   "steps": 3275.6667
+  },
+  "rows": 3,
+  "sha256": "a7dc8f5d6a43d70e"
+ },
+ "deadlock.csv": {
+  "columns": [
+   "policy",
+   "one_way_ring",
+   "deadlock_timeout",
+   "n_tasks",
+   "n_agvs",
+   "release_window",
+   "seed",
+   "tasks_completed",
+   "completion_rate",
+   "makespan_s",
+   "conflict_wait_steps",
+   "deadlock_breaks",
+   "collision_events",
+   "hard_failures"
+  ],
+  "means": {
+   "collision_events": 0.0,
+   "completion_rate": 0.9969,
+   "conflict_wait_steps": 1263.9333,
+   "deadlock_breaks": 5.4,
+   "deadlock_timeout": 66.6667,
+   "hard_failures": 0.0,
+   "n_agvs": 4.0,
+   "n_tasks": 50.0,
+   "one_way_ring": 0.3333,
+   "release_window": 600.0,
+   "seed": 2.0,
+   "tasks_completed": 49.8444
+  },
+  "rows": 45,
+  "sha256": "cc2c3bb501c7e51e"
+ },
+ "deadlock_predictor.csv": {
+  "columns": [
+   "layout",
+   "n_agvs",
+   "seed",
+   "n_tasks",
+   "tasks_completed",
+   "completion_rate",
+   "deadlock_breaks",
+   "conflict_wait_steps",
+   "makespan_seconds",
+   "n_nodes",
+   "n_edges"
+  ],
+  "means": {
+   "completion_rate": 0.9867,
+   "conflict_wait_steps": 21962.9444,
+   "deadlock_breaks": 170.25,
+   "makespan_seconds": 7448.0833,
+   "n_agvs": 5.0,
+   "n_edges": 34.0,
+   "n_nodes": 16.0,
+   "n_tasks": 50.0,
+   "seed": 2.5,
+   "tasks_completed": 49.3333
+  },
+  "rows": 36,
+  "sha256": "5597a97be82c0f07"
+ },
+ "deadlock_threshold.csv": {
+  "columns": [
+   "n_tasks",
+   "capacity",
+   "n_agvs",
+   "seed",
+   "tasks_completed",
+   "completion_rate",
+   "deadlock_breaks",
+   "conflict_wait_steps",
+   "makespan_seconds"
+  ],
+  "means": {
+   "capacity": 1.5,
+   "completion_rate": 0.599,
+   "conflict_wait_steps": 226336.0667,
+   "deadlock_breaks": 1907.4667,
+   "makespan_seconds": 9486.6333,
+   "n_agvs": 6.0,
+   "n_tasks": 56.6667,
+   "seed": 2.0,
+   "tasks_completed": 26.0667
+  },
+  "rows": 30,
+  "sha256": "b37911edc3cfa237"
+ },
+ "deadlock_transition.csv": {
+  "columns": [
+   "n_tasks",
+   "capacity",
+   "n_agvs",
+   "seed",
+   "tasks_completed",
+   "completion_rate",
+   "deadlock_breaks",
+   "conflict_wait_steps",
+   "makespan_seconds"
+  ],
+  "means": {
+   "capacity": 1.0,
+   "completion_rate": 0.6799,
+   "conflict_wait_steps": 179287.25,
+   "deadlock_breaks": 1706.45,
+   "makespan_seconds": 10701.0,
+   "n_agvs": 6.0,
+   "n_tasks": 32.5,
+   "seed": 2.0,
+   "tasks_completed": 21.35
+  },
+  "rows": 20,
+  "sha256": "27f05c3933069c30"
+ },
+ "diagnosis.csv": {
+  "columns": [
+   "strategy",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "tasks_completed",
+   "makespan_s",
+   "conflict_wait_steps",
+   "distance_m",
+   "detour_ratio",
+   "max_block_run",
+   "mean_block_run",
+   "n_block_runs"
+  ],
+  "means": {
+   "conflict_wait_steps": 1043.5704,
+   "detour_ratio": 1.7058,
+   "distance_m": 10896.943,
+   "makespan_s": 3884.963,
+   "max_block_run": 114.8222,
+   "mean_block_run": 24.3506,
+   "n_agvs": 4.0,
+   "n_block_runs": 39.363,
+   "n_tasks": 56.6667,
+   "seed": 2.0,
+   "tasks_completed": 56.6667
+  },
+  "rows": 135,
+  "sha256": "abeba797a1545b01"
+ },
+ "due_alpha_policy.csv": {
+  "columns": [
+   "alpha",
+   "policy",
+   "seed",
+   "makespan_s",
+   "on_time_rate",
+   "urgent_on_time_rate",
+   "mean_urgent_response_steps",
+   "preemption_count"
+  ],
+  "means": {
+   "alpha": 2.625,
+   "makespan_s": 2848.1667,
+   "mean_urgent_response_steps": 29.9967,
+   "on_time_rate": 0.1377,
+   "preemption_count": 3.2,
+   "seed": 4.5,
+   "urgent_on_time_rate": 0.604
+  },
+  "rows": 120,
+  "sha256": "d83173b21f4a3fcd"
+ },
+ "due_alpha_sweep.csv": {
+  "columns": [
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "alpha",
+   "tasks_completed",
+   "makespan_s",
+   "on_time_rate",
+   "urgent_on_time_rate"
+  ],
+  "means": {
+   "alpha": 2.625,
+   "makespan_s": 3205.7667,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.1813,
+   "seed": 4.5,
+   "tasks_completed": 56.6667,
+   "urgent_on_time_rate": 0.432
+  },
+  "rows": 120,
+  "sha256": "83c09fdff2abf926"
+ },
+ "due_sensitivity.csv": {
+  "columns": [
+   "load_level",
+   "release_window",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "tasks_completed",
+   "makespan_s",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "on_time_travel_only",
+   "on_time_travel_queue",
+   "on_time_fixed",
+   "urgent_travel_only",
+   "urgent_travel_queue",
+   "urgent_fixed"
+  ],
+  "means": {
+   "agv_utilization": 0.9543,
+   "conflict_wait_steps": 936.3333,
+   "makespan_s": 2911.8,
+   "n_agvs": 4.0,
+   "n_tasks": 50.0,
+   "on_time_fixed": 0.4247,
+   "on_time_travel_only": 0.2093,
+   "on_time_travel_queue": 0.832,
+   "release_window": 866.6667,
+   "seed": 4.5,
+   "tasks_completed": 50.0,
+   "urgent_fixed": 0.9548,
+   "urgent_travel_only": 0.5953,
+   "urgent_travel_queue": 1.0
+  },
+  "rows": 30,
+  "sha256": "2b56aa4a81805178"
+ },
+ "failure_classification.csv": {
+  "columns": [
+   "unfinished",
+   "deadlock",
+   "contention",
+   "starved",
+   "livelock",
+   "timeout",
+   "unreachable",
+   "aisle_capacity",
+   "seed",
+   "completed"
+  ],
+  "means": {
+   "aisle_capacity": 1.5,
+   "completed": 49.95,
+   "contention": 0.0,
+   "deadlock": 0.0,
+   "livelock": 0.05,
+   "seed": 4.5,
+   "starved": 0.0,
+   "timeout": 0.0,
+   "unfinished": 0.05,
+   "unreachable": 0.0
+  },
+  "rows": 20,
+  "sha256": "58583c6f14a7d913"
+ },
+ "fleet_size.csv": {
+  "columns": [
+   "n_tasks",
+   "fleet_step",
+   "makespan_mean_s",
+   "on_time_mean",
+   "util_mean",
+   "conflict_wait_mean",
+   "s_per_vehicle_saved",
+   "conflict_per_vehicle_added",
+   "step_ratio"
+  ],
+  "means": {
+   "conflict_per_vehicle_added": 337.85,
+   "conflict_wait_mean": 1168.4,
+   "makespan_mean_s": 2778.5,
+   "n_tasks": 56.6667,
+   "on_time_mean": 0.3347,
+   "s_per_vehicle_saved": 922.15,
+   "util_mean": 0.908
+  },
+  "rows": 6,
+  "sha256": "d02e927116c67e6c"
+ },
+ "gazebo_routes.csv": {
+  "columns": [
+   "route",
+   "waypoints",
+   "reached",
+   "mean_err_m",
+   "max_err_m",
+   "completed",
+   "wall_clock_s"
+  ],
+  "means": {
+   "completed": 1.0,
+   "max_err_m": 0.4173,
+   "mean_err_m": 0.151,
+   "reached": 5.0,
+   "waypoints": 5.0
+  },
+  "rows": 4,
+  "sha256": "94e02bad32c1dce3"
+ },
+ "hub_capacity.csv": {
+  "columns": [
+   "capacity",
+   "strategy",
+   "n_agvs",
+   "seed",
+   "tasks_total",
+   "tasks_completed",
+   "completion_rate",
+   "makespan_s",
+   "deadlock_breaks",
+   "conflict_wait_steps",
+   "wall_clock_s"
+  ],
+  "means": {
+   "capacity": 3.75,
+   "completion_rate": 0.9264,
+   "conflict_wait_steps": 91110.3611,
+   "deadlock_breaks": 576.2222,
+   "makespan_s": 24776.1111,
+   "n_agvs": 5.0,
+   "seed": 1.0,
+   "tasks_completed": 92.6389,
+   "tasks_total": 100.0
+  },
+  "rows": 72,
+  "sha256": "6091be23992e6de2"
+ },
+ "hub_capacity_seed8.csv": {
+  "columns": [
+   "capacity",
+   "strategy",
+   "n_agvs",
+   "seed",
+   "tasks_total",
+   "tasks_completed",
+   "completion_rate",
+   "makespan_s",
+   "deadlock_breaks",
+   "conflict_wait_steps",
+   "wall_clock_s"
+  ],
+  "means": {
+   "capacity": 3.75,
+   "completion_rate": 0.9353,
+   "conflict_wait_steps": 84181.6406,
+   "deadlock_breaks": 537.625,
+   "makespan_s": 22641.6771,
+   "n_agvs": 5.0,
+   "seed": 3.5,
+   "tasks_completed": 93.526,
+   "tasks_total": 100.0
+  },
+  "rows": 192,
+  "sha256": "f53892cce0ccd95f"
+ },
+ "lane_width.csv": {
+  "columns": [
+   "lane_capacity",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "completed",
+   "makespan_s",
+   "on_time_rate",
+   "deadlock_breaks",
+   "collision_events"
+  ],
+  "means": {
+   "collision_events": 0.0,
+   "completed": 30.0,
+   "deadlock_breaks": 0.0,
+   "lane_capacity": 1.5,
+   "makespan_s": 1481.1667,
+   "n_agvs": 5.0,
+   "n_tasks": 30.0,
+   "on_time_rate": 0.4694,
+   "seed": 1.0
+  },
+  "rows": 12,
+  "sha256": "7b0198a4cbe3396d"
+ },
+ "layout_compare.csv": {
+  "columns": [
+   "layout",
+   "n_nodes",
+   "n_edges",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "completed",
+   "makespan_s",
+   "on_time_rate",
+   "conflict_wait_steps",
+   "deadlock_breaks",
+   "collision_events"
+  ],
+  "means": {
+   "collision_events": 0.0,
+   "completed": 30.0,
+   "conflict_wait_steps": 174.3333,
+   "deadlock_breaks": 0.0833,
+   "makespan_s": 2954.9167,
+   "n_agvs": 2.5,
+   "n_edges": 61.5,
+   "n_nodes": 27.5,
+   "n_tasks": 30.0,
+   "on_time_rate": 0.3014,
+   "seed": 1.0
+  },
+  "rows": 48,
+  "sha256": "6ba3cf49adf708f3"
+ },
+ "layout_portability.csv": {
+  "columns": [
+   "layout",
+   "strategy",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "makespan_s",
+   "on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "conflict_wait_events",
+   "tasks_completed",
+   "n_nodes",
+   "n_edges"
+  ],
+  "means": {
+   "agv_utilization": 0.9449,
+   "conflict_wait_events": 186.062,
+   "conflict_wait_steps": 13373.5926,
+   "makespan_s": 7106.463,
+   "n_agvs": 4.0,
+   "n_edges": 34.0,
+   "n_nodes": 16.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.1697,
+   "seed": 4.5,
+   "tasks_completed": 55.5509
+  },
+  "rows": 1080,
+  "sha256": "1ece8a78205c4661"
+ },
+ "load.csv": {
+  "columns": [
+   "load_level",
+   "release_window",
+   "aisle_capacity",
+   "n_tasks",
+   "n_agvs",
+   "planner",
+   "seed",
+   "tasks_completed",
+   "all_done",
+   "completion_rate",
+   "makespan_s",
+   "on_time_rate",
+   "urgent_on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "mean_corridor_load",
+   "peak_corridor_load",
+   "load_ceiling",
+   "load_ratio",
+   "planning_retries",
+   "hard_failures",
+   "deadlock_breaks",
+   "collision_events",
+   "wall_clock_s"
+  ],
+  "means": {
+   "agv_utilization": 0.8983,
+   "aisle_capacity": 1.5,
+   "all_done": 0.9167,
+   "collision_events": 0.0,
+   "completion_rate": 0.9983,
+   "conflict_wait_steps": 1093.15,
+   "deadlock_breaks": 33.1833,
+   "hard_failures": 0.0,
+   "load_ceiling": 0.1911,
+   "load_ratio": 0.7697,
+   "makespan_s": 2960.4583,
+   "mean_corridor_load": 0.1451,
+   "n_agvs": 4.0,
+   "n_tasks": 50.0,
+   "on_time_rate": 0.2102,
+   "peak_corridor_load": 0.4186,
+   "planning_retries": 0.425,
+   "release_window": 866.6667,
+   "seed": 4.5,
+   "tasks_completed": 49.9167,
+   "urgent_on_time_rate": 0.599
+  },
+  "rows": 120,
+  "sha256": "709a718cc87a904a"
+ },
+ "material_mix_case.csv": {
+  "columns": [
+   "seed",
+   "mode",
+   "tasks_completed",
+   "makespan_seconds",
+   "on_time_rate",
+   "conflict_wait_steps",
+   "deadlock_breaks"
+  ],
+  "means": {
+   "conflict_wait_steps": 444.05,
+   "deadlock_breaks": 0.0,
+   "makespan_seconds": 1920.55,
+   "on_time_rate": 0.2367,
+   "seed": 4.5,
+   "tasks_completed": 30.0
+  },
+  "rows": 20,
+  "sha256": "a7764089ca081fd8"
+ },
+ "matrix.csv": {
+  "columns": [
+   "n_tasks",
+   "n_agvs",
+   "planner",
+   "seed",
+   "tasks_completed",
+   "makespan_s",
+   "on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "conflict_wait_events",
+   "urgent_on_time_rate",
+   "mean_urgent_response_steps",
+   "preemption_count",
+   "planning_retries",
+   "hard_failures",
+   "collision_events",
+   "deadlock_breaks",
+   "wall_clock_s"
+  ],
+  "means": {
+   "agv_utilization": 0.9349,
+   "collision_events": 0.0,
+   "conflict_wait_events": 39.2222,
+   "conflict_wait_steps": 982.2667,
+   "deadlock_breaks": 0.2111,
+   "hard_failures": 0.0,
+   "makespan_s": 3877.1944,
+   "mean_urgent_response_steps": 141.7749,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.2388,
+   "planning_retries": 0.7722,
+   "preemption_count": 0.0,
+   "seed": 4.5,
+   "tasks_completed": 56.6667,
+   "urgent_on_time_rate": 0.558
+  },
+  "rows": 180,
+  "sha256": "90de5762f822aa8c"
+ },
+ "node_hold_sweep.csv": {
+  "columns": [
+   "node_hold_steps",
+   "makespan_s",
+   "conflict_wait_steps",
+   "tasks_completed",
+   "seeds"
+  ],
+  "means": {
+   "conflict_wait_steps": 1013.125,
+   "makespan_s": 2923.2,
+   "node_hold_steps": 25.25,
+   "seeds": 10.0,
+   "tasks_completed": 50.0
+  },
+  "rows": 4,
+  "sha256": "5eb0ac2c9427d4ab"
+ },
+ "preempt_tiers.csv": {
+  "columns": [
+   "policy",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "tasks_completed",
+   "makespan_s",
+   "on_time_rate",
+   "urgent_on_time_rate",
+   "mean_urgent_response_steps",
+   "preemption_count",
+   "material_waste_steps",
+   "distance_m",
+   "conflict_wait_steps",
+   "conflict_wait_events",
+   "collision_events",
+   "hard_failures",
+   "deadlock_breaks"
+  ],
+  "means": {
+   "collision_events": 0.0,
+   "conflict_wait_steps": 1148.4,
+   "distance_m": 10969.9559,
+   "hard_failures": 0.0,
+   "makespan_s": 3926.1407,
+   "material_waste_steps": 49.5711,
+   "mean_urgent_response_steps": 100.9951,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.2401,
+   "preemption_count": 2.3074,
+   "seed": 4.5,
+   "tasks_completed": 56.6667,
+   "urgent_on_time_rate": 0.6758
+  },
+  "rows": 270,
+  "sha256": "79e1e9e3599fbc24"
+ },
+ "process_time.csv": {
+  "columns": [
+   "process_time",
+   "planner",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "makespan_s",
+   "on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "conflict_wait_events",
+   "tasks_completed"
+  ],
+  "means": {
+   "agv_utilization": 0.9293,
+   "conflict_wait_events": 64.5822,
+   "conflict_wait_steps": 4459.1689,
+   "makespan_s": 5101.0067,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.2212,
+   "process_time": 216.0,
+   "seed": 2.0,
+   "tasks_completed": 56.6667
+  },
+  "rows": 450,
+  "sha256": "ae73ee4873f5ffee"
+ },
+ "reschedule.csv": {
+  "columns": [
+   "n_tasks",
+   "n_agvs",
+   "planner",
+   "policy",
+   "seed",
+   "tasks_completed",
+   "makespan_s",
+   "on_time_rate",
+   "urgent_on_time_rate",
+   "mean_urgent_response_steps",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "preemption_count",
+   "planning_retries",
+   "hard_failures",
+   "collision_events"
+  ],
+  "means": {
+   "agv_utilization": 0.9361,
+   "collision_events": 0.0,
+   "conflict_wait_steps": 1128.8333,
+   "hard_failures": 0.0,
+   "makespan_s": 3911.1167,
+   "mean_urgent_response_steps": 115.5756,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.2411,
+   "planning_retries": 1.6,
+   "preemption_count": 1.3667,
+   "seed": 4.5,
+   "tasks_completed": 56.6667,
+   "urgent_on_time_rate": 0.6213
+  },
+  "rows": 180,
+  "sha256": "06335020e8978ed4"
+ },
+ "scene_route_run.csv": {
+  "columns": [
+   "t_s",
+   "waypoint",
+   "x",
+   "y",
+   "yaw",
+   "goal_x",
+   "goal_y",
+   "dist_m"
+  ],
+  "means": {
+   "dist_m": 0.6087,
+   "goal_x": 3.9869,
+   "goal_y": 1.2,
+   "t_s": 41.4571,
+   "waypoint": 4.7308,
+   "x": 3.7722,
+   "y": 1.0222,
+   "yaw": 0.1073
+  },
+  "rows": 52,
+  "sha256": "e8d005843c116397"
+ },
+ "workshop_fleet.csv": {
+  "columns": [
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "completed",
+   "makespan_s",
+   "on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "deadlock_breaks"
+  ],
+  "means": {
+   "agv_utilization": 0.9214,
+   "completed": 56.6667,
+   "conflict_wait_steps": 339.6667,
+   "deadlock_breaks": 0.0,
+   "makespan_s": 3518.5556,
+   "n_agvs": 4.0,
+   "n_tasks": 56.6667,
+   "on_time_rate": 0.2671,
+   "seed": 2.0
+  },
+  "rows": 45,
+  "sha256": "4aaf4532d7550a6f"
+ },
+ "workshop_junction_capacity.csv": {
+  "columns": [
+   "junction_capacity",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "completed",
+   "makespan_s",
+   "conflict_wait_steps",
+   "deadlock_breaks",
+   "collision_events"
+  ],
+  "means": {
+   "collision_events": 459.0,
+   "completed": 100.0,
+   "conflict_wait_steps": 5052.3333,
+   "deadlock_breaks": 2.3333,
+   "junction_capacity": 3.0,
+   "makespan_s": 1717.3333,
+   "n_agvs": 16.0,
+   "n_tasks": 100.0,
+   "seed": 0.5
+  },
+  "rows": 6,
+  "sha256": "578a547bff2c9436"
+ },
+ "workshop_methods.csv": {
+  "columns": [
+   "planner",
+   "allocator",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "completed",
+   "makespan_s",
+   "on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "deadlock_breaks",
+   "collision_events",
+   "planning_retries",
+   "hard_failures"
+  ],
+  "means": {
+   "agv_utilization": 0.9061,
+   "collision_events": 0.0,
+   "completed": 30.0,
+   "conflict_wait_steps": 205.3333,
+   "deadlock_breaks": 0.0,
+   "hard_failures": 0.0,
+   "makespan_s": 1777.4667,
+   "n_agvs": 4.0,
+   "n_tasks": 30.0,
+   "on_time_rate": 0.2878,
+   "planning_retries": 0.0,
+   "seed": 2.0
+  },
+  "rows": 30,
+  "sha256": "2f961da423610efe"
+ },
+ "workshop_process_time.csv": {
+  "columns": [
+   "process_time_s",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "completed",
+   "makespan_s",
+   "on_time_rate",
+   "agv_utilization",
+   "conflict_wait_steps",
+   "deadlock_breaks"
+  ],
+  "means": {
+   "agv_utilization": 0.8693,
+   "completed": 30.0,
+   "conflict_wait_steps": 306.1667,
+   "deadlock_breaks": 0.0,
+   "makespan_s": 1515.5,
+   "n_agvs": 5.0,
+   "n_tasks": 30.0,
+   "on_time_rate": 0.4667,
+   "process_time_s": 120.0,
+   "seed": 1.0
+  },
+  "rows": 24,
+  "sha256": "123eb913acb7cce2"
+ },
+ "workshop_scale.csv": {
+  "columns": [
+   "layout",
+   "n_tasks",
+   "n_agvs",
+   "seed",
+   "completed",
+   "makespan_s",
+   "on_time_rate",
+   "conflict_wait_steps",
+   "deadlock_breaks",
+   "collision_events"
+  ],
+  "means": {
+   "collision_events": 49.5769,
+   "completed": 44.6154,
+   "conflict_wait_steps": 901.3718,
+   "deadlock_breaks": 0.1282,
+   "makespan_s": 1720.7821,
+   "n_agvs": 6.3077,
+   "n_tasks": 44.6154,
+   "on_time_rate": 0.4669,
+   "seed": 1.0
+  },
+  "rows": 78,
+  "sha256": "23cbded02453f48c"
+ }
+}
