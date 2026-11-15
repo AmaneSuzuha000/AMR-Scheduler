@@ -40,11 +40,11 @@ NONDET = {"wall_clock_s"}
 
 
 def digest(path: str) -> str:
-    h = hashlib.sha256()
+    """Compute sha256 normalized for canonical LF line endings across all platforms."""
     with open(path, "rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()[:16]
+        raw = fh.read()
+    lf_bytes = raw.replace(b"\r\n", b"\n")
+    return hashlib.sha256(lf_bytes).hexdigest()[:16]
 
 
 def describe(path: str) -> dict:
