@@ -1255,6 +1255,9 @@ class Simulator:
     # ---------- Allocation ----------
 
     def _try_assign(self, agv: Agv, task: Task, t: int) -> bool:
+        roster = getattr(self, '_fleet_admission', None)
+        if roster is not None and not roster.eligible(agv.agv_id):
+            return False
         here = agv.cur_node or agv.start_node
         reserve = getattr(self.planner, "reservations_aware", False)
 
@@ -1316,6 +1319,8 @@ class Simulator:
         occupancy, the various counters, the event list, and the trajectory.
         ``test_reset_is_idempotent`` locks this invariant down.
         """
+        if getattr(self, '_fleet_admission', None) is not None:
+            raise RuntimeError('fleet membership is bound; create a fresh Simulator before resetting')
         if any(gate.bound for gate in self.executions.values()):
             raise RuntimeError("cannot reset a bound physical execution; reconcile occupancy first")
         if any(h.command is not None for h in self.handlings.values()):
@@ -1695,6 +1700,9 @@ class Simulator:
                 wanted.add(job.hops[k].dst)
 
         for agv in self.agvs:
+            roster = getattr(self, '_fleet_admission', None)
+            if roster is not None and not roster.eligible(agv.agv_id):
+                continue  # inactive parked vehicles must not be moved by idle retreat
             if agv.agv_id in self._jobs or agv.agv_id in self._transit:
                 continue
             node = agv.cur_node or agv.start_node
@@ -2039,7 +2047,9 @@ class Simulator:
                 self._res.reserve_node(*hold, owner)
 
     def _assign_step(self, step: int, *, urgent_only: bool = False) -> None:
+        roster = getattr(self, '_fleet_admission', None)
         idle = [a for a in self.agvs if a.cur_task is None and a.agv_id not in self._transit
+                and (roster is None or roster.eligible(a.agv_id))
                 and (not self.executions or (self.execution_for(a.agv_id).bound
                                              and not self.execution_for(a.agv_id).fault))]
         if not idle:
