@@ -1,0 +1,182 @@
+# ===========================================================================
+# AMR-Scheduler .gitignore
+# Professional Multi-Robot Scheduling & Digital Twin Research Platform
+# ===========================================================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ---------- .NET / C# / Visual Studio ----------
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+[Oo]ut/
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.pidb
+*.booproj
+*.binlog
+*.trx
+TestResults/
+
+# ---------- C++ / CMake / ROS 2 ----------
+build/
+install/
+log/
+.colcon/
+*.o
+*.obj
+*.so
+*.dylib
+
+# ---------- Rust / Cargo ----------
+target/
+**/target/
+*.pdb
+*.exp
+*.lib
+
+# ---------- GPU / Render / Blender Caches ----------
+optix7cache.db
+*.optixcache
+*.blend1
+*.blend2
+*.blend3
+*.blend4
+*.blend5
+
+# ---------- OS & Editor Temporary Files ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.swp
+*~
+~$*
+
+# ---------- Temporary Logs & Scratch Dirs ----------
+*.bak
+*.bak_*
+*_prev.pdf
+*.tmp
+temp/
+tmp/
+output/
+_scratch/
+_verify/
+controllog.txt
+exception.txt
+
+# 一次性调试临时脚本
+tools/_*.py
+tools/fix_a.py
+tools/pod_test.py
+tools/pod_fix_test.py
+tools/VisOnlyProbe/
+
+# Web 控制台与复现运行时临时缓存
+results/web_runs/
+results/reproduce/
+
+# 历史数据备份（内容已被当前 results/*.csv 取代）
+results/_official/
+results/archive/
+
+# ---------- 视觉中间对照与原始参考帧 (Video Reference Frames & Intermediate Visual Comparisons) ----------
+visual_comparison/wheelset_workshop_v1/references/
+visual_comparison/wheelset_workshop_v1/camera_alignment_*.png
+visual_comparison/wheelset_workshop_v1/blender_previews/
+visual_comparison/wheelset_workshop_v1/previous_0_*
+visual_comparison/wheelset_workshop_v1/current_revision_pairs.jpg
+visual_comparison/wheelset_workshop_v1/preparation_topology_43s.png
+visual_comparison/wheelset_workshop_v1/visual_gaps.md
+visual_comparison/wheelset_workshop_v1/source_coverage.*
+visual_comparison/wheelset_workshop_v1/review.html
+visual_comparison/wheelset_workshop_v1/page_check.json
+visual_comparison/wheelset_workshop_v1/reference_index.json
+visual_comparison/wheelset_workshop_v1/*_before_*
+visual_comparison/wheelset_workshop_v1/*_rejected*
+visual_comparison/wheelset_workshop_v1/*_initial_attempt*
+assets/wheelset_workshop/source/
+
+# ---------- 仿真车间开发日志与过程审计 (Simulation Intermediate Logs & Audits) ----------
+simulation/wheelset_workshop/*.md
+!simulation/wheelset_workshop/README.md
+simulation/wheelset_workshop/*.cmd
+simulation/wheelset_workshop/delivery_*.json
+simulation/wheelset_workshop/build_report.json
+simulation/wheelset_workshop/blender_check.json
+simulation/wheelset_workshop/validation.json
+simulation/wheelset_workshop/acceptance_rule.json
+simulation/wheelset_workshop/runtime/
+simulation/wheelset_workshop/agv_reference_*/
+simulation/wheelset_workshop/**/trace.jsonl
+simulation/wheelset_workshop/**/clearance_audit.json
+
+# 第三方上游素材与预编译二进制（非本课题交付物）
+RAWSimO.Hardware/x64/
+RAWSimO.Hardware/x86/
+Material/Wiki/
+Material/Lib/
+Material/Resources/*.pdf
+Material/Instances/CoreBenchmark/
+Material/Instances/MaTi/
+Material/Instances/Demonstrator/
+Material/Instances/FastLane/
+Material/Instances/*.xinst
+Material/Instances/*.xconf
+Material/Instances/*.xsett
+Material/Instances/*.xlayo
+Material/Instances/*.csv
+MaTiTiny-*/
+tools/planning_compare/
+
+# 根目录运行日志
+*.log
+/logs/
+/.snapshots/
+Material/
+scripts/
+
+# ---------- 仿真运行产物与录屏帧（由仿真脚本生成，体积达数 GB）----------
+simulation/wheelset_workshop/process_runs/
+**/process_runs/
+**/frames/*.png
+**/recordings/
+
+# ---------- 二进制动态库与归档压缩包 ----------
+*.dll
+!RAWSimO.Hardware/MasterCom.dll
+!RAWSimO.Hardware/MasterRD.dll
+!RAWSimO.MultiAgentPathFinding/libs/*.dll
+*.zip
+*.tar.gz
+*.7z
+**/win-x64/
+**/win-x86/
+**/linux-x64/
+
+# ---------- 内部材料、过程文档与课题交付物 (Internal Documents & Research Notes) ----------
+docs/
+
+

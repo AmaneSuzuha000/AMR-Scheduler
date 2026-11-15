@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Check experiment data integrity
+        run: python tools/data_manifest.py --check
+
+      - name: Smoke run a scenario
+        run: python -m amr_sched --tasks 20 --agvs 2 --seed 0
+
+      - name: Verify Demo B frame stream
+        run: python tools/verify_demo_b.py
+
+  csharp:
+    name: C# RAWSimO.Live
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      # The end-to-end tests start a real Python bridge, so an interpreter is needed
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Only build the C# parts added by this project (RAWSimO.Live and its
+      # tests). The upstream WPF projects need the Windows desktop runtime and
+      # are not built on Linux.
+      - name: Build RAWSimO.Live
+        run: dotnet build RAWSimO.Live/RAWSimO.Live.csproj -c Release
+
+      - name: Test RAWSimO.Live
+        env:
+          AMR_PYTHON: python3
+        run: dotnet test Tests/RAWSimO.Live.Tests/RAWSimO.Live.Tests.csproj -c Release --verbosity normal
+
+      # Proves the two halves actually meet: the Python producer streams over a socket
+      # and the C# client turns every frame into drawable positions. Parsing a captured
+      # sample cannot show this, because it never exercises the socket or the placement.
+      - name: Verify the scheduler -> C# chain end to end
+        run: python tools/verify_fleet_chain.py --steps 60
