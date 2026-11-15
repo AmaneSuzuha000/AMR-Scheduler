@@ -1,0 +1,18 @@
+{
+  "scenario": "workshop",
+  "n_tasks": 100,
+  "n_agvs": 6,
+  "seed": 42,
+  "python": {
+    "wall_clock_s": 0.1854150999997728,
+    "steps": 2952,
+    "tasks_completed": 100
+  },
+  "rust": {
+    "wall_clock_s": 0.10337900000013178,
+    "steps": 2952,
+    "tasks_completed": 100
+  },
+  "speedup": 1.7935470453335438,
+  "time_saved_pct": 44.24456260560307
+}

@@ -1,0 +1,5 @@
+node_hold_steps,makespan_s,conflict_wait_steps,tasks_completed,seeds
+60,2911.5,984.4,50.0,10
+30,2914.2,964.5,50.0,10
+10,2936.7,1069.3,50.0,10
+1,2930.4,1034.3,50.0,10

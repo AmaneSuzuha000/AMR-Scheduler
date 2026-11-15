@@ -1,0 +1,4 @@
+n_agvs,busiest_edge,busiest_edge_occupancy,mean_edge_occupancy,busiest_node,busiest_node_occupancy,edges_over_half,steps
+2,R0-R1,0.2547,0.099,B2,0.0507,0,5207
+4,R0-R1,0.4949,0.1841,W1,0.1218,0,2758
+6,R0-R1,0.6917,0.2723,B1,0.1729,3,1862
