@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Multi-AGV Scheduling Console</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#0f1419;color:#d5dce3;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{background:#1a2230;padding:8px 16px;border-bottom:1px solid #2a3546;display:flex;align-items:center;gap:14px;flex-shrink:0}
+header h1{font-size:15px;font-weight:600;color:#8ab4f8}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#2a3546;color:#8b9bb0}
+.badge.ok{background:#1e4620;color:#7ee787}
+.badge.run{background:#3d2f00;color:#e3b341}
+.badge.warn{background:#4a2400;color:#f0883e}
+main{flex:1;display:grid;grid-template-columns:270px 1fr 290px;gap:1px;background:#2a3546;overflow:hidden}
+.panel{background:#0f1419;overflow-y:auto;padding:12px}
+.panel h2{font-size:12px;color:#8b9bb0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1e2733}
+.field{margin-bottom:9px}
+.field label{display:block;font-size:11px;color:#7d8b9e;margin-bottom:3px}
+.field input,.field select{width:100%;background:#1a2230;border:1px solid #2a3546;color:#d5dce3;padding:5px 7px;border-radius:4px;font-size:12px;font-family:inherit}
+.field input:focus,.field select:focus{outline:none;border-color:#4a7fd4}
+.row{display:flex;gap:6px}
+button{background:#2a3546;border:1px solid #3a4a5e;color:#d5dce3;padding:6px 12px;border-radius:4px;font-size:12px;cursor:pointer;font-family:inherit;transition:.15s}
+button:hover:not(:disabled){background:#3a4a5e;border-color:#4a7fd4}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.primary{background:#1a5fb4;border-color:#1a5fb4;color:#fff;font-weight:600}
+button.primary:hover:not(:disabled){background:#2372d1}
+button.danger{background:#5c1f1f;border-color:#7a2a2a;color:#ffb3b3}
+button.wide{width:100%;margin-top:6px}
+#stage{position:relative;background:#0b0f14;display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* 回放进度放在画布右下角，避开左上角那块实时 HUD —— 两者说的是不同的事，不能叠在一起 */
+#replayHud{position:absolute;right:10px;bottom:10px;background:rgba(88,166,255,.14);border:1px solid #58a6ff;color:#c9d7e8;font:12px Consolas,monospace;padding:4px 8px;border-radius:4px;pointer-events:none}
+#cv{display:block;max-width:100%;max-height:100%}
+#hud{position:absolute;top:10px;left:10px;font-size:11px;background:rgba(15,20,25,.85);padding:7px 10px;border-radius:5px;border:1px solid #2a3546;line-height:1.65;pointer-events:none}
+#hud b{color:#8ab4f8}
+.stat{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #1a2230}
+.stat span:first-child{color:#7d8b9e}
+.stat span:last-child{color:#d5dce3;font-weight:600;font-variant-numeric:tabular-nums}
+#agvlist{font-size:11px;margin-top:6px}
+.agv{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #161d27}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.agv .nm{color:#8ab4f8;width:48px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.agv .st{color:#7d8b9e;flex:1;font-size:10px}
+#log{font-size:10px;font-family:Consolas,monospace;line-height:1.5;color:#6e7d90;margin-top:8px;max-height:130px;overflow-y:auto}
+.log-u{color:#e3b341}.log-e{color:#ff7b72}.log-ok{color:#7ee787}
+footer{background:#1a2230;padding:5px 16px;font-size:10px;color:#5f6d80;border-top:1px solid #2a3546;flex-shrink:0}
+</style></head><body>
+<header>
+<h1>Multi-AGV Material Delivery Scheduling Console</h1>
+<span class="badge" id="bState">Idle</span>
+<span class="badge" id="bRun">—</span>
+<span class="badge" id="bLive">Bridge: off</span>
+</header>
+<main>
+<div class="panel"><h2>Run configuration</h2>
+<div class="field"><label>Layout</label><select id="fLayout"><option value="ring">Ring (main study instance)</option><option value="grid">Grid</option><option value="hub">Hub</option><option value="workshop">Workshop (rail freight, 62 nodes)</option></select></div>
+<div class="row"><div class="field" style="flex:1"><label>Vehicles</label><input id="fAgvs" type="number" value="4" min="1" max="12"></div>
+<div class="field" style="flex:1"><label>Tasks</label><input id="fTasks" type="number" value="50" min="1" max="300"></div></div>
+<div class="row"><div class="field" style="flex:1"><label>Seed</label><input id="fSeed" type="number" value="0" min="0"></div>
+<div class="field" style="flex:1"><label>Aisle capacity</label><input id="fCap" type="number" value="2" min="1" max="4"></div></div>
+<div class="field"><label>Urgent ratio</label><input id="fUrgent" type="number" value="0.15" min="0" max="1" step="0.05"></div>
+<div class="field"><label>Path planner</label><select id="fPlanner"><option value="static">Static Dijkstra</option><option value="spacetime">Space-time A*</option></select></div>
+<div class="field"><label>Allocator</label><select id="fAlloc"><option value="greedy">Greedy (primary)</option><option value="nearest">Nearest first</option><option value="fifo">FIFO</option></select></div>
+<div class="field"><label>Reschedule policy</label><select id="fPolicy"><option value="preempt_unpicked">Non-destructive preemption</option><option value="none">No preemption</option><option value="preempt_any">Aggressive preemption</option></select></div>
+<div class="field"><label>Speed (steps/s, 0 = fastest)</label><input id="fSpeed" type="number" value="0" min="0" step="50"></div>
+<button class="primary wide" id="btnStart">Start</button>
+<div class="row" style="margin-top:6px"><button id="btnPause" style="flex:1" disabled>Pause</button><button class="danger" id="btnStop" style="flex:1" disabled>Stop</button></div>
+<div class="row" style="margin-top:6px"><button class="wide" id="btnReplay" disabled>Replay</button></div>
+<h2 style="margin-top:18px">Insert urgent task</h2>
+<div class="row"><div class="field" style="flex:1"><label>Pickup</label><input id="uPick" value="S"></div>
+<div class="field" style="flex:1"><label>Drop-off</label><input id="uDrop" value="W3"></div></div>
+<div class="field"><label>Due slack (steps)</label><input id="uSlack" type="number" value="300" min="1"></div>
+<button class="wide" id="btnUrgent" disabled>Insert urgent task</button>
+<h2 style="margin-top:18px">Live bridge (Gazebo)</h2>
+<div class="row"><div class="field" style="flex:2"><label>Host</label><input id="lHost" value="127.0.0.1"></div>
+<div class="field" style="flex:1"><label>Port</label><input id="lPort" type="number" value="9300"></div></div>
+<div class="row"><button style="flex:1" id="btnLiveOn">Attach</button><button style="flex:1" id="btnLiveOff" disabled>Detach</button></div>
+<div style="color:#7d8b9e;font-size:11px;line-height:1.45;margin-top:6px">
+Read-only. The ring is drawn from the bridge's <code>frame</code> channel and labelled with
+that name verbatim. In this Gazebo world that channel carries the simulator's own entity
+pose (measured: teleporting the model moves it 1:1), so it is a world position — but on a
+real chassis the same channel is wheel odometry, which drifts. It is never called an
+absolute fix. A pose whose source stopped is flagged stale, never drawn as if it were live.
+</div>
+</div>
+<div id="stage"><canvas id="cv" width="1000" height="700"></canvas><div id="hud"></div><div id="replayHud" hidden></div></div>
+<div class="panel"><h2>Run status</h2><div id="stats"></div><h2 style="margin-top:16px">Vehicle state</h2><div id="agvlist"></div><div id="log"></div></div>
+</main>
+<footer id="foot">Ready · the console drives the amr_sched simulation core step by step; it is not replaying a pre-computed trajectory</footer>
+<script src="/static/app.js"></script></body></html>
