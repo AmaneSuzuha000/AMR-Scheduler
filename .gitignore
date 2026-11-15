@@ -164,11 +164,11 @@ simulation/wheelset_workshop/process_runs/
 **/frames/*.png
 **/recordings/
 
-# ---------- 二进制动态库与归档压缩包 ----------
+# ---------- 二进制可执行文件、动态库、音频与归档压缩包 ----------
 *.dll
-!RAWSimO.Hardware/MasterCom.dll
-!RAWSimO.Hardware/MasterRD.dll
-!RAWSimO.MultiAgentPathFinding/libs/*.dll
+*.exe
+*.rej
+*.wav
 *.zip
 *.tar.gz
 *.7z
@@ -176,7 +176,21 @@ simulation/wheelset_workshop/process_runs/
 **/win-x86/
 **/linux-x64/
 
-# ---------- 内部材料、过程文档与课题交付物 (Internal Documents & Research Notes) ----------
+# ---------- 过程调试、视觉对齐对比与摄像机副本 ----------
+visual_comparison/
+simulation/wheelset_workshop/worlds/camera_*.world
+
+# ---------- 内部结项、论文答辩与核验脚手架 (Internal Defense & Acceptance Tools) ----------
 docs/
+tools/build_docx.py
+tools/build_slides.py
+tools/build_script.py
+tools/check_slide_numbers.py
+tools/acceptance_check.py
+tools/capture_hid_evidence.py
+tools/export_pdf.py
+tools/*_export.ps1
+tools/verify_numbers.py
+
 
 

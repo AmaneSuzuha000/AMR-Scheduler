@@ -84,6 +84,13 @@ flowchart TD
    - Real-time TCP stream broadcasting vehicle poses, trail histories, and reservation claims to C# RAWSim-O WPF visualizer.
    - Interactive browser-based control console with WebSocket telemetry.
 
+### Digital Twins & Workshop Layout
+
+<p align="center">
+  <img src="results/figures/gazebo_overview.png" alt="1:25 Gazebo Physical Simulation Twin" width="49%" />
+  <img src="results/figures/layout.png" alt="Workshop Topological Road Network" width="49%" />
+</p>
+
 ---
 
 ### Performance Benchmark

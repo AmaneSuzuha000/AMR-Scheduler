@@ -84,6 +84,13 @@ flowchart TD
    - **2,533 项** 自动化测试全覆盖（Pytest 与 Cargo 单测）。
    - 代码库遵循顶级开源工程规范，剥离中间瞬态大文件，提交体积保持轻量高效。
 
+### 仿真数字孪生与车间拓扑布局
+
+<p align="center">
+  <img src="results/figures/gazebo_overview.png" alt="1:25 Gazebo 物理仿真数字孪生" width="49%" />
+  <img src="results/figures/layout.png" alt="轮对检修车间拓扑路网" width="49%" />
+</p>
+
 ---
 
 ### 性能基准测试

@@ -14,6 +14,7 @@ pydantic>=2.0
 # Tests
 pytest>=8.0
 Pillow>=10.0         # Tests/test_animation.py reads the generated GIF
+PyYAML>=6.0          # tools/wheelset_scene/*.py and navigation acceptance tests import yaml
 
 # HTTP client for fastapi.testclient.
 # starlette >= 1.0 looks for "httpx2" first and falls back to "httpx" with a

@@ -20,8 +20,7 @@ The simulation environment models the complete industrial lifecycle of railway f
 ```text
 simulation/wheelset_workshop/
 ├── worlds/
-│   ├── wheelset_workshop.world        # Master Gazebo simulation world (complete workshop layout)
-│   └── camera_*.world                 # Perspective camera inspection worlds (31 viewpoints)
+│   └── wheelset_workshop.world        # Master Gazebo simulation world (complete 1:25 workshop layout)
 ├── agv_network_01/                    # AMR navigation topological road network (Phase 1)
 │   └── scene_layout.json
 ├── agv_network_02/                    # AMR navigation topological road network (Phase 2)
@@ -38,11 +37,8 @@ simulation/wheelset_workshop/
 
 ### Launching the Workshop World
 ```bash
-# Launch master workshop world
+# Launch master workshop simulation twin
 gazebo simulation/wheelset_workshop/worlds/wheelset_workshop.world
-
-# Launch specific inspection camera viewpoint
-gazebo simulation/wheelset_workshop/worlds/camera_overview.world
 ```
 
 ### AMR Navigation & Material Supply

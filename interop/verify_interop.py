@@ -52,7 +52,8 @@ def build_exe() -> bool:
          "/r:System.Web.Extensions.dll",
          os.path.join(CS_DIR, "StreamReader.cs"),
          os.path.join(CS_DIR, "Program.cs")],
-        capture_output=True, text=True, encoding="utf-8", errors="replace")
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        stdin=subprocess.DEVNULL)
     if r.returncode != 0:
         print("! the C# build failed:\n" + (r.stdout or "")[:800])
         return False

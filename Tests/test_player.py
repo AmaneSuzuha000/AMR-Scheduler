@@ -45,7 +45,8 @@ def _build():
          "/r:System.Web.Extensions.dll",
          "/r:System.Windows.Forms.dll",
          "/r:System.Drawing.dll", SRC],
-        capture_output=True, text=True, encoding="utf-8", errors="replace")
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        stdin=subprocess.DEVNULL)
     return r.returncode == 0
 
 
