@@ -1,0 +1,5 @@
+# Advance ROS timers often enough for the 50 Hz EKF and 10 Hz laser's TF gate.
+# This changes time publication, not the 1 ms physical integration or sensors.
+gazebo:
+  ros__parameters:
+    publish_rate: 100.0

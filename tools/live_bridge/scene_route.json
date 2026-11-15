@@ -1,0 +1,28 @@
+{
+  "scene": "rail_freight_workshop_v1",
+  "scale": 0.04,
+  "frame": "world",
+  "note": "缩比试验场路线；1 世界米 = 25 路网米，不可用于车间通行结论",
+  "waypoints": [
+    [
+      0.32,
+      1.2
+    ],
+    [
+      5.0,
+      1.2
+    ]
+  ],
+  "network_waypoints": [
+    [
+      8.0,
+      30.0
+    ],
+    [
+      125.0,
+      30.0
+    ]
+  ],
+  "network_distance_m": 117.0,
+  "world_distance_m": 4.68
+}

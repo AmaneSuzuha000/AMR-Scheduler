@@ -1,0 +1,5 @@
+<library path="amr_bounded_pursuit">
+  <class type="amr_execution::BoundedPursuit" base_class_type="nav2_core::Controller">
+    <description>Upstream Nav2 RPP with curvature-preserving execution velocity bounds.</description>
+  </class>
+</library>

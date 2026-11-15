@@ -1,0 +1,16 @@
+{
+  "world_sha256": "415f7e710d342967121ad87e0c7e51c2e3e21bd649992bf0a9d5111e65fe7867",
+  "image_sha256": "d992e94cdf953166abfcf11895d78752c13fc0acc97ee509c0e8f5b3c08d7303",
+  "bounds": [
+    -1.0,
+    -1.0,
+    141.0,
+    91.0
+  ],
+  "resolution": 0.05,
+  "width": 2840,
+  "height": 1840,
+  "collision_boxes": 28,
+  "occupied_cells": 101380,
+  "scope": "known synthetic collision map at the laser plane; not SLAM or a surveyed site"
+}
