@@ -30,11 +30,16 @@ def one(release_tick, policy):
         ProductionOperation('P0',('K0',),(ResourceChoice('W1','C0','T0'),),90),
         ProductionOperation('P1',('K1',),(ResourceChoice('W5','C0','T1'),
                               ResourceChoice('W4','C1','T1')),50)],fleet=fleet)
-    timings=[];receipt=None
-    while sim.step_once():
+    step_ms=[];receipt=None;transaction_ms=None
+    while True:
+        t_step0=time.perf_counter_ns()
+        advanced=sim.step_once()
+        step_ms.append((time.perf_counter_ns()-t_step0)/1e6)
+        if not advanced:break
         # The fixture models *exogenous* robot availability: A1 is unavailable
         # until release_tick, independent of policy and of future disturbances.
         if sim._step_cursor==release_tick and policy != 'STATIC_ONE':
+            t_commit0=time.perf_counter_ns()
             if policy=='EVENT_FLEET':
                 candidate=fleet.prepare(robot_id='A1',action='ACTIVATE',
                          expected_tick=sim._step_cursor,expected_revision=fleet.revision)
@@ -46,9 +51,10 @@ def one(release_tick, policy):
                             expected_tick=sim._step_cursor,expected_revision=fleet.revision))
                 receipt=prod.commit(candidate)
             else:raise ValueError('unsupported policy')
+            transaction_ms=(time.perf_counter_ns()-t_commit0)/1e6
         # A single step timer below is advisory, and does not certify hard
         # real-time. Measured separate from candidate transactions above.
-        timings.append(sim._step_cursor)
+        # No sleep/timer loop: these are wall measurements on an offline CI runner.
     result=sim._build_result(sim._step_cursor)
     task_records={t.task_id:dict(status=t.status.value,assigned_agv=t.assigned_agv,
           pickup_step=t.pickup_step,complete_step=t.complete_step,dropoff=t.dropoff)
@@ -76,7 +82,10 @@ def one(release_tick, policy):
         collision_events=result.collision_events,source='native_software_simulation',
         outcome_task_states=task_records,production_started=prod.started,
         production_finished=prod.finished,production_events=prod.events,
-        fleet_events=fleet.events,commit=receipt)
+        fleet_events=fleet.events,commit=receipt,
+        step_p99_ms=sorted(step_ms)[min(len(step_ms)-1,math.ceil(len(step_ms)*.99)-1)],
+        max_step_ms=max(step_ms),transaction_gate_ms=transaction_ms,
+        timing_scope='software simulator and eligibility+commit only; no physical control or full candidate search')
 
 def matrix():
     rows=[one(t,policy) for t in (40,60,80)
