@@ -31,6 +31,18 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
 
+      - name: SYSTEM12 native dynamic experiment (research diagnostic)
+        if: ${{ matrix.python-version == '3.12' }}
+        run: python tools/research/system12_dynamic_matrix.py --out system12_evidence/native_dynamic_matrix.json
+
+      - name: Archive SYSTEM12 raw paired experiment
+        if: ${{ matrix.python-version == '3.12' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: system12-native-dynamic-matrix
+          path: system12_evidence/native_dynamic_matrix.json
+          retention-days: 30
+
       - name: Check experiment data integrity
         run: python tools/data_manifest.py --check
 
