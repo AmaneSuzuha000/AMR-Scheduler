@@ -1,0 +1,14 @@
+[package]
+name = "spacetime_planner"
+version = "0.1.0"
+edition = "2021"
+authors = ["AMR-Scheduler Contributors"]
+description = "High-performance Spatiotemporal A* and SIPP path planner in native Rust"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "spacetime_planner"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+reservation_core = { path = "../reservation_core" }
