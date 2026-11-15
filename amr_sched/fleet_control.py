@@ -35,7 +35,7 @@ class FleetControl:
         first = next(iter(sim.executions.values()))
         return dict(session_id=self.session_id, scene_id=first.identity['scene_id'],
                     run_id=first.identity['run_id'], paused=sim._operator_paused,
-                    operations=['submit_task', 'pause', 'resume'],
+                    operations=['submit_task', 'pause', 'resume', 'preview_fleet_membership'], 
                     routes={r:g.recovery_token() for r,g in sim.executions.items()},
                     faults={r:g.fault for r,g in sim.executions.items()},
                     task_total=len(sim.tasks),
@@ -75,7 +75,17 @@ class FleetControl:
             try:
                 if self.owner.failed or self.owner.closing or not self.owner.ready:
                     raise ValueError('active durable fleet owner required')
-                if op == 'submit_task':
+                if op == 'preview_fleet_membership':
+                    if set(payload) != {'robot_id', 'routes'} or type(payload['robot_id']) is not str:
+                        raise ValueError('exact robot_id and global route tokens required')
+                    from .native_physical_admission_audit import inspect_physical_membership
+                    assessment=inspect_physical_membership(self.owner,payload['robot_id'],
+                        expected_routes=payload['routes'],now=time.monotonic())
+                    # A successful preview is NEVER acceptance of a physical
+                    # membership mutation or a motor permit.
+                    answer=dict(accepted=False,reason='PREVIEW_ONLY_NO_PHYSICAL_COMMIT',
+                                readiness=assessment)
+                elif op == 'submit_task':
                     answer = self._submit(payload)
                 elif op in {'pause', 'resume'}:
                     if set(payload) != {'routes'} or payload['routes'] != state['routes']:
