@@ -34,7 +34,7 @@ def test_full_preflight_never_grants_physical_motion():
     before=deepcopy([(a.cur_node,a.cur_task) for a in owner.sim.agvs])
     old=deepcopy(owner.sim._res.pins())
     v=inspect(owner)
-    assert v['ready'] and v['action']=='PREPARE_ONLY'
+    assert v['ready'] and v['action']=='PREPARE_ONLY',v['reasons']
     assert not v['permit_issued'] and not v['commit_enabled'] and not v['physical_authorization']
     assert owner.sim._res.pins()==old
     assert before==[(a.cur_node,a.cur_task) for a in owner.sim.agvs]
