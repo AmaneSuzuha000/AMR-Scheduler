@@ -7,6 +7,9 @@ profile. Robot A1 becomes available only at release_tick, so an always-on A1
 from __future__ import annotations
 import argparse,json,math,statistics,time
 from pathlib import Path
+import sys
+# Running this directly as python tools/research/... must find the repository root.
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from amr_sched.entities import Agv,Task,TaskStatus
 from amr_sched.network import build_demo_network
 from amr_sched.allocation.greedy import GreedyAllocator
