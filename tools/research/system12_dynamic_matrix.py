@@ -33,6 +33,10 @@ def one(release_tick, policy):
         ProductionOperation('P0',('K0',),(ResourceChoice('W1','C0','T0'),),90),
         ProductionOperation('P1',('K1',),(ResourceChoice('W5','C0','T1'),
                               ResourceChoice('W4','C1','T1')),50)],fleet=fleet)
+    # Clairvoyant static production selection is a stronger, explicitly
+    # labelled reference. It does not activate the unavailable A1 early.
+    if policy=='PRECOMMITTED_FLEX':
+        prod.commit(prod.prepare(op_id='P1',choice_index=1,expected_tick=0,expected_revision=0))
     step_ms=[];receipt=None;transaction_ms=None;observations=[]
     while True:
         t_step0=time.perf_counter_ns()
@@ -46,7 +50,7 @@ def one(release_tick, policy):
         # until release_tick, independent of policy and of future disturbances.
         if sim._step_cursor==release_tick and policy != 'STATIC_ONE':
             t_commit0=time.perf_counter_ns()
-            if policy=='EVENT_FLEET':
+            if policy in ('EVENT_FLEET','PRECOMMITTED_FLEX'):
                 candidate=fleet.prepare(robot_id='A1',action='ACTIVATE',
                          expected_tick=sim._step_cursor,expected_revision=fleet.revision)
                 receipt=fleet.commit(candidate)
@@ -106,7 +110,7 @@ def one(release_tick, policy):
 
 def matrix():
     rows=[one(t,policy) for t in (40,60,80)
-          for policy in ('STATIC_ONE','EVENT_FLEET','EVENT_JOINT')]
+          for policy in ('STATIC_ONE','EVENT_FLEET','EVENT_JOINT','PRECOMMITTED_FLEX')]
     pairs=[]
     for t in (40,60,80):
         cells={r['policy']:r for r in rows if r['release_tick']==t}
@@ -115,13 +119,16 @@ def matrix():
             delta_event_fleet_vs_static=cells['EVENT_FLEET']['makespan_step']-
                                         cells['STATIC_ONE']['makespan_step'],
             delta_event_joint_vs_fleet=cells['EVENT_JOINT']['makespan_step']-
-                                        cells['EVENT_FLEET']['makespan_step']))
+                                        cells['EVENT_FLEET']['makespan_step'],
+            delta_joint_vs_clairvoyant_static=cells['EVENT_JOINT']['makespan_step']-
+                                        cells['PRECOMMITTED_FLEX']['makespan_step']))
     return dict(schema='system12-native-dynamic-research-v1',
       origin='two-kit synthetic workshop; NOT real industry, not holdout, not a hardware test',
       availability='A1 unavailable before release_tick; no physical motor dispatch',
       methods={'STATIC_ONE':'one eligible vehicle for entire run',
                'EVENT_FLEET':'A1 accepted when availability event occurs',
-               'EVENT_JOINT':'same activation + qualified P1 bay/crew change'},
+               'EVENT_JOINT':'same activation + qualified P1 bay/crew change',
+               'PRECOMMITTED_FLEX':'qualified P1 choice known at tick0, A1 still activates only after event; clairvoyant benchmark'},
       paired_profiles=pairs,episodes=rows,
       scientific_claim='mechanism and confounder diagnosis only; no SOTA or statistical claims')
 
