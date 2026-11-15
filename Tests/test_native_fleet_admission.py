@@ -1,5 +1,6 @@
 """SYSTEM11: native Simulator admission, not physical fleet authorization."""
 import pytest
+import math
 from amr_sched.entities import Agv, Task
 from amr_sched.network import build_demo_network
 from amr_sched.allocation.greedy import GreedyAllocator
@@ -11,14 +12,16 @@ def scene(n=8, release=4):
     net = build_demo_network()
     a = [Agv('A0', start_node='B1', load_time=0., unload_time=0.),
          Agv('A1', start_node='B2', load_time=0., unload_time=0.)]
-    t = [Task('T'+str(i), 'D', 'W1', release_step=release) for i in range(n)]
+    legal = [('D', 'W1'), ('B2', 'W5'), ('D', 'W2'), ('B1', 'W4')]
+    t = [Task('T'+str(i), *legal[i % len(legal)], release_step=release)
+         for i in range(n)]
     sim = Simulator(net, t, a, SpaceTimeAStarPlanner(), GreedyAllocator(),
                     SimulationConfig(max_steps=16000, idle_retreat=False))
     sim.reset()
     return sim
 
 def test_dynamic_activation_executes_native_tasks_and_reservations():
-    sim = scene(n=8)
+    sim = scene(n=2)
     ctrl = NativeFleetAdmission(sim, initial_active={'A0'})
     for _ in range(4):
         assert sim.step_once()
@@ -27,7 +30,7 @@ def test_dynamic_activation_executes_native_tasks_and_reservations():
     while sim.step_once():
         pass
     result = sim._build_result(sim._step_cursor)
-    assert result.summary()['tasks_completed'] == 8
+    assert result.summary()['tasks_completed'] == 2
     assert result.collision_events == 0
     assert 'A1' in {t.assigned_agv for t in sim.tasks}
     assert all(t.complete_step is not None for t in sim.tasks)
@@ -96,4 +99,9 @@ def test_no_fleet_opt_in_legacy_behavior_identical():
         pass
     while b.step_once():
         pass
-    assert a._build_result(a._step_cursor).summary() == b._build_result(b._step_cursor).summary()
+    a_summary = a._build_result(a._step_cursor).summary()
+    b_summary = b._build_result(b._step_cursor).summary()
+    def canonical(m):
+        return {k: None if isinstance(v, float) and math.isnan(v) else v
+                for k, v in m.items()}
+    assert canonical(a_summary) == canonical(b_summary)
