@@ -72,8 +72,10 @@ def test_physical_candidate_fails_closed(case,expected):
     assert not v['ready'] and expected in v['reasons']
     assert v['physical_authorization'] is False
 
-def test_existing_control_channel_preview_cannot_move_or_mutate():
+def test_existing_control_channel_preview_cannot_move_or_mutate(monkeypatch):
     from amr_sched.fleet_control import FleetControl
+    # Synthetic gate receipts use the same fake monotonic timeline (0.1s).
+    monkeypatch.setattr('amr_sched.fleet_control.time.monotonic',lambda:.2)
     owner=paused_fixture()
     ctl=FleetControl(owner)
     st=ctl.state()
