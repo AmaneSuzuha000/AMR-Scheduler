@@ -74,13 +74,14 @@ def test_loaded_kit_immutable():
         prod.prepare(op_id='P0',choice_index=1,expected_tick=0,expected_revision=0)
 
 def test_cycle_and_unqualified_bay_rejected():
-    sim,_,_=make_scene()
+    sim,_,prod=make_scene()
+    del sim._native_production  # construct an alternate malformed calendar for negative test only
     with pytest.raises(ValueError,match='cyclic production precedence'):
         NativeJointProduction(sim,[
             ProductionOperation('A',('K0',),(ResourceChoice('W1','C','T'),),2,'B'),
             ProductionOperation('B',('K1',),(ResourceChoice('W5','C','T'),),2,'A')])
     with pytest.raises(ValueError,match='UNQUALIFIED_RESOURCE_COMBINATION'):
-        sim._native_production.prepare(op_id='P0',choice_index=5,expected_tick=0,expected_revision=0)
+        prod.prepare(op_id='P0',choice_index=5,expected_tick=0,expected_revision=0)
 
 def test_stale_global_tick_refuses_both_changes():
     sim,fleet,prod=make_scene()
