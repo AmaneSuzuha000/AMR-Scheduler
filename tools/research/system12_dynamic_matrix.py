@@ -33,12 +33,15 @@ def one(release_tick, policy):
         ProductionOperation('P0',('K0',),(ResourceChoice('W1','C0','T0'),),90),
         ProductionOperation('P1',('K1',),(ResourceChoice('W5','C0','T1'),
                               ResourceChoice('W4','C1','T1')),50)],fleet=fleet)
-    step_ms=[];receipt=None;transaction_ms=None
+    step_ms=[];receipt=None;transaction_ms=None;observations=[]
     while True:
         t_step0=time.perf_counter_ns()
         advanced=sim.step_once()
         step_ms.append((time.perf_counter_ns()-t_step0)/1e6)
         if not advanced:break
+        positions={a.agv_id:a.cur_node for a in sim.agvs if a.agv_id not in sim._transit}
+        observations.append(dict(tick=sim._step_cursor,node_positions=positions,
+              transit={rid:list(tr) for rid,tr in sim._transit.items()}))
         # The fixture models *exogenous* robot availability: A1 is unavailable
         # until release_tick, independent of policy and of future disturbances.
         if sim._step_cursor==release_tick and policy != 'STATIC_ONE':
@@ -73,7 +76,16 @@ def one(release_tick, policy):
             overlapping=(prod.started[a]<prod.finished[b] and
                          prod.started[b]<prod.finished[a]) if prod.all_finished() else False
             if sharing and overlapping:resource_valid=False
-    valid=(resource_valid and result.collision_events==0 and
+    node_cap={node_id:node.capacity for node_id,node in sim.network.nodes.items()}
+    independent_node_capacity_violations=[]
+    for obs in observations:
+        occ={}
+        for node in obs['node_positions'].values():
+            occ[node]=occ.get(node,0)+1
+        for node,n in occ.items():
+            if n>node_cap[node]:
+                independent_node_capacity_violations.append((obs['tick'],node,n))
+    valid=(resource_valid and not independent_node_capacity_violations and result.collision_events==0 and
            all((prod.started[k] is None or
                 all(task_records[kit]['complete_step'] is not None and
                 task_records[kit]['complete_step']<=prod.started[k]
@@ -86,6 +98,8 @@ def one(release_tick, policy):
         outcome_task_states=task_records,production_started=prod.started,
         production_finished=prod.finished,production_events=prod.events,
         fleet_events=fleet.events,commit=receipt,
+        observations=observations,node_capacity_violations=independent_node_capacity_violations,
+        node_capacities=node_cap,
         step_p99_ms=sorted(step_ms)[min(len(step_ms)-1,math.ceil(len(step_ms)*.99)-1)],
         max_step_ms=max(step_ms),transaction_gate_ms=transaction_ms,
         timing_scope='software simulator and eligibility+commit only; no physical control or full candidate search')
