@@ -1,0 +1,514 @@
+{
+  "method": "Bed camera and human scale from 0.17. Camera unchanged in0.25; seven white-tower corners and seven approximate black-cover envelope points jointly estimate their positions, footprint and height.",
+  "assumed_human_height_m": 1.7,
+  "geometry_measured": false,
+  "geometry_adjusted_using_same_sequence": true,
+  "bed_dimensions_estimated_m": [
+    4.7450389,
+    1.043908558,
+    0.85
+  ],
+  "pixel_reading_tolerance_estimate": 20,
+  "views": [
+    {
+      "camera": "back_ring",
+      "reference_second": 55,
+      "parameters": [
+        135.60552921964424,
+        34.28396856401342,
+        6.126769,
+        -2.27245787,
+        0.6454497900000002
+      ],
+      "fit_count": 6,
+      "check_count": 4,
+      "fit_rmse_px": 14.08210147443076,
+      "check_rmse_px": 22.39503043454987,
+      "landmarks": [
+        {
+          "name": "bed_or_assumed_human_1",
+          "world_point": [
+            133.73264125964423,
+            29.11113858501342,
+            0.85
+          ],
+          "source_pixel": [
+            287,
+            551
+          ],
+          "projection": [
+            302.09559733916285,
+            556.7594478302115
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "bed_or_assumed_human_2",
+          "world_point": [
+            133.73264125964423,
+            30.15504714301342,
+            0.85
+          ],
+          "source_pixel": [
+            414,
+            672
+          ],
+          "projection": [
+            400.4879819679552,
+            668.6174064948782
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "bed_or_assumed_human_3",
+          "world_point": [
+            128.98760235964423,
+            30.15504714301342,
+            0.85
+          ],
+          "source_pixel": [
+            962,
+            326
+          ],
+          "projection": [
+            978.9621122221852,
+            324.3174761578181
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "bed_or_assumed_human_4",
+          "world_point": [
+            128.98760235964423,
+            29.11113858501342,
+            0.85
+          ],
+          "source_pixel": [
+            886,
+            264
+          ],
+          "projection": [
+            867.4625792293816,
+            263.0582822918024
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "bed_or_assumed_human_5",
+          "world_point": [
+            128.30881350964424,
+            28.174596864013424,
+            0.0
+          ],
+          "source_pixel": [
+            821,
+            273
+          ],
+          "projection": [
+            828.350489800145,
+            273.7684472879216
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "bed_or_assumed_human_6",
+          "world_point": [
+            128.30881350964424,
+            28.174596864013424,
+            1.7
+          ],
+          "source_pixel": [
+            854,
+            93
+          ],
+          "projection": [
+            847.3221201525946,
+            92.30186406510546
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "same_sequence_table_corner_1",
+          "world_point": [
+            131.98766320964424,
+            28.00751286401342,
+            0.85
+          ],
+          "source_pixel": [
+            460,
+            334
+          ],
+          "projection": [
+            452.3859249387184,
+            349.3234915819132
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_table_corner_2",
+          "world_point": [
+            131.98766320964424,
+            28.47751286401342,
+            0.85
+          ],
+          "source_pixel": [
+            474,
+            363
+          ],
+          "projection": [
+            491.77953737240966,
+            381.46871203851424
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_table_corner_3",
+          "world_point": [
+            131.16766320964425,
+            28.47751286401342,
+            0.85
+          ],
+          "source_pixel": [
+            591,
+            317
+          ],
+          "projection": [
+            588.5773761272022,
+            334.7871527502014
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_table_corner_4",
+          "world_point": [
+            131.16766320964425,
+            28.00751286401342,
+            0.85
+          ],
+          "source_pixel": [
+            572,
+            293
+          ],
+          "projection": [
+            547.9890704830975,
+            305.54528198828893
+          ],
+          "role": "check"
+        }
+      ],
+      "gazebo_image_sha256": "4b2e13e17c2a29d1aa51138085dfa0076dfcc0bbbbe2929caa0272a3999de32f",
+      "reference_sha256": "d501ea1f646f03e917a29baccef55402f0cbeb69e006c1f8228806065cc03de5"
+    },
+    {
+      "camera": "back_ring",
+      "diagnostic_id": "back_ring_column",
+      "reference_second": 55,
+      "parameters": [
+        135.60552921964424,
+        34.28396856401342,
+        6.126769,
+        -2.27245787,
+        0.6454497900000002
+      ],
+      "fit_count": 7,
+      "check_count": 0,
+      "fit_rmse_px": 6.035245578384653,
+      "check_rmse_px": null,
+      "landmarks": [
+        {
+          "name": "back_ring_column_approx_corner_0",
+          "world_point": [
+            130.15484239559964,
+            25.9236469129802,
+            1.5288242335840423
+          ],
+          "source_pixel": [
+            495,
+            81
+          ],
+          "projection": [
+            490.78020317562607,
+            83.59489343788124
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_column_approx_corner_1",
+          "world_point": [
+            130.74221881599829,
+            25.9236469129802,
+            1.5288242335840423
+          ],
+          "source_pixel": [
+            437,
+            101
+          ],
+          "projection": [
+            430.5644997749024,
+            103.92421405698167
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_column_approx_corner_2",
+          "world_point": [
+            130.74221881599829,
+            26.41764339260332,
+            1.5288242335840423
+          ],
+          "source_pixel": [
+            471,
+            127
+          ],
+          "projection": [
+            465.1893585690888,
+            125.36825336949858
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_column_approx_corner_3",
+          "world_point": [
+            130.15484239559964,
+            26.41764339260332,
+            1.5288242335840423
+          ],
+          "source_pixel": [
+            528,
+            106
+          ],
+          "projection": [
+            526.1435059135995,
+            103.82246033866016
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_column_approx_corner_5",
+          "world_point": [
+            130.74221881599829,
+            25.9236469129802,
+            0.0
+          ],
+          "source_pixel": [
+            440,
+            264
+          ],
+          "projection": [
+            447.6187643098094,
+            264.4584068327522
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_column_approx_corner_6",
+          "world_point": [
+            130.74221881599829,
+            26.41764339260332,
+            0.0
+          ],
+          "source_pixel": [
+            474,
+            290
+          ],
+          "projection": [
+            479.8144211670368,
+            288.509914825161
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_column_approx_corner_7",
+          "world_point": [
+            130.15484239559964,
+            26.41764339260332,
+            0.0
+          ],
+          "source_pixel": [
+            529,
+            265
+          ],
+          "projection": [
+            535.4135939701266,
+            264.3440010731888
+          ],
+          "role": "fit"
+        }
+      ],
+      "correspondence_scope": "Visible tower corners",
+      "gazebo_image_sha256": "4b2e13e17c2a29d1aa51138085dfa0076dfcc0bbbbe2929caa0272a3999de32f",
+      "reference_sha256": "d501ea1f646f03e917a29baccef55402f0cbeb69e006c1f8228806065cc03de5"
+    },
+    {
+      "camera": "back_ring",
+      "diagnostic_id": "back_ring_cover",
+      "reference_second": 55,
+      "parameters": [
+        135.60552921964424,
+        34.28396856401342,
+        6.126769,
+        -2.27245787,
+        0.6454497900000002
+      ],
+      "fit_count": 7,
+      "check_count": 0,
+      "fit_rmse_px": 9.307027923009748,
+      "check_rmse_px": null,
+      "landmarks": [
+        {
+          "name": "back_ring_cover_approx_corner_0",
+          "world_point": [
+            127.939675993476,
+            27.292106687190874,
+            1.5898009087492557
+          ],
+          "source_pixel": [
+            796,
+            56
+          ],
+          "projection": [
+            798.3199227389657,
+            57.37611298753478
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_cover_approx_corner_1",
+          "world_point": [
+            128.58921312130988,
+            27.292106687190874,
+            1.5898009087492557
+          ],
+          "source_pixel": [
+            740,
+            78
+          ],
+          "projection": [
+            742.9337768393308,
+            78.5241167553508
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_cover_approx_corner_2",
+          "world_point": [
+            128.58921312130988,
+            27.674877554018664,
+            1.5898009087492557
+          ],
+          "source_pixel": [
+            766,
+            94
+          ],
+          "projection": [
+            775.9989479669445,
+            94.07790804788169
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_cover_approx_corner_3",
+          "world_point": [
+            127.939675993476,
+            27.674877554018664,
+            1.5898009087492557
+          ],
+          "source_pixel": [
+            822,
+            72
+          ],
+          "projection": [
+            831.5587306066693,
+            71.9827495593484
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_cover_approx_corner_5",
+          "world_point": [
+            128.58921312130988,
+            27.292106687190874,
+            0.0
+          ],
+          "source_pixel": [
+            745,
+            237
+          ],
+          "projection": [
+            734.4249633620004,
+            243.58936737463625
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_cover_approx_corner_6",
+          "world_point": [
+            128.58921312130988,
+            27.674877554018664,
+            0.0
+          ],
+          "source_pixel": [
+            767,
+            266
+          ],
+          "projection": [
+            764.5252626840432,
+            261.23157313837277
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "back_ring_cover_approx_corner_7",
+          "world_point": [
+            127.939675993476,
+            27.674877554018664,
+            0.0
+          ],
+          "source_pixel": [
+            830,
+            240
+          ],
+          "projection": [
+            815.8614746992944,
+            236.15006883894972
+          ],
+          "role": "fit"
+        }
+      ],
+      "correspondence_scope": "Approximate rectangular envelope; rounded cover silhouette corners are not exact mesh vertices",
+      "gazebo_image_sha256": "4b2e13e17c2a29d1aa51138085dfa0076dfcc0bbbbe2929caa0272a3999de32f",
+      "reference_sha256": "d501ea1f646f03e917a29baccef55402f0cbeb69e006c1f8228806065cc03de5"
+    }
+  ],
+  "robot_static_estimate": {
+    "reference_second": 55,
+    "assumed_joint_world_heights_m": [
+      1.16,
+      1.96,
+      1.99,
+      2.27
+    ],
+    "manual_approx_joint_centres_px": [
+      [
+        604,
+        351
+      ],
+      [
+        632,
+        254
+      ],
+      [
+        597,
+        241
+      ],
+      [
+        608,
+        207
+      ]
+    ],
+    "method": "XY from source pixel rays at assumed Z. Zero ray reprojection is by construction, not validation; no robot accuracy score.",
+    "motion_validated": false
+  },
+  "claim_boundary": "One bed corner partly hidden by caption. Human scale, ring count, rail, cabinet dimensions and background are estimates. Black-cover envelope points approximate a rounded shape. Same-sequence fits/checks are not independent; no full-image, process, motion or dimensional acceptance.",
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88"
+}

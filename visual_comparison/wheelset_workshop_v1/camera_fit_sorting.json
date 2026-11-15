@@ -1,0 +1,199 @@
+{
+  "method": "Six manually read bin rim corners; four table corners excluded from pose fit; FOV fixed 0.92 rad",
+  "pixel_reading_tolerance_estimate": 15,
+  "geometry_measured": false,
+  "geometry_adjusted_using_same_sequence": true,
+  "views": [
+    {
+      "camera": "sorting",
+      "reference_second": 21,
+      "parameters": [
+        60.80993879602263,
+        35.821040331722955,
+        15.068863006770178,
+        -2.0507569018143887,
+        0.7865299699808639
+      ],
+      "fit_count": 6,
+      "check_count": 4,
+      "fit_rmse_px": 5.978388942991533,
+      "check_rmse_px": 25.353154831798253,
+      "landmarks": [
+        {
+          "name": "fit_1",
+          "world_point": [
+            57.86,
+            24.37,
+            0.71
+          ],
+          "source_pixel": [
+            445,
+            505
+          ],
+          "role": "fit",
+          "projection": [
+            451.4821012541724,
+            500.26056874882215
+          ]
+        },
+        {
+          "name": "fit_2",
+          "world_point": [
+            55.74,
+            24.37,
+            0.71
+          ],
+          "source_pixel": [
+            592,
+            447
+          ],
+          "role": "fit",
+          "projection": [
+            586.244567762214,
+            448.02240472643615
+          ]
+        },
+        {
+          "name": "fit_3",
+          "world_point": [
+            55.74,
+            26.17,
+            0.71
+          ],
+          "source_pixel": [
+            645,
+            531
+          ],
+          "role": "fit",
+          "projection": [
+            642.9494754110524,
+            535.305948691
+          ]
+        },
+        {
+          "name": "fit_4",
+          "world_point": [
+            57.86,
+            26.17,
+            0.71
+          ],
+          "source_pixel": [
+            503,
+            594
+          ],
+          "role": "fit",
+          "projection": [
+            501.62059243433475,
+            594.4884871418202
+          ]
+        },
+        {
+          "name": "fit_5",
+          "world_point": [
+            53.49,
+            24.37,
+            0.71
+          ],
+          "source_pixel": [
+            724,
+            395
+          ],
+          "role": "fit",
+          "projection": [
+            718.9372125838681,
+            396.58656858919727
+          ]
+        },
+        {
+          "name": "fit_6",
+          "world_point": [
+            53.49,
+            26.17,
+            0.71
+          ],
+          "source_pixel": [
+            774,
+            480
+          ],
+          "role": "fit",
+          "projection": [
+            781.450582789023,
+            477.30756265530033
+          ]
+        },
+        {
+          "name": "check_1",
+          "world_point": [
+            53.06,
+            25.65,
+            0.95
+          ],
+          "source_pixel": [
+            791,
+            454
+          ],
+          "role": "check",
+          "projection": [
+            788.8945438361512,
+            431.947609757015
+          ]
+        },
+        {
+          "name": "check_2",
+          "world_point": [
+            49.34,
+            25.65,
+            0.95
+          ],
+          "source_pixel": [
+            1018,
+            361
+          ],
+          "role": "check",
+          "projection": [
+            991.8889355088004,
+            349.49091611788464
+          ]
+        },
+        {
+          "name": "check_3",
+          "world_point": [
+            53.06,
+            24.0,
+            0.95
+          ],
+          "source_pixel": [
+            738,
+            370
+          ],
+          "role": "check",
+          "projection": [
+            731.7857554446861,
+            361.05687371316736
+          ]
+        },
+        {
+          "name": "check_4",
+          "world_point": [
+            49.34,
+            24.0,
+            0.95
+          ],
+          "source_pixel": [
+            962,
+            286
+          ],
+          "role": "check",
+          "projection": [
+            928.1317871466159,
+            286.70006634470093
+          ]
+        }
+      ],
+      "gazebo_image_sha256": "29c30d9f3801e23a7c2c150d1c3070182df4793f41731a6b0a513ca223ef63cc",
+      "reference_sha256": "0d572d2783abd69edf191b0503e2db18239f88aa72118415f903dc16fa7df712"
+    }
+  ],
+  "claim_boundary": "Bin and table dimensions estimated from the same sequence. Checks are not independent. No full-scene, count, dynamics or scheduling acceptance.",
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88"
+}

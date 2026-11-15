@@ -1,0 +1,113 @@
+{
+  "id": "wheelset_light_material_v1",
+  "source": "explicit_extension_not_video_measured",
+  "coordinates": "frozen scene world metres",
+  "robot_enclosing_radius_m": 0.55,
+  "safety_margin_m": 0.2,
+  "nodes": [
+    {
+      "id": "supply",
+      "x": 6.0,
+      "y": 69.2,
+      "kind": "handoff"
+    },
+    {
+      "id": "west",
+      "x": 20.0,
+      "y": 69.2,
+      "kind": "aisle"
+    },
+    {
+      "id": "east",
+      "x": 40.0,
+      "y": 69.2,
+      "kind": "aisle"
+    },
+    {
+      "id": "receiving",
+      "x": 60.0,
+      "y": 69.2,
+      "kind": "handoff"
+    },
+    {
+      "id": "bay_west",
+      "x": 20.0,
+      "y": 71.0,
+      "kind": "buffer"
+    },
+    {
+      "id": "bay_east",
+      "x": 40.0,
+      "y": 71.0,
+      "kind": "buffer"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "west_approach",
+      "src": "supply",
+      "dst": "west",
+      "width_m": 1.8,
+      "speed_limit_mps": 0.5,
+      "capacity": 1,
+      "two_way": true
+    },
+    {
+      "id": "shared_middle",
+      "src": "west",
+      "dst": "east",
+      "width_m": 1.8,
+      "speed_limit_mps": 0.5,
+      "capacity": 1,
+      "two_way": true
+    },
+    {
+      "id": "east_approach",
+      "src": "east",
+      "dst": "receiving",
+      "width_m": 1.8,
+      "speed_limit_mps": 0.5,
+      "capacity": 1,
+      "two_way": true
+    },
+    {
+      "id": "west_bay",
+      "src": "west",
+      "dst": "bay_west",
+      "width_m": 1.8,
+      "speed_limit_mps": 0.5,
+      "capacity": 1,
+      "two_way": true
+    },
+    {
+      "id": "east_bay",
+      "src": "east",
+      "dst": "bay_east",
+      "width_m": 1.8,
+      "speed_limit_mps": 0.5,
+      "capacity": 1,
+      "two_way": true
+    }
+  ],
+  "robots": [
+    {
+      "id": "scout_a",
+      "start": "bay_west"
+    },
+    {
+      "id": "scout_b",
+      "start": "bay_east"
+    }
+  ],
+  "allowed_materials": [
+    "inspection_consumables",
+    "small_tools",
+    "bearing_accessories"
+  ],
+  "excluded_materials": [
+    "wheelset",
+    "axle",
+    "bogie"
+  ],
+  "handoff_boundary": "North service corridor outside low production boundary; downstream handoff mechanisms unmodelled"
+}

@@ -1,0 +1,388 @@
+{
+  "method": "Six shared fixed fixture points per view; both camera poses, portal position/span and run-in pitch jointly estimated from these same frames.",
+  "geometry_measured": false,
+  "geometry_adjusted_using_same_sequence": true,
+  "pixel_reading_tolerance_estimate": 15,
+  "views": [
+    {
+      "camera": "run_in",
+      "reference_second": 71,
+      "parameters": [
+        169.6252942373212,
+        21.709124224713797,
+        10.801638562202715,
+        -1.4075324584528013,
+        0.6763431529002795
+      ],
+      "fit_count": 6,
+      "check_count": 6,
+      "fit_rmse_px": 7.033925768753622,
+      "check_rmse_px": 15.401591767217292,
+      "landmarks": [
+        {
+          "name": "fixed_fixture_1",
+          "world_point": [
+            178.56491403612551,
+            11.200000000000001,
+            0.03
+          ],
+          "source_pixel": [
+            58,
+            450
+          ],
+          "projection": [
+            64.41184508928495,
+            440.94611367588027
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_2",
+          "world_point": [
+            178.56491403612551,
+            7.4,
+            0.03
+          ],
+          "source_pixel": [
+            204,
+            263
+          ],
+          "projection": [
+            195.77180775184974,
+            267.8908300171667
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_3",
+          "world_point": [
+            173.0,
+            10.520000000000001,
+            0.08
+          ],
+          "source_pixel": [
+            520,
+            448
+          ],
+          "projection": [
+            516.0521336929155,
+            450.83618732111063
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_4",
+          "world_point": [
+            173.0,
+            8.08,
+            0.08
+          ],
+          "source_pixel": [
+            560,
+            331
+          ],
+          "projection": [
+            558.3196189686263,
+            330.7200466500771
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_5",
+          "world_point": [
+            171.04703562179583,
+            10.520000000000001,
+            0.08
+          ],
+          "source_pixel": [
+            670,
+            464
+          ],
+          "projection": [
+            674.6527218693652,
+            468.84457312215784
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_6",
+          "world_point": [
+            171.04703562179583,
+            8.08,
+            0.08
+          ],
+          "source_pixel": [
+            699,
+            348
+          ],
+          "projection": [
+            700.3875367316092,
+            345.0718503326051
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "same_sequence_check_1",
+          "world_point": [
+            177.2,
+            10.07,
+            0.56
+          ],
+          "source_pixel": [
+            198,
+            374
+          ],
+          "projection": [
+            198.35474864687689,
+            362.2060961132242
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_check_2",
+          "world_point": [
+            177.2,
+            8.530000000000001,
+            0.56
+          ],
+          "source_pixel": [
+            244,
+            288
+          ],
+          "projection": [
+            246.70410236916496,
+            291.8975923239504
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_check_3",
+          "world_point": [
+            173.0,
+            10.07,
+            0.56
+          ],
+          "source_pixel": [
+            510,
+            408
+          ],
+          "projection": [
+            522.393612401291,
+            397.2277343246461
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_check_4",
+          "world_point": [
+            173.0,
+            8.530000000000001,
+            0.56
+          ],
+          "source_pixel": [
+            545,
+            321
+          ],
+          "projection": [
+            549.6441346334346,
+            322.27058397972087
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_check_5",
+          "world_point": [
+            171.04703562179583,
+            10.07,
+            0.56
+          ],
+          "source_pixel": [
+            654,
+            425
+          ],
+          "projection": [
+            680.6277590755536,
+            414.32944543828296
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_check_6",
+          "world_point": [
+            171.04703562179583,
+            8.530000000000001,
+            0.56
+          ],
+          "source_pixel": [
+            685,
+            337
+          ],
+          "projection": [
+            697.0748521463793,
+            337.05209674102747
+          ],
+          "role": "check"
+        }
+      ],
+      "gazebo_image_sha256": "b6c7d3eaaeb79ba1695fadd26666db371d4762d9a6af0da9b435687ab2b54ddb",
+      "reference_sha256": "78f307b7fbb427272a3a56329f0b5ea0c2564e2763d615faf583a37d536b460e"
+    },
+    {
+      "camera": "painting",
+      "reference_second": 73,
+      "parameters": [
+        170.1110644945855,
+        22.024702165688765,
+        14.656683583366542,
+        -0.9152223447851604,
+        0.7099596407680484
+      ],
+      "fit_count": 6,
+      "check_count": 2,
+      "fit_rmse_px": 7.368429347555223,
+      "check_rmse_px": 8.065942141205944,
+      "landmarks": [
+        {
+          "name": "fixed_fixture_1",
+          "world_point": [
+            178.56491403612551,
+            11.200000000000001,
+            0.03
+          ],
+          "source_pixel": [
+            637,
+            491
+          ],
+          "projection": [
+            633.365800779281,
+            498.60821680952586
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_2",
+          "world_point": [
+            178.56491403612551,
+            7.4,
+            0.03
+          ],
+          "source_pixel": [
+            767,
+            371
+          ],
+          "projection": [
+            768.633523734588,
+            370.2973948799262
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_3",
+          "world_point": [
+            173.0,
+            10.520000000000001,
+            0.08
+          ],
+          "source_pixel": [
+            985,
+            655
+          ],
+          "projection": [
+            983.684894470638,
+            648.327655093217
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_4",
+          "world_point": [
+            173.0,
+            8.08,
+            0.08
+          ],
+          "source_pixel": [
+            1045,
+            543
+          ],
+          "projection": [
+            1057.4260046584875,
+            541.5913016644447
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_5",
+          "world_point": [
+            171.04703562179583,
+            10.520000000000001,
+            0.08
+          ],
+          "source_pixel": [
+            1126,
+            720
+          ],
+          "projection": [
+            1120.7814351207835,
+            723.2673328285746
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "fixed_fixture_6",
+          "world_point": [
+            171.04703562179583,
+            8.08,
+            0.08
+          ],
+          "source_pixel": [
+            1190,
+            607
+          ],
+          "projection": [
+            1187.1785247415214,
+            605.2683049259829
+          ],
+          "role": "fit"
+        },
+        {
+          "name": "same_sequence_check_1",
+          "world_point": [
+            178.56491403612551,
+            11.200000000000001,
+            1.38
+          ],
+          "source_pixel": [
+            643,
+            435
+          ],
+          "projection": [
+            633.0596788974129,
+            435.6515070798797
+          ],
+          "role": "check"
+        },
+        {
+          "name": "same_sequence_check_2",
+          "world_point": [
+            178.56491403612551,
+            7.4,
+            1.38
+          ],
+          "source_pixel": [
+            778,
+            305
+          ],
+          "projection": [
+            773.9340808017453,
+            308.7884959055219
+          ],
+          "role": "check"
+        }
+      ],
+      "gazebo_image_sha256": "cad7489e51a6e8e8260176b1304c690862bcb08d8b8e0f14f0416b44b13b7eff",
+      "reference_sha256": "60174a7df9fd8a5a3ce0af32f01997687d53c3f09d0bed63818084558802db9b"
+    }
+  ],
+  "claim_boundary": "Sparse fixed-equipment alignment only. Same-frame checks are not independent; moving wheelsets occupy different positions at 71/73 s. No full-image, process or physics acceptance.",
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88"
+}

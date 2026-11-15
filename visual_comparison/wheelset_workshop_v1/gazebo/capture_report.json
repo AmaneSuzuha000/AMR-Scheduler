@@ -1,0 +1,808 @@
+[
+  {
+    "camera": "overview",
+    "reference_second": 0,
+    "file": "overview.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "a09a0ebd4e22d5a929835ad9e2b6e409e76bfeb6280b2ceee6751aaa9534c5b3",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "INITIAL_ESTIMATE_NOT_CALIBRATED_TO_VIDEO",
+    "requested_pose": [
+      35.0,
+      -36.0,
+      64.0,
+      0,
+      0.70849828786313,
+      1.1131366701780037
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 12,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "identification",
+    "reference_second": 3,
+    "file": "identification.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "614d3bfff30330a85943457de094769dca90c9b4ff99e253d69e33f467607de8",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      21.251711319918456,
+      2.483273874893885,
+      6.250800287977539,
+      0,
+      0.5232683897934428,
+      2.253764173217928
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 14,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "identification_close",
+    "reference_second": 4,
+    "file": "identification_close.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "d69d1e9212e5b9513b63ad89690bb60178cd78077ec106149c1e225a7e1cd081",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      24.54022929046558,
+      2.9362378022156586,
+      7.588896813588022,
+      0,
+      0.56642453749781,
+      2.474188388688615
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 16,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "opening_wide",
+    "reference_second": 8,
+    "file": "opening_wide.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "5b2f26b4a54af6f7064fbcc0c22399470c91e8ce9e8a6358cfe01e4dd78f30de",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      38.60028627,
+      3.44107779,
+      5.98758749,
+      0,
+      0.541014,
+      2.46615201
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 18,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "opening",
+    "reference_second": 10,
+    "file": "opening.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "6a2bd9bc6cd1a9b142c7e033b358dc82051f870ac4456498965fc84273a80d58",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      34.12382194634141,
+      3.4392225579652123,
+      7.705089748334657,
+      0,
+      0.6803646409284416,
+      2.414491966522704
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 20,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "sorting",
+    "reference_second": 21,
+    "file": "sorting.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "29c30d9f3801e23a7c2c150d1c3070182df4793f41731a6b0a513ca223ef63cc",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      60.80993879602263,
+      35.821040331722955,
+      15.068863006770178,
+      0,
+      0.7865299699808639,
+      -2.0507569018143887
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 22,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "inspection",
+    "reference_second": 30,
+    "file": "inspection.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "8cd67d93d9227a3df3f5baf6db201bd0150f253a9d6312dc1556560b3e836183",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      35.98151073932515,
+      26.882983446845547,
+      23.563932441969293,
+      0,
+      0.704817006258651,
+      1.5699404676092592
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 24,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "inspection_exit",
+    "reference_second": 32,
+    "file": "inspection_exit.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "c8029089963b348929066e24e9549dacb74e55948ba838cb19e9ca8b9122cae4",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      48.21005088641252,
+      26.96831166300189,
+      31.792590302532698,
+      0,
+      0.8577270618469683,
+      1.5693482322826824
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 26,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "unknown",
+    "reference_second": 36,
+    "file": "unknown.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "b80a31d18aeb3f61ef0591791007e575ded36b8ba552d85acf5ae068bbc65fa3",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      77.5860067619222,
+      31.461444660476182,
+      34.17086406969262,
+      0,
+      0.8382039254621667,
+      1.0692338092517322
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 28,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "wiping",
+    "reference_second": 45,
+    "file": "wiping.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "f08ef281ad906249e0e2af53d83155c226794b016a5012fcd82e71ca3afdbfd8",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "SAME_VIDEO_JOINT_GEOMETRY_ESTIMATE_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      90.87395168072321,
+      20.265759364130524,
+      7.837656987264342,
+      0,
+      0.6206102040038285,
+      2.450713967888831
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 30,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "press",
+    "reference_second": 58,
+    "file": "press.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "7037e1a9f8313b861e5863a37cb28b6e6f599537f5581bf5d7a4cff9b31503c6",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      128.8000437525813,
+      16.542380315087893,
+      3.563565482444545,
+      0,
+      0.6266640084971079,
+      0.600292116745836
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 32,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "press_front",
+    "reference_second": 62,
+    "file": "press_front.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "9dd532c166f05201df2eafa012391efc4b25ba6dd21ad00808ae2173f995a7c3",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      127.0885248498255,
+      17.412823272424127,
+      4.836221473206401,
+      0,
+      0.6254839123127995,
+      -0.024008178549961224
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 34,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "closing",
+    "reference_second": 68,
+    "file": "closing.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "840fb38b37d69817b371032ae82dc7afb9e243a47618a20c756c0c4c5813bb13",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      162.6432963234173,
+      8.524554087705413,
+      8.3473271207142,
+      0,
+      0.6159661825896456,
+      1.3865562381930365
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 36,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "storage",
+    "reference_second": 76,
+    "file": "storage.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "f4901cb17cb9723ecaee9c8aadd17d9066b80463ef7818d052766b9caefcec8e",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      185.64166401218876,
+      51.08020740874468,
+      20.909423197213723,
+      0,
+      0.8107446444366304,
+      -0.809383332098626
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 38,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "storage_reverse",
+    "reference_second": 78,
+    "file": "storage_reverse.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "fe6cf8729bb551048f6f390f9398424e003de6794b0401382fc75528779294ea",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      191.58313195240086,
+      20.960820342430875,
+      21.886335501907126,
+      0,
+      0.7403178821863751,
+      1.1054464611515706
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 40,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "overview_east",
+    "reference_second": null,
+    "file": "overview_east.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "32656258314136b8dcf652450dc34e6bf663b8c9ba8b04c61f0acd2686172d26",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "INITIAL_ESTIMATE_NOT_CALIBRATED_TO_VIDEO",
+    "requested_pose": [
+      325.0,
+      -155.0,
+      206.0,
+      0,
+      0.6452413561121161,
+      2.3691136680260527
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 42,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "top",
+    "reference_second": null,
+    "file": "top.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "46f598ac784e172b04ca7d20cab29e7e98a4f45975331d782d2b0b4d310dce39",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "INITIAL_ESTIMATE_NOT_CALIBRATED_TO_VIDEO",
+    "requested_pose": [
+      129.0,
+      36.0,
+      295.0,
+      0,
+      1.5707963267948966,
+      1.5707963267948966
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 44,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "component_overview",
+    "reference_second": 43,
+    "file": "component_overview.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "84239a5b328561fcf5d6c2724c966e1b16a24157384ee46aaef1eff4fbf13823",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      104.12620992219188,
+      2.473151580483464,
+      30.505403941687806,
+      0,
+      0.8560324404079058,
+      2.0271907307412182
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 46,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "bearing_loading",
+    "reference_second": 54,
+    "file": "bearing_loading.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "80821a5aca42db8b8802f31d3f4b0c57f5f55ca0e848bb717b06dd1c15b56c1e",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      113.51736338907158,
+      25.424822711832128,
+      14.62025521643386,
+      0,
+      1.0595684625199238,
+      2.052228361355276
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 48,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "closing_wide",
+    "reference_second": 67,
+    "file": "closing_wide.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "524c2b45f189026b8667a4b2b964fa9a506f1d2818c820283c539a84968bd569",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      161.73054808741148,
+      8.120911254814834,
+      9.946194030367428,
+      0,
+      0.678215332855163,
+      1.222271360163813
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 50,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "run_in",
+    "reference_second": 71,
+    "file": "run_in.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "b6c7d3eaaeb79ba1695fadd26666db371d4762d9a6af0da9b435687ab2b54ddb",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      169.6252942373212,
+      21.709124224713797,
+      10.801638562202715,
+      0,
+      0.6763431529002795,
+      -1.4075324584528013
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 52,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "painting",
+    "reference_second": 73,
+    "file": "painting.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "cad7489e51a6e8e8260176b1304c690862bcb08d8b8e0f14f0416b44b13b7eff",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      170.1110644945855,
+      22.024702165688765,
+      14.656683583366542,
+      0,
+      0.7099596407680484,
+      -0.9152223447851604
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 54,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "back_ring",
+    "reference_second": 55,
+    "file": "back_ring.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "4b2e13e17c2a29d1aa51138085dfa0076dfcc0bbbbe2929caa0272a3999de32f",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      135.60552921964424,
+      34.28396856401342,
+      6.126769,
+      0,
+      0.6454497900000002,
+      -2.27245787
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 56,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "exterior_check",
+    "reference_second": 6,
+    "file": "exterior_check.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "e06c3f62c21d31afa565ccdb87d86b5c8f0b350be1d919567f3311474a0448a7",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      43.41378382370463,
+      0.02599022007333815,
+      6.138131966353262,
+      0,
+      0.45009858392541713,
+      2.2823428331324993
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 58,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "parts_transfer",
+    "reference_second": 14,
+    "file": "parts_transfer.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "19b3c0a6025604fb38ada9d210570cceef3b9667e96685c1bae7943351f6ae55",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      37.36852241636513,
+      2.670973918092781,
+      16.472154425787235,
+      0,
+      0.707430133912854,
+      2.4898409070215117
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 60,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "axle_check",
+    "reference_second": 17,
+    "file": "axle_check.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "6b29ee0c8c00fbd7d6eda72b51934bd4cba0246f64319e1b217b71b2ff72efd9",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      13.872068171440011,
+      1.4147318835092249,
+      9.610916990588843,
+      0,
+      0.7440991600624467,
+      0.9067995619506831
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 62,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "reinspection",
+    "reference_second": 33,
+    "file": "reinspection.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "9040f8791ec3b781c9c48b629b59b8b36ac0b6cf912c184986ec7e245ee58115",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      49.66488609,
+      28.40662851,
+      35.37372935,
+      0,
+      0.9408508200000001,
+      1.6117107100000003
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 64,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "cache_transfer",
+    "reference_second": 65,
+    "file": "cache_transfer.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "80498bee62b6c6b085766a30a32f0166d584d3d3900a20f6a4a7f3bfa5084b73",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      131.37180275,
+      3.02766836,
+      11.88526547,
+      0,
+      0.7612784500000003,
+      0.7035590200000004
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 66,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "cache_reverse",
+    "reference_second": 66,
+    "file": "cache_reverse.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "79bf69ef8cd6fae5947c1ed9b0bcf57fc57e804ef28f07d00f12169b152084dc",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      137.87783021,
+      2.72477775,
+      22.39842656,
+      0,
+      0.9901262699999995,
+      0.8292121799999992
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 68,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "greasing",
+    "reference_second": 48,
+    "file": "greasing.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "50ade59216cc00585f77879430eb13c85202185a9b3a826f037174b40bde4a40",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "SAME_VIDEO_JOINT_GEOMETRY_ESTIMATE_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      81.69989528285265,
+      23.715499838350695,
+      5.068877578075942,
+      0,
+      0.6869846061859106,
+      2.5352500908851043
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 70,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  },
+  {
+    "camera": "cross_transfer",
+    "reference_second": 50,
+    "file": "cross_transfer.png",
+    "width": 1280,
+    "height": 720,
+    "pose_residual_m": 0.0,
+    "sha256": "c9831fe854fe5654c09bbd359c1495b123cc88decf5181cc53393abdd928f8b2",
+    "source": "Gazebo ROS camera image",
+    "camera_registration": "MANUAL_SPARSE_LANDMARK_FIT_NOT_FULL_IMAGE_VALIDATED",
+    "requested_pose": [
+      75.94898787,
+      53.56350748,
+      14.07629842,
+      0,
+      0.8622477099999997,
+      -1.0137015435897931
+    ],
+    "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+    "scene_sha256": "8eb32b6b8303c0b9169511d393e2fa0e3e6229360f9a53352468630b29e640c2",
+    "image_stamp": {
+      "sec": 72,
+      "nanosec": 270000000
+    },
+    "image_transport": "RELIABLE_DEPTH_1_NEW_READER_PER_VIEW"
+  }
+]

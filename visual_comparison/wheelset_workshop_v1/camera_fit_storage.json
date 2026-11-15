@@ -1,0 +1,235 @@
+{
+  "method": "Four stationary-frame points per camera; fixed FOV 0.92 rad, five pose parameters",
+  "pixel_reading_tolerance_estimate": 10,
+  "geometry_measured": false,
+  "geometry_adjusted_using_same_sequence": true,
+  "views": [
+    {
+      "camera": "storage",
+      "reference_second": 76,
+      "parameters": [
+        185.64166401218876,
+        51.08020740874468,
+        20.909423197213723,
+        -0.809383332098626,
+        0.8107446444366304
+      ],
+      "fit_rmse_px": 9.102110487910425,
+      "check_rmse_px": 13.952584573631645,
+      "fit_count": 4,
+      "check_count": 1,
+      "landmarks": [
+        {
+          "name": "static_frame_1",
+          "world_point": [
+            194,
+            45.4,
+            4.02
+          ],
+          "source_pixel": [
+            499,
+            668
+          ],
+          "role": "fit",
+          "projection": [
+            495.46213497605015,
+            663.5681110782155
+          ]
+        },
+        {
+          "name": "static_frame_2",
+          "world_point": [
+            202,
+            45.4,
+            4.02
+          ],
+          "source_pixel": [
+            191,
+            379
+          ],
+          "role": "fit",
+          "projection": [
+            192.14609461094113,
+            386.8874376031388
+          ]
+        },
+        {
+          "name": "static_frame_3",
+          "world_point": [
+            194,
+            27.4,
+            4.02
+          ],
+          "source_pixel": [
+            1122,
+            131
+          ],
+          "role": "fit",
+          "projection": [
+            1114.209163780244,
+            131.0208348920767
+          ]
+        },
+        {
+          "name": "static_frame_4",
+          "world_point": [
+            202,
+            45.4,
+            0.12
+          ],
+          "source_pixel": [
+            233,
+            508
+          ],
+          "role": "check",
+          "projection": [
+            241.4496859654124,
+            519.1030366733726
+          ]
+        },
+        {
+          "name": "static_frame_5",
+          "world_point": [
+            194,
+            27.4,
+            0.12
+          ],
+          "source_pixel": [
+            1058,
+            268
+          ],
+          "role": "fit",
+          "projection": [
+            1070.7595525743427,
+            264.5062079054488
+          ]
+        }
+      ],
+      "gazebo_image_sha256": "f4901cb17cb9723ecaee9c8aadd17d9066b80463ef7818d052766b9caefcec8e",
+      "reference_sha256": "251d55ad872667eafa191ce41cc108d60a6b5653c5f4ad12f2aa66420e9fa4d2"
+    },
+    {
+      "camera": "storage_reverse",
+      "reference_second": 78,
+      "parameters": [
+        191.58313195240086,
+        20.960820342430875,
+        21.886335501907126,
+        1.1054464611515706,
+        0.7403178821863751
+      ],
+      "fit_rmse_px": 5.042390153071292,
+      "check_rmse_px": 2.5858062299862388,
+      "fit_count": 4,
+      "check_count": 2,
+      "landmarks": [
+        {
+          "name": "static_frame_1",
+          "world_point": [
+            194,
+            45.4,
+            4.02
+          ],
+          "source_pixel": [
+            253,
+            260
+          ],
+          "role": "fit",
+          "projection": [
+            247.38373121266704,
+            258.64520948542327
+          ]
+        },
+        {
+          "name": "static_frame_2",
+          "world_point": [
+            202,
+            45.4,
+            4.02
+          ],
+          "source_pixel": [
+            570,
+            168
+          ],
+          "role": "fit",
+          "projection": [
+            572.2979309403745,
+            168.23454041216775
+          ]
+        },
+        {
+          "name": "static_frame_3",
+          "world_point": [
+            194,
+            45.4,
+            0.12
+          ],
+          "source_pixel": [
+            273,
+            384
+          ],
+          "role": "fit",
+          "projection": [
+            280.0617152602616,
+            384.75430979701065
+          ]
+        },
+        {
+          "name": "static_frame_4",
+          "world_point": [
+            202,
+            45.4,
+            0.12
+          ],
+          "source_pixel": [
+            581,
+            291
+          ],
+          "role": "fit",
+          "projection": [
+            577.4969214088352,
+            291.53009459417945
+          ]
+        },
+        {
+          "name": "static_frame_5",
+          "world_point": [
+            196.7,
+            43.27,
+            1.165
+          ],
+          "source_pixel": [
+            408,
+            376
+          ],
+          "role": "check",
+          "projection": [
+            408.8504871588426,
+            372.79067081100055
+          ]
+        },
+        {
+          "name": "static_frame_6",
+          "world_point": [
+            207.9,
+            43.27,
+            1.165
+          ],
+          "source_pixel": [
+            812,
+            244
+          ],
+          "role": "check",
+          "projection": [
+            813.1468830462265,
+            242.9829824260961
+          ]
+        }
+      ],
+      "gazebo_image_sha256": "fe6cf8729bb551048f6f390f9398424e003de6794b0401382fc75528779294ea",
+      "reference_sha256": "54d65da4b8246f8fb8c4e7d446e7f1b536fa9cce8a59da981be7e0d731b7e281"
+    }
+  ],
+  "claim_boundary": "Manual sparse pose fit, same-sequence checks; not full-image, independent, motion or dimension acceptance.",
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88"
+}

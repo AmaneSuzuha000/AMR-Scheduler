@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_back_ring_measuring_column">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_back_ring_measuring_column/meshes/back_ring_measuring_column.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 0 0.7644121 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.6123764 0.5189965 1.528824</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

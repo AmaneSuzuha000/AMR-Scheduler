@@ -1,0 +1,581 @@
+{
+  "method": "Fixed FOV 0.92 rad; 0.23 wiping uses two central hubs and four portal corners in a joint 43/45/48 s roof fit. Separate greasing fixture confirmed in 43 s. Closing uses four tray corners and two fixed rail ends per view, with cabinet roof checks",
+  "pixel_reading_tolerance_estimate": 15,
+  "geometry_measured": false,
+  "geometry_adjusted_using_same_sequence": true,
+  "views": [
+    {
+      "camera": "wiping",
+      "reference_second": 45,
+      "parameters": [
+        90.87395168072321,
+        20.265759364130524,
+        7.837656987264342,
+        2.450713967888831,
+        0.6206102040038285
+      ],
+      "fit_rmse_px": 4.889158247076302,
+      "check_rmse_px": null,
+      "fit_count": 6,
+      "check_count": 0,
+      "landmarks": [
+        {
+          "name": "central_hub_-1",
+          "world_point": [
+            82.96953174,
+            25.77513306,
+            0.67
+          ],
+          "source_pixel": [
+            550,
+            395
+          ],
+          "role": "fit",
+          "projection": [
+            554.7301453985269,
+            386.6233807250492
+          ]
+        },
+        {
+          "name": "central_hub_1",
+          "world_point": [
+            82.96953174,
+            27.31513306,
+            0.67
+          ],
+          "source_pixel": [
+            681,
+            327
+          ],
+          "role": "fit",
+          "projection": [
+            680.0358621085762,
+            327.27216652810023
+          ]
+        },
+        {
+          "name": "fixed_roof_1",
+          "world_point": [
+            79.56580872194613,
+            24.238595379829643,
+            1.926837398478177
+          ],
+          "source_pixel": [
+            214,
+            185
+          ],
+          "role": "fit",
+          "projection": [
+            214.7157452024017,
+            182.28254045622452
+          ]
+        },
+        {
+          "name": "fixed_roof_2",
+          "world_point": [
+            80.35120600694546,
+            24.238595379829643,
+            1.926837398478177
+          ],
+          "source_pixel": [
+            253,
+            209
+          ],
+          "role": "fit",
+          "projection": [
+            250.85374046640624,
+            212.6427593603205
+          ]
+        },
+        {
+          "name": "fixed_roof_3",
+          "world_point": [
+            80.35120600694546,
+            28.212494725549146,
+            1.926837398478177
+          ],
+          "source_pixel": [
+            588,
+            96
+          ],
+          "role": "fit",
+          "projection": [
+            586.9940699968342,
+            99.69861988115662
+          ]
+        },
+        {
+          "name": "fixed_roof_4",
+          "world_point": [
+            79.56580872194613,
+            28.212494725549146,
+            1.926837398478177
+          ],
+          "source_pixel": [
+            543,
+            80
+          ],
+          "role": "fit",
+          "projection": [
+            544.6377788654133,
+            77.40567145291271
+          ]
+        }
+      ],
+      "portal_roof_diagnostic": {
+        "point_rmse_px": 3.5312019104104224,
+        "landmarks": [
+          {
+            "name": "roof_corner_1",
+            "world_point": [
+              79.56580872194613,
+              24.238595379829643,
+              1.926837398478177
+            ],
+            "source_pixel": [
+              214,
+              185
+            ],
+            "projection": [
+              214.7157452024017,
+              182.28254045622452
+            ],
+            "role": "fit"
+          },
+          {
+            "name": "roof_corner_2",
+            "world_point": [
+              80.35120600694546,
+              24.238595379829643,
+              1.926837398478177
+            ],
+            "source_pixel": [
+              253,
+              209
+            ],
+            "projection": [
+              250.85374046640624,
+              212.6427593603205
+            ],
+            "role": "fit"
+          },
+          {
+            "name": "roof_corner_3",
+            "world_point": [
+              80.35120600694546,
+              28.212494725549146,
+              1.926837398478177
+            ],
+            "source_pixel": [
+              588,
+              96
+            ],
+            "projection": [
+              586.9940699968342,
+              99.69861988115662
+            ],
+            "role": "fit"
+          },
+          {
+            "name": "roof_corner_4",
+            "world_point": [
+              79.56580872194613,
+              28.212494725549146,
+              1.926837398478177
+            ],
+            "source_pixel": [
+              543,
+              80
+            ],
+            "projection": [
+              544.6377788654133,
+              77.40567145291271
+            ],
+            "role": "fit"
+          }
+        ],
+        "role": "same_video_geometry_fit",
+        "independent_check_points": 0,
+        "claim_boundary": "0.23 jointly estimates the shared roof and both 45/48 s cameras from 43/45 s four roof corners, 45 s two central hubs, and 48 s far corner/edge plus separate greasing hubs/cabinets; camera43 stays fixed. All are same-video fitting targets, not independent visual acceptance."
+      },
+      "moving_wheel_snapshot_diagnostic": {
+        "source_pixels": [
+          [
+            356,
+            277
+          ],
+          [
+            478,
+            211
+          ],
+          [
+            687,
+            478
+          ],
+          [
+            815,
+            402
+          ]
+        ],
+        "world_points": [
+          [
+            79.64741717186031,
+            25.77513306,
+            0.67
+          ],
+          [
+            79.64741717186031,
+            27.31513306,
+            0.67
+          ],
+          [
+            84.6946761393849,
+            25.77513306,
+            0.56
+          ],
+          [
+            84.6946761393849,
+            27.31513306,
+            0.56
+          ]
+        ],
+        "projected_pixels": [
+          [
+            372.91063560670636,
+            245.916482804621
+          ],
+          [
+            490.421204943043,
+            202.44212184760727
+          ],
+          [
+            676.3491566900361,
+            490.7465490322038
+          ],
+          [
+            804.2419832513367,
+            419.19183198902806
+          ]
+        ],
+        "point_rmse_px": 23.274918020874797,
+        "role": "same_video_static_snapshot_estimate",
+        "claim_boundary": "These two wheels move in the source and do not determine the fixed camera/roof. Current positions use one 45 s snapshot shared by every camera; 43/48 s motion differences remain."
+      },
+      "gazebo_image_sha256": "f08ef281ad906249e0e2af53d83155c226794b016a5012fcd82e71ca3afdbfd8",
+      "reference_sha256": "93b3dbf63d9893d9339064b3585aad94c4627a10dd5318b9de2ed4e17937d3d2"
+    },
+    {
+      "camera": "closing",
+      "reference_second": 68,
+      "parameters": [
+        162.6432963234173,
+        8.524554087705413,
+        8.3473271207142,
+        1.3865562381930365,
+        0.6159661825896456
+      ],
+      "fit_rmse_px": 8.801458285024387,
+      "check_rmse_px": 16.688336196764507,
+      "fit_count": 6,
+      "check_count": 2,
+      "landmarks": [
+        {
+          "name": "tray_115.75_19.75373622596708",
+          "world_point": [
+            165.75,
+            18.853736225967083,
+            0.725
+          ],
+          "source_pixel": [
+            763,
+            363
+          ],
+          "role": "fit",
+          "projection": [
+            754.072700314,
+            362.55076540767465
+          ]
+        },
+        {
+          "name": "tray_115.75_17.88626377403292",
+          "world_point": [
+            165.75,
+            16.98626377403292,
+            0.725
+          ],
+          "source_pixel": [
+            800,
+            482
+          ],
+          "role": "fit",
+          "projection": [
+            806.6434045933257,
+            480.4051070260986
+          ]
+        },
+        {
+          "name": "tray_117.55_19.75373622596708",
+          "world_point": [
+            167.55,
+            18.853736225967083,
+            0.725
+          ],
+          "source_pixel": [
+            906,
+            346
+          ],
+          "role": "fit",
+          "projection": [
+            922.0431456496742,
+            344.1688345462189
+          ]
+        },
+        {
+          "name": "tray_117.55_17.88626377403292",
+          "world_point": [
+            167.55,
+            16.98626377403292,
+            0.725
+          ],
+          "source_pixel": [
+            1001,
+            458
+          ],
+          "role": "fit",
+          "projection": [
+            994.5303813849243,
+            457.0542124309142
+          ]
+        },
+        {
+          "name": "fixed_rail_start",
+          "world_point": [
+            163.27300334368132,
+            18.900000000000002,
+            2.9578215181231977
+          ],
+          "source_pixel": [
+            500,
+            184
+          ],
+          "role": "fit",
+          "projection": [
+            496.44225309165097,
+            185.20891398568367
+          ]
+        },
+        {
+          "name": "fixed_rail_tip",
+          "world_point": [
+            168.83258700399617,
+            18.900000000000002,
+            2.9578215181231977
+          ],
+          "source_pixel": [
+            1080,
+            132
+          ],
+          "role": "fit",
+          "projection": [
+            1077.089783528617,
+            135.4846009329073
+          ]
+        },
+        {
+          "name": "cabinet_roof_left",
+          "world_point": [
+            162.95,
+            18.610000000000003,
+            2.585
+          ],
+          "source_pixel": [
+            458,
+            261
+          ],
+          "role": "check",
+          "projection": [
+            465.83696445107364,
+            240.89171247208668
+          ]
+        },
+        {
+          "name": "cabinet_roof_right",
+          "world_point": [
+            164.37,
+            18.610000000000003,
+            2.465
+          ],
+          "source_pixel": [
+            617,
+            245
+          ],
+          "role": "check",
+          "projection": [
+            623.4899249364089,
+            237.99137921987267
+          ]
+        }
+      ],
+      "gazebo_image_sha256": "840fb38b37d69817b371032ae82dc7afb9e243a47618a20c756c0c4c5813bb13",
+      "reference_sha256": "5cb5c56f74a0ea10875caedcbb25594e9784230673d5fd87347a71bb01c5872c"
+    },
+    {
+      "camera": "closing_wide",
+      "reference_second": 67,
+      "parameters": [
+        161.73054808741148,
+        8.120911254814834,
+        9.946194030367428,
+        1.222271360163813,
+        0.678215332855163
+      ],
+      "fit_rmse_px": 4.492664485598354,
+      "check_rmse_px": 23.71820909196903,
+      "fit_count": 6,
+      "check_count": 2,
+      "landmarks": [
+        {
+          "name": "tray_115.75_19.75373622596708",
+          "world_point": [
+            165.75,
+            18.853736225967083,
+            0.725
+          ],
+          "source_pixel": [
+            651,
+            360
+          ],
+          "role": "fit",
+          "projection": [
+            649.8712824577287,
+            359.1470302402545
+          ]
+        },
+        {
+          "name": "tray_115.75_17.88626377403292",
+          "world_point": [
+            165.75,
+            16.98626377403292,
+            0.725
+          ],
+          "source_pixel": [
+            710,
+            464
+          ],
+          "role": "fit",
+          "projection": [
+            712.6269870584854,
+            465.6729920243702
+          ]
+        },
+        {
+          "name": "tray_117.55_19.75373622596708",
+          "world_point": [
+            167.55,
+            18.853736225967083,
+            0.725
+          ],
+          "source_pixel": [
+            800,
+            324
+          ],
+          "role": "fit",
+          "projection": [
+            793.4471055812786,
+            326.37168319780164
+          ]
+        },
+        {
+          "name": "tray_117.55_17.88626377403292",
+          "world_point": [
+            167.55,
+            16.98626377403292,
+            0.725
+          ],
+          "source_pixel": [
+            871,
+            423
+          ],
+          "role": "fit",
+          "projection": [
+            868.2272351520324,
+            425.96721892033656
+          ]
+        },
+        {
+          "name": "fixed_rail_start",
+          "world_point": [
+            163.27300334368132,
+            18.900000000000002,
+            2.9578215181231977
+          ],
+          "source_pixel": [
+            409,
+            235
+          ],
+          "role": "fit",
+          "projection": [
+            412.73832626232695,
+            233.2100976479546
+          ]
+        },
+        {
+          "name": "fixed_rail_tip",
+          "world_point": [
+            168.83258700399617,
+            18.900000000000002,
+            2.9578215181231977
+          ],
+          "source_pixel": [
+            910,
+            142
+          ],
+          "role": "fit",
+          "projection": [
+            913.0757012404703,
+            137.79215140605686
+          ]
+        },
+        {
+          "name": "cabinet_roof_left",
+          "world_point": [
+            162.95,
+            18.610000000000003,
+            2.585
+          ],
+          "source_pixel": [
+            365,
+            291
+          ],
+          "role": "check",
+          "projection": [
+            390.64385242037736,
+            286.8711406307704
+          ]
+        },
+        {
+          "name": "cabinet_roof_right",
+          "world_point": [
+            164.37,
+            18.610000000000003,
+            2.465
+          ],
+          "source_pixel": [
+            510,
+            267
+          ],
+          "role": "check",
+          "projection": [
+            531.1654898090991,
+            268.57298428240045
+          ]
+        }
+      ],
+      "gazebo_image_sha256": "524c2b45f189026b8667a4b2b964fa9a506f1d2818c820283c539a84968bd569",
+      "reference_sha256": "11a3e9a28fafc839dc7841e3c002d6865b0067cd3384def62fd93b556144520c"
+    }
+  ],
+  "fixed_rail_correspondence_correction": "0.16 reads the visible fixed rail tip; the previous 67 s end reading overlapped the moving carriage and did not consistently identify the rail end.",
+  "claim_boundary": "Sparse same-sequence camera and geometry fitting. Cabinet roof checks exclude pose fitting, but come from the same source sequence. No independent full-scene fidelity, kinematics or dimensions acceptance.",
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88"
+}

@@ -1,0 +1,354 @@
+{
+  "method": "Four approximate manual wheel-hub correspondences per view; pose only, fixed FOV",
+  "independent_check_points": 0,
+  "measured_geometry": false,
+  "claim_boundary": "Both frames contain moving equipment. This is a static visual snapshot, not temporal registration or independent scene acceptance.",
+  "views": [
+    {
+      "camera": "identification",
+      "reference_second": 3,
+      "parameters": [
+        21.251711319918456,
+        2.483273874893885,
+        6.250800287977539,
+        2.253764173217928,
+        0.5232683897934428
+      ],
+      "fit_rmse_px": 5.574235962054684,
+      "world_points": [
+        [
+          16.4,
+          8.23,
+          0.56
+        ],
+        [
+          16.4,
+          9.77,
+          0.56
+        ],
+        [
+          16.4,
+          14.23,
+          0.56
+        ],
+        [
+          16.4,
+          15.77,
+          0.56
+        ]
+      ],
+      "manual_pixels": [
+        [
+          618,
+          519
+        ],
+        [
+          748,
+          434
+        ],
+        [
+          993,
+          255
+        ],
+        [
+          1052,
+          197
+        ]
+      ],
+      "projections": [
+        [
+          621.1230794870536,
+          521.7439714482074
+        ],
+        [
+          743.8121549408008,
+          431.436041426273
+        ],
+        [
+          992.1425462729063,
+          248.64712138755397
+        ],
+        [
+          1053.9222192572379,
+          203.1728657212431
+        ]
+      ],
+      "robot_pose_diagnostic": {
+        "landmarks": [
+          {
+            "name": "shoulder_base",
+            "world_point": [
+              15.6,
+              10.75,
+              1.8399999999999999
+            ],
+            "source_pixel": [
+              612,
+              245
+            ],
+            "projection": [
+              739.1984744916938,
+              221.13214502331897
+            ],
+            "role": "motion_mismatch"
+          },
+          {
+            "name": "shoulder",
+            "world_point": [
+              15.6,
+              11.140244027451914,
+              2.8016774546550876
+            ],
+            "source_pixel": [
+              604,
+              104
+            ],
+            "projection": [
+              771.1650924933988,
+              98.66882211429879
+            ],
+            "role": "motion_mismatch"
+          },
+          {
+            "name": "elbow",
+            "world_point": [
+              15.95,
+              12.441429751676374,
+              2.8187385996243624
+            ],
+            "source_pixel": [
+              647,
+              74
+            ],
+            "projection": [
+              888.2019997716191,
+              67.54813668167077
+            ],
+            "role": "motion_mismatch"
+          },
+          {
+            "name": "wrist",
+            "world_point": [
+              16.35,
+              12.887955852987353,
+              2.5304056423025534
+            ],
+            "source_pixel": [
+              753,
+              135
+            ],
+            "projection": [
+              949.6845666010166,
+              95.98932114413918
+            ],
+            "role": "motion_mismatch"
+          },
+          {
+            "name": "thin_probe_tip",
+            "world_point": [
+              16.76323362973609,
+              12.817580810363342,
+              1.38
+            ],
+            "source_pixel": [
+              760,
+              269
+            ],
+            "projection": [
+              971.9362803511383,
+              228.72426736839532
+            ],
+            "role": "motion_mismatch"
+          }
+        ],
+        "point_rmse_px": 194.77552239755266,
+        "probe_tip_height_m": 1.38,
+        "hood_top_height_m": 1.325,
+        "probe_height_above_hood_top_m": 0.05499999999999994,
+        "independent_check_points": 0,
+        "manual_pixel_reading_tolerance_estimate": 20,
+        "role": "moving_source_vs_shared_static_pose",
+        "claim_boundary": "4 s landmarks tune one static arm. 3 s landmarks expose carriage/pose motion mismatch and are not fitting targets. Last point is a thin probe, not a wrist joint. Height separation is a static geometric check, not contact or kinematics validation."
+      },
+      "gazebo_image_sha256": "614d3bfff30330a85943457de094769dca90c9b4ff99e253d69e33f467607de8",
+      "reference_sha256": "afdbd5381adeb54f487ee596ea38250b0fcbfc40dfb85f4a07fde7f22607945a"
+    },
+    {
+      "camera": "identification_close",
+      "reference_second": 4,
+      "parameters": [
+        24.54022929046558,
+        2.9362378022156586,
+        7.588896813588022,
+        2.474188388688615,
+        0.56642453749781
+      ],
+      "fit_rmse_px": 21.325018730818204,
+      "world_points": [
+        [
+          16.4,
+          8.23,
+          0.56
+        ],
+        [
+          16.4,
+          9.77,
+          0.56
+        ],
+        [
+          16.4,
+          14.23,
+          0.56
+        ],
+        [
+          16.4,
+          15.77,
+          0.56
+        ]
+      ],
+      "manual_pixels": [
+        [
+          554,
+          449
+        ],
+        [
+          656,
+          368
+        ],
+        [
+          991,
+          270
+        ],
+        [
+          1036,
+          206
+        ]
+      ],
+      "projections": [
+        [
+          544.6746374951568,
+          440.327722638969
+        ],
+        [
+          673.3748530134529,
+          383.3763565755366
+        ],
+        [
+          968.57408944604,
+          252.74720643764903
+        ],
+        [
+          1050.3764200542641,
+          216.54870858316323
+        ]
+      ],
+      "robot_pose_diagnostic": {
+        "landmarks": [
+          {
+            "name": "shoulder_base",
+            "world_point": [
+              15.6,
+              10.75,
+              1.8399999999999999
+            ],
+            "source_pixel": [
+              720,
+              240
+            ],
+            "projection": [
+              699.5613950416703,
+              210.7767549550645
+            ],
+            "role": "fit"
+          },
+          {
+            "name": "shoulder",
+            "world_point": [
+              15.6,
+              11.140244027451914,
+              2.8016774546550876
+            ],
+            "source_pixel": [
+              732,
+              112
+            ],
+            "projection": [
+              731.9999999999999,
+              112.00000000000003
+            ],
+            "role": "fit"
+          },
+          {
+            "name": "elbow",
+            "world_point": [
+              15.95,
+              12.441429751676374,
+              2.8187385996243624
+            ],
+            "source_pixel": [
+              850,
+              91
+            ],
+            "projection": [
+              850.0,
+              91.00000000000011
+            ],
+            "role": "fit"
+          },
+          {
+            "name": "wrist",
+            "world_point": [
+              16.35,
+              12.887955852987353,
+              2.5304056423025534
+            ],
+            "source_pixel": [
+              906,
+              119
+            ],
+            "projection": [
+              906.0000000000001,
+              119.00000000000003
+            ],
+            "role": "fit"
+          },
+          {
+            "name": "thin_probe_tip",
+            "world_point": [
+              16.76323362973609,
+              12.817580810363342,
+              1.38
+            ],
+            "source_pixel": [
+              919,
+              235
+            ],
+            "projection": [
+              919.0000000000001,
+              235.0
+            ],
+            "role": "fit"
+          }
+        ],
+        "point_rmse_px": 15.948257733050394,
+        "probe_tip_height_m": 1.38,
+        "hood_top_height_m": 1.325,
+        "probe_height_above_hood_top_m": 0.05499999999999994,
+        "independent_check_points": 0,
+        "manual_pixel_reading_tolerance_estimate": 20,
+        "role": "same_video_static_pose_fit",
+        "claim_boundary": "4 s landmarks tune one static arm. 3 s landmarks expose carriage/pose motion mismatch and are not fitting targets. Last point is a thin probe, not a wrist joint. Height separation is a static geometric check, not contact or kinematics validation."
+      },
+      "gazebo_image_sha256": "d69d1e9212e5b9513b63ad89690bb60178cd78077ec106149c1e225a7e1cd081",
+      "reference_sha256": "c936c0f01c4e12409d0a14a61c9cda1409b0492433464ec1776c00eaf814ee53"
+    }
+  ],
+  "static_robot_hood_height_separation": {
+    "passed": true,
+    "minimum_robot_mesh_height_m": 1.3752069735137127,
+    "maximum_hood_mesh_height_m": 1.35,
+    "minimum_z_gap_m": 0.025206973513712594,
+    "scope": "All two static identification arms and hoods, including probe thickness and cover screws. Z bounds exclude arm/hood visual-mesh intersection in this snapshot; no motion, collision-shape or contact validation."
+  },
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88"
+}

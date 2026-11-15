@@ -1,0 +1,233 @@
+{
+  "method": "Fixed FOV 0.92 rad; eight approximate cyan-bed corners; five pose parameters",
+  "pixel_reading_tolerance_estimate": 15,
+  "geometry_measured": false,
+  "geometry_adjusted_using_same_sequence": true,
+  "views": [
+    {
+      "camera": "unknown",
+      "reference_second": 36,
+      "parameters": [
+        77.5860067619222,
+        31.461444660476182,
+        34.17086406969262,
+        1.0692338092517322,
+        0.8382039254621667
+      ],
+      "fit_rmse_px": 12.848711643465903,
+      "check_rmse_px": 29.384868636510735,
+      "fit_count": 8,
+      "check_count": 4,
+      "landmarks": [
+        {
+          "name": "bed_80_corner_0",
+          "world_point": [
+            76.6,
+            62,
+            1.1
+          ],
+          "source_pixel": [
+            171,
+            425
+          ],
+          "role": "fit",
+          "projection": [
+            163.8382996244709,
+            438.4922872887098
+          ]
+        },
+        {
+          "name": "bed_80_corner_1",
+          "world_point": [
+            83.4,
+            62,
+            1.1
+          ],
+          "source_pixel": [
+            354,
+            365
+          ],
+          "role": "fit",
+          "projection": [
+            360.91577072888634,
+            363.8511861382644
+          ]
+        },
+        {
+          "name": "bed_80_corner_2",
+          "world_point": [
+            76.6,
+            64,
+            1.1
+          ],
+          "source_pixel": [
+            154,
+            402
+          ],
+          "role": "fit",
+          "projection": [
+            148.06740450628104,
+            397.5196895443073
+          ]
+        },
+        {
+          "name": "bed_80_corner_3",
+          "world_point": [
+            83.4,
+            64,
+            1.1
+          ],
+          "source_pixel": [
+            325,
+            342
+          ],
+          "role": "fit",
+          "projection": [
+            340.8262596430495,
+            326.7684306938081
+          ]
+        },
+        {
+          "name": "bed_107_corner_0",
+          "world_point": [
+            103.6,
+            62,
+            1.1
+          ],
+          "source_pixel": [
+            849,
+            169
+          ],
+          "role": "fit",
+          "projection": [
+            846.4150768454866,
+            179.97322883932705
+          ]
+        },
+        {
+          "name": "bed_107_corner_1",
+          "world_point": [
+            110.4,
+            62,
+            1.1
+          ],
+          "source_pixel": [
+            983,
+            128
+          ],
+          "role": "fit",
+          "projection": [
+            983.1012949554665,
+            128.20470464097548
+          ]
+        },
+        {
+          "name": "bed_107_corner_2",
+          "world_point": [
+            103.6,
+            64,
+            1.1
+          ],
+          "source_pixel": [
+            834,
+            150
+          ],
+          "role": "fit",
+          "projection": [
+            817.8899523008333,
+            151.6643775832148
+          ]
+        },
+        {
+          "name": "bed_107_corner_3",
+          "world_point": [
+            110.4,
+            64,
+            1.1
+          ],
+          "source_pixel": [
+            944,
+            108
+          ],
+          "role": "fit",
+          "projection": [
+            952.7698038115986,
+            102.15734310127584
+          ]
+        },
+        {
+          "name": "bridge_85_end_65.5",
+          "world_point": [
+            85,
+            65.5,
+            2.65
+          ],
+          "source_pixel": [
+            350,
+            270
+          ],
+          "role": "check",
+          "projection": [
+            361.64315209962507,
+            253.96392766618504
+          ]
+        },
+        {
+          "name": "bridge_85_end_51",
+          "world_point": [
+            85,
+            51,
+            2.65
+          ],
+          "source_pixel": [
+            550,
+            580
+          ],
+          "role": "check",
+          "projection": [
+            539.7378856495537,
+            557.3316721725946
+          ]
+        },
+        {
+          "name": "bridge_98.5_end_65.5",
+          "world_point": [
+            98.5,
+            65.5,
+            2.65
+          ],
+          "source_pixel": [
+            675,
+            155
+          ],
+          "role": "check",
+          "projection": [
+            690.8367411708368,
+            138.77889838150176
+          ]
+        },
+        {
+          "name": "bridge_98.5_end_51",
+          "world_point": [
+            98.5,
+            51,
+            2.65
+          ],
+          "source_pixel": [
+            955,
+            410
+          ],
+          "role": "check",
+          "projection": [
+            917.6154408854607,
+            386.9681184837397
+          ]
+        }
+      ],
+      "gazebo_image_sha256": "b80a31d18aeb3f61ef0591791007e575ded36b8ba552d85acf5ae068bbc65fa3",
+      "reference_sha256": "5231765ecc871a74c2e6b924c2e76e2f375e22583bbb640fa8c64522b0d3e9cf"
+    }
+  ],
+  "claim_boundary": "Cyan bed outlines and snapshot bridge endpoints only; not independent full-image, count, dimension or dynamics acceptance.",
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88"
+}

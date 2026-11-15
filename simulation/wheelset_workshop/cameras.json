@@ -1,0 +1,589 @@
+[
+  {
+    "id": "overview",
+    "reference_second": 0,
+    "position": [
+      35.0,
+      -36.0,
+      64.0
+    ],
+    "target": [
+      68,
+      31,
+      0
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "initial_estimate"
+  },
+  {
+    "id": "identification",
+    "reference_second": 3,
+    "position": [
+      21.251711319918456,
+      2.483273874893885,
+      6.250800287977539
+    ],
+    "target": [
+      15.785200365220396,
+      9.202341129532037,
+      1.2536617858129855
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_identification.json"
+  },
+  {
+    "id": "identification_close",
+    "reference_second": 4,
+    "position": [
+      24.54022929046558,
+      2.9362378022156586,
+      7.588896813588022
+    ],
+    "target": [
+      17.912566486136267,
+      8.159086912890233,
+      2.2227126088448106
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_identification.json"
+  },
+  {
+    "id": "opening_wide",
+    "reference_second": 8,
+    "position": [
+      38.60028627,
+      3.44107779,
+      5.98758749
+    ],
+    "target": [
+      31.910529479628902,
+      8.800564087424112,
+      0.8375330520928621
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_opening.json"
+  },
+  {
+    "id": "opening",
+    "reference_second": 10,
+    "position": [
+      34.12382194634141,
+      3.4392225579652123,
+      7.705089748334657
+    ],
+    "target": [
+      28.316252749642214,
+      8.606273321750104,
+      1.4143245778628941
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_opening.json"
+  },
+  {
+    "id": "sorting",
+    "reference_second": 21,
+    "position": [
+      60.80993879602263,
+      35.821040331722955,
+      15.068863006770178
+    ],
+    "target": [
+      57.548611674486494,
+      29.55601320930389,
+      7.989796644481549
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_sorting.json"
+  },
+  {
+    "id": "inspection",
+    "reference_second": 30,
+    "position": [
+      35.98151073932515,
+      26.882983446845547,
+      23.563932441969293
+    ],
+    "target": [
+      35.98803007577507,
+      34.500281908472935,
+      17.08498795658116
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_inspection.json"
+  },
+  {
+    "id": "inspection_exit",
+    "reference_second": 32,
+    "position": [
+      48.21005088641252,
+      26.96831166300189,
+      31.792590302532698
+    ],
+    "target": [
+      48.219523713699225,
+      33.50988791052581,
+      24.22901373695381
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_inspection.json"
+  },
+  {
+    "id": "unknown",
+    "reference_second": 36,
+    "position": [
+      77.5860067619222,
+      31.461444660476182,
+      34.17086406969262
+    ],
+    "target": [
+      80.8015677592999,
+      37.32569245559091,
+      26.736433004060537
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_unknown.json"
+  },
+  {
+    "id": "wiping",
+    "reference_second": 45,
+    "position": [
+      90.87395168072321,
+      20.265759364130524,
+      7.837656987264342
+    ],
+    "target": [
+      84.6042347289081,
+      25.449651663196132,
+      2.0223401450096947
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "same_video_three_view_fixed_roof_and_separate_stations_joint_estimate",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_service.json"
+  },
+  {
+    "id": "press",
+    "reference_second": 58,
+    "position": [
+      128.8000437525813,
+      16.542380315087893,
+      3.563565482444545
+    ],
+    "target": [
+      135.483830122578,
+      21.117871437818845,
+      -2.300893635501169
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_press_feed.json"
+  },
+  {
+    "id": "press_front",
+    "reference_second": 62,
+    "position": [
+      127.0885248498255,
+      17.412823272424127,
+      4.836221473206401
+    ],
+    "target": [
+      135.19298750034545,
+      17.218212493882127,
+      -1.0186749213681852
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_press_front.json"
+  },
+  {
+    "id": "closing",
+    "reference_second": 68,
+    "position": [
+      162.6432963234173,
+      8.524554087705413,
+      8.3473271207142
+    ],
+    "target": [
+      164.13859954945355,
+      16.548571899661564,
+      2.5698530692262977
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_service.json"
+  },
+  {
+    "id": "storage",
+    "reference_second": 76,
+    "position": [
+      185.64166401218876,
+      51.08020740874468,
+      20.909423197213723
+    ],
+    "target": [
+      190.3951011634519,
+      46.09309676375073,
+      13.661419150334368
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_storage.json"
+  },
+  {
+    "id": "storage_reverse",
+    "reference_second": 78,
+    "position": [
+      191.58313195240086,
+      20.960820342430875,
+      21.886335501907126
+    ],
+    "target": [
+      194.89594046309992,
+      27.55833675412221,
+      15.141109266345907
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_storage.json"
+  },
+  {
+    "id": "overview_east",
+    "reference_second": null,
+    "position": [
+      325,
+      -155,
+      206
+    ],
+    "target": [
+      129,
+      36,
+      0
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "initial_estimate"
+  },
+  {
+    "id": "top",
+    "reference_second": null,
+    "position": [
+      129,
+      36,
+      295
+    ],
+    "target": [
+      129,
+      36,
+      0
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "yaw_rad": 1.5707963267948966,
+    "registration": "initial_estimate"
+  },
+  {
+    "id": "component_overview",
+    "reference_second": 43,
+    "position": [
+      104.12620992219188,
+      2.473151580483464,
+      30.505403941687806
+    ],
+    "target": [
+      101.23759521530285,
+      8.35668350013175,
+      22.952923738097454
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_component.json"
+  },
+  {
+    "id": "bearing_loading",
+    "reference_second": 54,
+    "position": [
+      113.51736338907158,
+      25.424822711832128,
+      14.62025521643386
+    ],
+    "target": [
+      111.25190359189841,
+      29.76119221232089,
+      5.8988108714516
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_component.json"
+  },
+  {
+    "id": "closing_wide",
+    "reference_second": 67,
+    "position": [
+      161.73054808741148,
+      8.120911254814834,
+      9.946194030367428
+    ],
+    "target": [
+      164.3898790675598,
+      15.43967763321672,
+      3.672150881297007
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_service.json"
+  },
+  {
+    "id": "run_in",
+    "reference_second": 71,
+    "position": [
+      169.6252942373212,
+      21.709124224713797,
+      10.801638562202715
+    ],
+    "target": [
+      170.89288627177345,
+      14.014161530159551,
+      4.542184946781343
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_finishing.json"
+  },
+  {
+    "id": "painting",
+    "reference_second": 73,
+    "position": [
+      170.1110644945855,
+      22.024702165688765,
+      14.656683583366542
+    ],
+    "target": [
+      174.734307596676,
+      16.012973062288932,
+      8.138651947488405
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_finishing.json"
+  },
+  {
+    "id": "back_ring",
+    "reference_second": 55,
+    "position": [
+      135.60552921964424,
+      34.28396856401342,
+      6.126769
+    ],
+    "target": [
+      130.449185191066,
+      28.182744341712763,
+      0.11119095228445985
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_metrology.json"
+  },
+  {
+    "id": "exterior_check",
+    "reference_second": 6,
+    "position": [
+      43.41378382370463,
+      0.02599022007333815,
+      6.138131966353262
+    ],
+    "target": [
+      37.53409203823213,
+      6.845227712134838,
+      1.7875889502792877
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_front_detail.json"
+  },
+  {
+    "id": "parts_transfer",
+    "reference_second": 14,
+    "position": [
+      37.36852241636513,
+      2.670973918092781,
+      16.472154425787235
+    ],
+    "target": [
+      31.32607759194257,
+      7.281191263581487,
+      9.973327103018603
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_front_detail.json"
+  },
+  {
+    "id": "axle_check",
+    "reference_second": 17,
+    "position": [
+      13.872068171440011,
+      1.4147318835092249,
+      9.610916990588843
+    ],
+    "target": [
+      18.405951671048264,
+      7.208617139016373,
+      2.8378236014499585
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_front_detail.json"
+  },
+  {
+    "id": "reinspection",
+    "reference_second": 33,
+    "position": [
+      49.66488609,
+      28.40662851,
+      35.37372935
+    ],
+    "target": [
+      49.423926402237974,
+      34.29270571433192,
+      27.293133235014565
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_front_detail.json"
+  },
+  {
+    "id": "cache_transfer",
+    "reference_second": 65,
+    "position": [
+      131.37180275,
+      3.02766836,
+      11.88526547
+    ],
+    "target": [
+      136.8922797128281,
+      7.711189481077362,
+      4.986789985423248
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_transfer_detail.json"
+  },
+  {
+    "id": "cache_reverse",
+    "reference_second": 66,
+    "position": [
+      137.87783021,
+      2.72477775,
+      22.39842656
+    ],
+    "target": [
+      141.58328069935055,
+      6.770035359463266,
+      14.037474009958142
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_transfer_detail.json"
+  },
+  {
+    "id": "greasing",
+    "reference_second": 48,
+    "position": [
+      81.69989528285265,
+      23.715499838350695,
+      5.068877578075942
+    ],
+    "target": [
+      75.34653188936596,
+      28.121485361976692,
+      -1.27320923589164
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "same_video_three_view_fixed_roof_and_separate_stations_joint_estimate",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_transfer_detail.json"
+  },
+  {
+    "id": "cross_transfer",
+    "reference_second": 50,
+    "position": [
+      75.94898787,
+      53.56350748,
+      14.07629842
+    ],
+    "target": [
+      79.38955654216237,
+      48.04012497407096,
+      6.4832270450337415
+    ],
+    "horizontal_fov": 0.92,
+    "width": 1280,
+    "height": 720,
+    "registration": "manual_sparse_landmark_fit",
+    "registration_report": "visual_comparison/wheelset_workshop_v1/camera_fit_transfer_detail.json"
+  }
+]

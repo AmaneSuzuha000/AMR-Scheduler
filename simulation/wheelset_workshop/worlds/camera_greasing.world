@@ -1,0 +1,4684 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <world name="wheelset_workshop_video_v1">
+    <gravity>0 0 -9.81</gravity>
+    <physics name="static_visual_review" type="ode">
+      <max_step_size>0.01</max_step_size>
+      <real_time_update_rate>100</real_time_update_rate>
+    </physics>
+    <scene>
+      <ambient>0.60 0.60 0.60 1</ambient>
+      <background>0.60 0.62 0.65 1</background>
+      <shadows>true</shadows>
+    </scene>
+    <light name="sun" type="directional">
+      <pose>0 0 50 0 0 0</pose>
+      <diffuse>0.75 0.75 0.73 1</diffuse>
+      <specular>0.22 0.22 0.22 1</specular>
+      <direction>-0.5 0.3 -0.8</direction>
+      <cast_shadows>true</cast_shadows>
+    </light>
+    <gui fullscreen="false">
+      <camera name="user_camera">
+        <pose>81.6999 23.7155 5.068878 0 0.6869846 2.53525</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+    <model name="floor">
+      <static>true</static>
+      <pose>129 36 -0.08 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>258 72 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>258 72 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.44 0.45 1</ambient>
+            <diffuse>0.42 0.44 0.45 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_north_low_boundary">
+      <static>true</static>
+      <pose>69 67.1 0.8 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>126 0.22 1.6</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>126 0.22 1.6</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_unknown_west_return">
+      <static>true</static>
+      <pose>72 62.1 0.8 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 10 1.6</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 10 1.6</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_enclosure_front">
+      <static>true</static>
+      <pose>66.5 60 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>15 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>15 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.045 0.055 1</ambient>
+            <diffuse>0.035 0.045 0.055 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_enclosure_side_59">
+      <static>true</static>
+      <pose>59 63.3 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 6.6 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 6.6 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.045 0.055 1</ambient>
+            <diffuse>0.035 0.045 0.055 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_enclosure_side_74">
+      <static>true</static>
+      <pose>74 63.3 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 6.6 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 6.6 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.045 0.055 1</ambient>
+            <diffuse>0.035 0.045 0.055 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_enclosure_back_61.5">
+      <static>true</static>
+      <pose>61.5 66.6 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>5 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.045 0.055 1</ambient>
+            <diffuse>0.035 0.045 0.055 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_enclosure_back_70.5">
+      <static>true</static>
+      <pose>70.5 66.6 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>7 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>7 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.045 0.055 1</ambient>
+            <diffuse>0.035 0.045 0.055 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_unknown_front_105">
+      <static>true</static>
+      <pose>105 49.9 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>38 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>38 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_assembly_return_3">
+      <static>true</static>
+      <pose>74.3 4 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 2 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 2 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_assembly_return_11">
+      <static>true</static>
+      <pose>74.3 12.5 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_assembly_return_20">
+      <static>true</static>
+      <pose>74.3 21.5 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="r08_assembly_return_29">
+      <static>true</static>
+      <pose>74.3 31.5 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 5 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 5 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="component_r10_back_boundary">
+      <static>true</static>
+      <pose>94 35.8 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>56 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>56 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="frontage_r11_wall_post_70">
+      <static>true</static>
+      <pose>70 35.66 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="frontage_r11_wall_post_78">
+      <static>true</static>
+      <pose>78 35.66 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="frontage_r11_wall_post_86">
+      <static>true</static>
+      <pose>86 35.66 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="frontage_r11_wall_post_94">
+      <static>true</static>
+      <pose>94 35.66 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="frontage_r11_wall_post_102">
+      <static>true</static>
+      <pose>102 35.66 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="frontage_r11_wall_post_110">
+      <static>true</static>
+      <pose>110 35.66 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="frontage_r11_wall_post_118">
+      <static>true</static>
+      <pose>118 35.66 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.22 0.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="closing_r12_side_boundary_8">
+      <static>true</static>
+      <pose>169.57 14.3 0.75 0 0 0.218</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 7.9 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 7.9 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="closing_r12_side_boundary_17">
+      <static>true</static>
+      <pose>169.57 21.1 0.75 0 0 0.218</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 7.9 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 7.9 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="metrology_r17_robot_rail">
+      <static>true</static>
+      <pose>131.3601 28.95309 0.79 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>4.745039 0.1 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>4.745039 0.1 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.045 0.38 0.59 1</ambient>
+            <diffuse>0.045 0.38 0.59 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="metrology_r17_front_boundary">
+      <static>true</static>
+      <pose>130.9601 30.63309 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>6.5 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.5 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="metrology_r17_end_boundary">
+      <static>true</static>
+      <pose>126.9601 27.63309 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 6 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 6 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="transfer_r20_cache_wall_near">
+      <static>true</static>
+      <pose>140 5.1 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 4.3 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 4.3 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="transfer_r20_cache_wall_mid">
+      <static>true</static>
+      <pose>140 14.05 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 3.1 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 3.1 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="transfer_r20_cache_wall_far">
+      <static>true</static>
+      <pose>140 22 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 6.5 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 6.5 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="transfer_r20_cache_back">
+      <static>true</static>
+      <pose>143.6 22.2 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>11.6 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>11.6 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="transfer_r20_room_left">
+      <static>true</static>
+      <pose>82.3 45.9 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.18 8 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.18 8 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="transfer_r20_room_back">
+      <static>true</static>
+      <pose>78.3 41.9 0.75 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>8 0.18 1.5</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>8 0.18 1.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.31 0.33 0.34 1</ambient>
+            <diffuse>0.31 0.33 0.34 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_visual_route_0">
+      <static>true</static>
+      <pose>128 4 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>248 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_visual_route_1">
+      <static>true</static>
+      <pose>34 37.5 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>60 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_visual_route_2">
+      <static>true</static>
+      <pose>39 47.5 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>70 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_visual_route_3">
+      <static>true</static>
+      <pose>4 35.75 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>63.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_visual_route_4">
+      <static>true</static>
+      <pose>64.5 31 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>54 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_visual_route_5">
+      <static>true</static>
+      <pose>252 25.75 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>43.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_dock_west_9">
+      <static>true</static>
+      <pose>62.75 9 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_dock_west_15">
+      <static>true</static>
+      <pose>62.75 15 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_dock_west_21">
+      <static>true</static>
+      <pose>62.75 21 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_dock_west_50">
+      <static>true</static>
+      <pose>59.75 50 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>9.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_dock_west_58">
+      <static>true</static>
+      <pose>59.75 56.5 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>9.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_dock_east_53">
+      <static>true</static>
+      <pose>69.25 48 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>9.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_dock_east_61">
+      <static>true</static>
+      <pose>68.25 56 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>7.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_component_r10_inspection_left">
+      <static>true</static>
+      <pose>56.1 47.2 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>18.4 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_component_r10_inspection_right">
+      <static>true</static>
+      <pose>59.6 47.2 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>18.4 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_prep_left">
+      <static>true</static>
+      <pose>90.1665 20.28367 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>11.43266 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_prep_right">
+      <static>true</static>
+      <pose>92.85155 20.28367 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>11.43266 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_finish_left">
+      <static>true</static>
+      <pose>185 25.75 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>43.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_finish_right">
+      <static>true</static>
+      <pose>189 25.75 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>43.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_store_left">
+      <static>true</static>
+      <pose>186 25.75 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>43.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_store_right">
+      <static>true</static>
+      <pose>190 25.75 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>43.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_finishing_8">
+      <static>true</static>
+      <pose>190.5 9.3 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>15 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_finishing_17">
+      <static>true</static>
+      <pose>190.5 16.1 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>15 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r10_finishing_26">
+      <static>true</static>
+      <pose>169.5 26 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>57 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_frontage_r11_cache_26">
+      <static>true</static>
+      <pose>102.9848 26 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>32.03047 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_frontage_r11_cache_21">
+      <static>true</static>
+      <pose>102.9848 22.18911 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>32.03047 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_frontage_r11_cache_16">
+      <static>true</static>
+      <pose>102.9848 18.37823 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>32.03047 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_frontage_r11_cache_11">
+      <static>true</static>
+      <pose>102.9848 14.56734 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>32.03047 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_north_route_after_room">
+      <static>true</static>
+      <pose>167.5 47.5 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>169 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_cache_row_0">
+      <static>true</static>
+      <pose>147.95 8 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>15.1 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_cache_row_1">
+      <static>true</static>
+      <pose>147.95 10.69625 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>15.1 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_cache_row_2">
+      <static>true</static>
+      <pose>147.95 13.39249 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>15.1 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_cache_row_3">
+      <static>true</static>
+      <pose>147.95 16.08874 0.006 0 0 0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>15.1 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_cache_cross_141.8">
+      <static>true</static>
+      <pose>140.4009 12.25 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>13.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_cache_cross_151.2">
+      <static>true</static>
+      <pose>151.2 12.25 0.006 0 0 1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>13.5 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_room_spine_a">
+      <static>true</static>
+      <pose>89.6 44.4 0.006 0 0 -1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>13 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_room_spine_b">
+      <static>true</static>
+      <pose>86.1 44.4 0.006 0 0 -1.570796</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>13 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_room_cross_35">
+      <static>true</static>
+      <pose>89.1 49.9 0.006 0 0 3.141593</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_room_cross_39">
+      <static>true</static>
+      <pose>89.1 45.9 0.006 0 0 3.141593</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_room_cross_43">
+      <static>true</static>
+      <pose>89.1 41.9 0.006 0 0 3.141593</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_transfer_r20_room_cross_47">
+      <static>true</static>
+      <pose>89.1 37.9 0.006 0 0 3.141593</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6 0.14 0.008</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.96 0.91 0.045 1</ambient>
+            <diffuse>0.96 0.91 0.045 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_001</name>
+      <pose>8.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_002</name>
+      <pose>11.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_003</name>
+      <pose>14.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_004</name>
+      <pose>17.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_005</name>
+      <pose>20.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_006</name>
+      <pose>23.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_007</name>
+      <pose>26.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_008</name>
+      <pose>29.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_009</name>
+      <pose>32.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_010</name>
+      <pose>35.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_011</name>
+      <pose>38.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_012</name>
+      <pose>41.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_013</name>
+      <pose>44.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_014</name>
+      <pose>47.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_015</name>
+      <pose>50.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_016</name>
+      <pose>53.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_017</name>
+      <pose>56.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_018</name>
+      <pose>59.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_identification_hood</uri>
+      <name>identification_hood_001</name>
+      <pose>16.4 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_frontage_portal</uri>
+      <name>cap_portal_001</name>
+      <pose>31.49717 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_overhead_robot</uri>
+      <name>overhead_robot_001</name>
+      <pose>15.6 10 1.46 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_operator_console</uri>
+      <name>operator_console_003</name>
+      <pose>50 6.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_001</name>
+      <pose>9.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_002</name>
+      <pose>16.4 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_006</name>
+      <pose>28 9 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_007</name>
+      <pose>30.1 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_008</name>
+      <pose>31.15 9 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_009</name>
+      <pose>39 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_019</name>
+      <pose>8.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_020</name>
+      <pose>11.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_021</name>
+      <pose>14.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_022</name>
+      <pose>17.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_023</name>
+      <pose>20.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_024</name>
+      <pose>23.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_025</name>
+      <pose>26.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_026</name>
+      <pose>29.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_027</name>
+      <pose>32.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_028</name>
+      <pose>35.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_029</name>
+      <pose>38.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_030</name>
+      <pose>41.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_031</name>
+      <pose>44.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_032</name>
+      <pose>47.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_033</name>
+      <pose>50.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_034</name>
+      <pose>53.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_035</name>
+      <pose>56.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_036</name>
+      <pose>59.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_identification_hood</uri>
+      <name>identification_hood_002</name>
+      <pose>16.4 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_frontage_portal</uri>
+      <name>cap_portal_002</name>
+      <pose>31.49717 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_overhead_robot</uri>
+      <name>overhead_robot_002</name>
+      <pose>15.6 16 1.46 0 0 -1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_operator_console</uri>
+      <name>operator_console_006</name>
+      <pose>50 12.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_015</name>
+      <pose>9.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_016</name>
+      <pose>16.4 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_020</name>
+      <pose>28 15 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_021</name>
+      <pose>30.1 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_022</name>
+      <pose>31.15 15 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_023</name>
+      <pose>39 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_037</name>
+      <pose>8.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_038</name>
+      <pose>11.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_039</name>
+      <pose>14.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_040</name>
+      <pose>17.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_041</name>
+      <pose>20.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_042</name>
+      <pose>23.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_043</name>
+      <pose>26.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_044</name>
+      <pose>29.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_045</name>
+      <pose>32.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_046</name>
+      <pose>35.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_047</name>
+      <pose>38.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_048</name>
+      <pose>41.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_049</name>
+      <pose>44.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_050</name>
+      <pose>47.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>track_segment_051</name>
+      <pose>50.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_052</name>
+      <pose>53.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_053</name>
+      <pose>56.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_track_segment</uri>
+      <name>track_segment_054</name>
+      <pose>59.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_frontage_portal</uri>
+      <name>cap_portal_003</name>
+      <pose>31.49717 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_operator_console</uri>
+      <name>operator_console_009</name>
+      <pose>50 18.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_029</name>
+      <pose>9.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_030</name>
+      <pose>16.4 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_034</name>
+      <pose>28 21 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_035</name>
+      <pose>30.1 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_036</name>
+      <pose>31.15 21 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_037</name>
+      <pose>39 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_identification_bridge</uri>
+      <name>identification_bridge_001</name>
+      <pose>15.6 12 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_parts_gantry</uri>
+      <name>overhead_gantry_001</name>
+      <pose>23.2655 12.14146 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_press_cell</uri>
+      <name>bearing_press_cell_001</name>
+      <pose>133 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_spray_portal</uri>
+      <name>spray_portal_001</name>
+      <pose>178.5649 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_feed_mirrored</uri>
+      <name>bearing_feed_module_001</name>
+      <pose>130 9.75 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_feed_module</uri>
+      <name>bearing_feed_module_002</name>
+      <pose>130 12.85 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_operator_console</uri>
+      <name>operator_console_017</name>
+      <pose>137 13.6 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_087</name>
+      <pose>79.64742 10.59752 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_088</name>
+      <pose>82.96953 10.59752 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_089</name>
+      <pose>84.69468 10.59752 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_091</name>
+      <pose>125 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_092</name>
+      <pose>129 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_093</name>
+      <pose>133 11.3 0.22 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_094</name>
+      <pose>138 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_095</name>
+      <pose>156 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_096</name>
+      <pose>160 9.3 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_098</name>
+      <pose>173 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_099</name>
+      <pose>177.2 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_100</name>
+      <pose>182 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_press_cell</uri>
+      <name>bearing_press_cell_002</name>
+      <pose>133 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_spray_portal</uri>
+      <name>spray_portal_002</name>
+      <pose>178.5649 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_feed_mirrored</uri>
+      <name>bearing_feed_module_003</name>
+      <pose>130 15.75 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_feed_module</uri>
+      <name>bearing_feed_module_004</name>
+      <pose>130 18.85 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_operator_console</uri>
+      <name>operator_console_020</name>
+      <pose>137 19.6 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_101</name>
+      <pose>79.64742 18.57133 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_102</name>
+      <pose>82.96953 18.57133 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_103</name>
+      <pose>84.69468 18.57133 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_105</name>
+      <pose>125 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_106</name>
+      <pose>129 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_107</name>
+      <pose>133 17.3 0.22 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_108</name>
+      <pose>138 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_109</name>
+      <pose>156 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_110</name>
+      <pose>160 16.1 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_112</name>
+      <pose>173 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_113</name>
+      <pose>177.2 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_114</name>
+      <pose>182 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_press_cell</uri>
+      <name>bearing_press_cell_003</name>
+      <pose>133 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_feed_mirrored</uri>
+      <name>bearing_feed_module_005</name>
+      <pose>130 21.75 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_feed_module</uri>
+      <name>bearing_feed_module_006</name>
+      <pose>130 24.85 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_operator_console</uri>
+      <name>operator_console_023</name>
+      <pose>137 25.6 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_115</name>
+      <pose>79.64742 26.54513 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_116</name>
+      <pose>82.96953 26.54513 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_117</name>
+      <pose>84.69468 26.54513 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_119</name>
+      <pose>125 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_120</name>
+      <pose>129 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_121</name>
+      <pose>133 23.3 0.22 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_122</name>
+      <pose>138 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>wheelset_agv_001</name>
+      <pose>64 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_158</name>
+      <pose>64 9 0.34 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>wheelset_agv_002</name>
+      <pose>64.5 33 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_159</name>
+      <pose>64.5 33 0.34 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>wheelset_agv_003</name>
+      <pose>64.5 56 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_160</name>
+      <pose>64.5 56 0.34 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>wheelset_agv_004</name>
+      <pose>91.5 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_161</name>
+      <pose>91.5 14.56734 0.34 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>wheelset_agv_005</name>
+      <pose>172 23 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_162</name>
+      <pose>172 23 0.34 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>wheelset_agv_006</name>
+      <pose>188 36.4 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_163</name>
+      <pose>188 36.4 0.34 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_164</name>
+      <pose>10 40 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_165</name>
+      <pose>13 40 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_166</name>
+      <pose>16 40 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_167</name>
+      <pose>19 40 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_168</name>
+      <pose>22 40 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_169</name>
+      <pose>10 43 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_170</name>
+      <pose>13 43 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_171</name>
+      <pose>16 43 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_172</name>
+      <pose>19 43 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>wheelset_173</name>
+      <pose>22 43 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_001</name>
+      <pose>8.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_002</name>
+      <pose>11.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_003</name>
+      <pose>14.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_004</name>
+      <pose>17.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_005</name>
+      <pose>20.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_006</name>
+      <pose>23.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_007</name>
+      <pose>26.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_008</name>
+      <pose>29.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_009</name>
+      <pose>32.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_010</name>
+      <pose>35.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_011</name>
+      <pose>38.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_012</name>
+      <pose>41.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_013</name>
+      <pose>44.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_014</name>
+      <pose>47.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_015</name>
+      <pose>50.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_016</name>
+      <pose>53.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_derust_hood</uri>
+      <name>inspection_r04_derust_hood_001</name>
+      <pose>21 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_magnetic_test_hood</uri>
+      <name>inspection_r04_magnetic_test_hood_001</name>
+      <pose>35.45 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_ultrasonic_test_hood</uri>
+      <name>inspection_r04_ultrasonic_test_hood_001</name>
+      <pose>44.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_stand</uri>
+      <name>inspection_r04_inspection_stand_001</name>
+      <pose>46.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_floor_control_box</uri>
+      <name>inspection_r04_floor_control_box_001</name>
+      <pose>52.5 52.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_001</name>
+      <pose>10 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_002</name>
+      <pose>13 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_003</name>
+      <pose>16 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_004</name>
+      <pose>27 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_005</name>
+      <pose>30 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_006</name>
+      <pose>31 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_007</name>
+      <pose>32 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_008</name>
+      <pose>35 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_009</name>
+      <pose>42 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_010</name>
+      <pose>46.5 50 0.43 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_017</name>
+      <pose>8.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_018</name>
+      <pose>11.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_019</name>
+      <pose>14.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_020</name>
+      <pose>17.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_021</name>
+      <pose>20.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_022</name>
+      <pose>23.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_023</name>
+      <pose>26.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_024</name>
+      <pose>29.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_025</name>
+      <pose>32.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_026</name>
+      <pose>35.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_027</name>
+      <pose>38.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_028</name>
+      <pose>41.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_029</name>
+      <pose>44.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_030</name>
+      <pose>47.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_031</name>
+      <pose>50.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>inspection_r04_inspection_track_032</name>
+      <pose>53.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_derust_hood</uri>
+      <name>inspection_r04_derust_hood_002</name>
+      <pose>21 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_magnetic_test_hood</uri>
+      <name>inspection_r04_magnetic_test_hood_002</name>
+      <pose>35.45 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_ultrasonic_test_hood</uri>
+      <name>inspection_r04_ultrasonic_test_hood_002</name>
+      <pose>44.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_stand</uri>
+      <name>inspection_r04_inspection_stand_002</name>
+      <pose>46.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_floor_control_box</uri>
+      <name>inspection_r04_floor_control_box_002</name>
+      <pose>52.5 58.6 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_011</name>
+      <pose>10 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_012</name>
+      <pose>13 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_013</name>
+      <pose>16 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_014</name>
+      <pose>27 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_015</name>
+      <pose>30 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_016</name>
+      <pose>31 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_017</name>
+      <pose>32 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_018</name>
+      <pose>35 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_019</name>
+      <pose>42 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>inspection_r04_wheelset_020</name>
+      <pose>46.5 56.5 0.43 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_crossbeam</uri>
+      <name>inspection_r04_inspection_crossbeam_001</name>
+      <pose>24 49 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_001</name>
+      <pose>209.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_002</name>
+      <pose>211.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_003</name>
+      <pose>214.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_004</name>
+      <pose>216.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_005</name>
+      <pose>219.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_006</name>
+      <pose>221.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_007</name>
+      <pose>224.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_008</name>
+      <pose>226.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_009</name>
+      <pose>229.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_010</name>
+      <pose>231.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_011</name>
+      <pose>234.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_012</name>
+      <pose>236.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_013</name>
+      <pose>239.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_014</name>
+      <pose>241.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_015</name>
+      <pose>244.1 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_016</name>
+      <pose>246.6 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_storage_buffer</uri>
+      <name>storage_r07_storage_buffer_001</name>
+      <pose>202.3 30.7 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_017</name>
+      <pose>209.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_018</name>
+      <pose>211.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_019</name>
+      <pose>214.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_020</name>
+      <pose>216.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_021</name>
+      <pose>219.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_022</name>
+      <pose>221.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_023</name>
+      <pose>224.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_024</name>
+      <pose>226.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_025</name>
+      <pose>229.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_026</name>
+      <pose>231.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_027</name>
+      <pose>234.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_028</name>
+      <pose>236.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_029</name>
+      <pose>239.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_030</name>
+      <pose>241.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_031</name>
+      <pose>244.1 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_032</name>
+      <pose>246.6 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_storage_buffer</uri>
+      <name>storage_r07_storage_buffer_002</name>
+      <pose>202.3 37.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_033</name>
+      <pose>209.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_034</name>
+      <pose>211.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_035</name>
+      <pose>214.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_036</name>
+      <pose>216.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_037</name>
+      <pose>219.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_038</name>
+      <pose>221.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_039</name>
+      <pose>224.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_040</name>
+      <pose>226.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_041</name>
+      <pose>229.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_042</name>
+      <pose>231.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_043</name>
+      <pose>234.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_044</name>
+      <pose>236.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_045</name>
+      <pose>239.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_046</name>
+      <pose>241.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_047</name>
+      <pose>244.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_storage_bay</uri>
+      <name>storage_r07_wheelset_storage_bay_048</name>
+      <pose>246.6 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_storage_buffer</uri>
+      <name>storage_r07_storage_buffer_003</name>
+      <pose>202.3 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_storage_gantry</uri>
+      <name>storage_r07_storage_gantry_001</name>
+      <pose>198 36.4 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_storage_stacker</uri>
+      <name>storage_r07_storage_stacker_001</name>
+      <pose>208.1 42.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>storage_r07_wheelset_001</name>
+      <pose>198 36.4 1.64 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_cyan_cell</uri>
+      <name>unknown_r08_unknown_cyan_cell_001</name>
+      <pose>80 63 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_001</name>
+      <pose>80 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_002</name>
+      <pose>80 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_003</name>
+      <pose>80 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_004</name>
+      <pose>82.7 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_005</name>
+      <pose>82.7 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_006</name>
+      <pose>82.7 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_007</name>
+      <pose>85.4 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_008</name>
+      <pose>85.4 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_009</name>
+      <pose>85.4 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_cyan_cell</uri>
+      <name>unknown_r08_unknown_cyan_cell_002</name>
+      <pose>89 63 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_010</name>
+      <pose>89 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_011</name>
+      <pose>89 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_012</name>
+      <pose>89 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_013</name>
+      <pose>91.7 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_014</name>
+      <pose>91.7 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_015</name>
+      <pose>91.7 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_016</name>
+      <pose>94.4 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_017</name>
+      <pose>94.4 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_018</name>
+      <pose>94.4 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_cyan_cell</uri>
+      <name>unknown_r08_unknown_cyan_cell_003</name>
+      <pose>98 63 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_019</name>
+      <pose>98 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_020</name>
+      <pose>98 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_021</name>
+      <pose>98 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_022</name>
+      <pose>100.7 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_023</name>
+      <pose>100.7 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_024</name>
+      <pose>100.7 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_025</name>
+      <pose>103.4 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_026</name>
+      <pose>103.4 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_027</name>
+      <pose>103.4 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_cyan_cell</uri>
+      <name>unknown_r08_unknown_cyan_cell_004</name>
+      <pose>107 63 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_028</name>
+      <pose>107 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_029</name>
+      <pose>107 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_030</name>
+      <pose>107 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_031</name>
+      <pose>109.7 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_032</name>
+      <pose>109.7 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_033</name>
+      <pose>109.7 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_034</name>
+      <pose>112.4 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_035</name>
+      <pose>112.4 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_036</name>
+      <pose>112.4 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_cyan_cell</uri>
+      <name>unknown_r08_unknown_cyan_cell_005</name>
+      <pose>116 63 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_037</name>
+      <pose>116 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_038</name>
+      <pose>116 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_039</name>
+      <pose>116 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_040</name>
+      <pose>118.7 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_041</name>
+      <pose>118.7 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_042</name>
+      <pose>118.7 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_043</name>
+      <pose>121.4 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_044</name>
+      <pose>121.4 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_045</name>
+      <pose>121.4 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_cyan_cell</uri>
+      <name>unknown_r08_unknown_cyan_cell_006</name>
+      <pose>125 63 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_046</name>
+      <pose>125 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_047</name>
+      <pose>125 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_048</name>
+      <pose>125 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_049</name>
+      <pose>127.7 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_050</name>
+      <pose>127.7 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_051</name>
+      <pose>127.7 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_052</name>
+      <pose>130.4 54.8 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_053</name>
+      <pose>130.4 56.25 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>unknown_r08_wheelset_054</name>
+      <pose>130.4 57.7 0 0 0 1.570796</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_runway</uri>
+      <name>unknown_r08_unknown_runway_001</name>
+      <pose>101 58.25 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_bridge</uri>
+      <name>unknown_r08_unknown_bridge_001</name>
+      <pose>85 58.25 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_bridge</uri>
+      <name>unknown_r08_unknown_bridge_002</name>
+      <pose>98.5 58.25 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_unknown_bridge</uri>
+      <name>unknown_r08_unknown_bridge_003</name>
+      <pose>112 58.25 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_sorting_system</uri>
+      <name>sorting_r09_system</name>
+      <pose>56 23.75 0 0 0 3.141593</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_sorting_pick_robot</uri>
+      <name>sorting_r09_robot</name>
+      <pose>56.0536 23.3112 0.74 0 0 3.141593</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_demount_station</uri>
+      <name>sorting_r09_demount_0</name>
+      <pose>51 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_demount_station</uri>
+      <name>sorting_r09_demount_1</name>
+      <pose>51 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_demount_frontage</uri>
+      <name>sorting_r09_demount_2</name>
+      <pose>51 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_portal</uri>
+      <name>service_r09_opening_portal_001</name>
+      <pose>79.95851 10.27794 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wiping_station</uri>
+      <name>service_r09_wiping_station_001</name>
+      <pose>82.96953 10.59752 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_tool_station</uri>
+      <name>service_r09_opening_tool_station_001</name>
+      <pose>160 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_closing_transfer_cell</uri>
+      <name>service_r09_closing_transfer_cell_001</name>
+      <pose>158.2 9.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_closing_primary_robot</uri>
+      <name>service_r09_sorting_robot_001</name>
+      <pose>161.683 11.7573 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_closing_secondary_robot</uri>
+      <name>service_r09_industrial_arm_001</name>
+      <pose>165.0842 11.7001 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_portal</uri>
+      <name>service_r09_opening_portal_002</name>
+      <pose>79.95851 18.25174 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wiping_station</uri>
+      <name>service_r09_wiping_station_003</name>
+      <pose>82.96953 18.57133 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_tool_station</uri>
+      <name>service_r09_opening_tool_station_002</name>
+      <pose>160 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_closing_transfer_cell</uri>
+      <name>service_r09_closing_transfer_cell_002</name>
+      <pose>158.2 16.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_closing_primary_robot</uri>
+      <name>service_r09_sorting_robot_002</name>
+      <pose>161.683 18.5573 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_closing_secondary_robot</uri>
+      <name>service_r09_industrial_arm_002</name>
+      <pose>165.0842 18.5001 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_portal</uri>
+      <name>service_r09_opening_portal_003</name>
+      <pose>79.95851 26.22555 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wiping_station</uri>
+      <name>service_r09_wiping_station_005</name>
+      <pose>82.96953 26.54513 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_tool_station</uri>
+      <name>opening_r09_opening_tool_station_001</name>
+      <pose>28 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_robot</uri>
+      <name>opening_r09_opening_robot_001</name>
+      <pose>26 7.55 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_robot</uri>
+      <name>opening_r09_opening_robot_002</name>
+      <pose>26 10.45 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_parts_bin</uri>
+      <name>opening_r09_opening_parts_bin_001</name>
+      <pose>24.16457 6.356606 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>opening_r09_wheelset_001</name>
+      <pose>33.25 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_exterior_inspection_rollers</uri>
+      <name>opening_r09_exterior_inspection_rollers_001</name>
+      <pose>36.5 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>opening_r09_wheelset_002</name>
+      <pose>36.5 9 0.135 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_tool_station</uri>
+      <name>opening_r09_opening_tool_station_002</name>
+      <pose>28 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_robot</uri>
+      <name>opening_r09_opening_robot_003</name>
+      <pose>26 13.55 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_robot</uri>
+      <name>opening_r09_opening_robot_004</name>
+      <pose>26 16.45 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_parts_bin</uri>
+      <name>opening_r09_opening_parts_bin_002</name>
+      <pose>24.16457 12.35661 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>opening_r09_wheelset_003</name>
+      <pose>33.25 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_exterior_inspection_rollers</uri>
+      <name>opening_r09_exterior_inspection_rollers_002</name>
+      <pose>36.5 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>opening_r09_wheelset_004</name>
+      <pose>36.5 15 0.135 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_tool_station</uri>
+      <name>opening_r09_opening_tool_station_003</name>
+      <pose>28 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_robot</uri>
+      <name>opening_r09_opening_robot_005</name>
+      <pose>26 19.55 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_robot</uri>
+      <name>opening_r09_opening_robot_006</name>
+      <pose>26 22.45 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_opening_parts_bin</uri>
+      <name>opening_r09_opening_parts_bin_003</name>
+      <pose>24.16457 18.35661 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>opening_r09_wheelset_005</name>
+      <pose>33.25 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_exterior_inspection_rollers</uri>
+      <name>opening_r09_exterior_inspection_rollers_003</name>
+      <pose>36.5 21 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>opening_r09_wheelset_006</name>
+      <pose>36.5 21 0.135 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_001</name>
+      <pose>75.20052 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_002</name>
+      <pose>75.94072 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_003</name>
+      <pose>76.68091 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_004</name>
+      <pose>77.4211 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_005</name>
+      <pose>78.16129 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_006</name>
+      <pose>78.90149 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_007</name>
+      <pose>79.64168 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_008</name>
+      <pose>80.38187 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_009</name>
+      <pose>81.12207 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_010</name>
+      <pose>81.86226 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_011</name>
+      <pose>82.60245 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_012</name>
+      <pose>83.34264 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_013</name>
+      <pose>84.08284 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_014</name>
+      <pose>84.82303 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_015</name>
+      <pose>85.56322 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_016</name>
+      <pose>86.30342 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_017</name>
+      <pose>87.04361 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_018</name>
+      <pose>87.7838 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_019</name>
+      <pose>88.52399 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_020</name>
+      <pose>89.26419 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_021</name>
+      <pose>90.00438 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_022</name>
+      <pose>90.74457 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_023</name>
+      <pose>91.48477 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_024</name>
+      <pose>92.22496 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_025</name>
+      <pose>92.96515 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_026</name>
+      <pose>93.70534 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_027</name>
+      <pose>94.44554 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_028</name>
+      <pose>95.18573 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_029</name>
+      <pose>95.92592 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_030</name>
+      <pose>96.66612 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_031</name>
+      <pose>97.40631 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_032</name>
+      <pose>98.1465 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_storage_module</uri>
+      <name>component_r10_bearing_storage_module_033</name>
+      <pose>98.88669 32.45808 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_store_lift</uri>
+      <name>component_r10_bearing_store_lift_001</name>
+      <pose>102.5 32.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_identification_line</uri>
+      <name>component_r10_bearing_identification_line_001</name>
+      <pose>107.7 32.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_001</name>
+      <pose>8.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_002</name>
+      <pose>11.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_003</name>
+      <pose>14.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_004</name>
+      <pose>17.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_005</name>
+      <pose>20.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_006</name>
+      <pose>23.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_007</name>
+      <pose>26.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_008</name>
+      <pose>29.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_009</name>
+      <pose>32.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_010</name>
+      <pose>35.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_011</name>
+      <pose>38.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_012</name>
+      <pose>41.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_013</name>
+      <pose>44.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_014</name>
+      <pose>47.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_015</name>
+      <pose>50.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>component_r10_inspection_track_016</name>
+      <pose>53.5 43.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_001</name>
+      <pose>76.46953 10.59752 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_002</name>
+      <pose>79.46953 10.59752 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_003</name>
+      <pose>82.46953 10.59752 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_004</name>
+      <pose>85.46953 10.59752 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_005</name>
+      <pose>126.5 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_006</name>
+      <pose>129.5 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_007</name>
+      <pose>132.5 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_008</name>
+      <pose>135.5 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_009</name>
+      <pose>138.5 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_018</name>
+      <pose>76.46953 18.57133 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_019</name>
+      <pose>79.46953 18.57133 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_020</name>
+      <pose>82.46953 18.57133 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_021</name>
+      <pose>85.46953 18.57133 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_022</name>
+      <pose>126.5 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_023</name>
+      <pose>129.5 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_024</name>
+      <pose>132.5 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_025</name>
+      <pose>135.5 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_026</name>
+      <pose>138.5 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_035</name>
+      <pose>76.46953 26.54513 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_036</name>
+      <pose>79.46953 26.54513 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_037</name>
+      <pose>82.46953 26.54513 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_038</name>
+      <pose>85.46953 26.54513 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_039</name>
+      <pose>126.5 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_040</name>
+      <pose>129.5 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_041</name>
+      <pose>132.5 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_042</name>
+      <pose>135.5 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r10_inspection_track_043</name>
+      <pose>138.5 23.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_loading_robot</uri>
+      <name>frontage_r11_bearing_loading_robot_535</name>
+      <pose>112.4733 32.21797 0 0 0 3.141593</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_loading_fixture</uri>
+      <name>frontage_r11_bearing_loading_fixture_536</name>
+      <pose>112.1899 30.62737 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_loading_tool_stand</uri>
+      <name>frontage_r11_bearing_loading_tool_stand_537</name>
+      <pose>114.2918 31.55827 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_run_in_stand</uri>
+      <name>finishing_r15_run_in_8_0</name>
+      <pose>173 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_run_in_stand</uri>
+      <name>finishing_r15_run_in_8_1</name>
+      <pose>171.047 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>finishing_r15_wheel_8</name>
+      <pose>171.047 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>finishing_r15_spray_wheel_8</name>
+      <pose>179.3 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_run_in_stand</uri>
+      <name>finishing_r15_run_in_17_0</name>
+      <pose>173 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_bearing_run_in_stand</uri>
+      <name>finishing_r15_run_in_17_1</name>
+      <pose>171.047 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>finishing_r15_wheel_17</name>
+      <pose>171.047 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>finishing_r15_spray_wheel_17</name>
+      <pose>179.3 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_back_ring_storage_bed</uri>
+      <name>metrology_r17_547</name>
+      <pose>131.3601 29.63309 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_back_ring_short_table</uri>
+      <name>metrology_r17_548</name>
+      <pose>131.5777 28.24251 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_back_ring_short_table</uri>
+      <name>metrology_r17_549</name>
+      <pose>130.5607 28.22382 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_back_ring_electrical_cabinet</uri>
+      <name>metrology_r17_550</name>
+      <pose>128.7963 26.19793 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_back_ring_measuring_column</uri>
+      <name>metrology_r17_551</name>
+      <pose>130.4485 26.17065 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_back_ring_measuring_booth</uri>
+      <name>metrology_r17_552</name>
+      <pose>128.2644 27.48349 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_back_ring_travelling_robot</uri>
+      <name>metrology_r17_553</name>
+      <pose>131.5234 29.14088 0.85 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_workshop_operator</uri>
+      <name>metrology_r17_554</name>
+      <pose>128.3088 28.1746 0 0 0 0.4</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_axle_end_check_table</uri>
+      <name>front_r18_001</name>
+      <pose>17.65591 11.5663 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_axle_end_check_table</uri>
+      <name>front_r18_002</name>
+      <pose>17.64091 13.65444 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>front_r18_003</name>
+      <pose>19.62483 9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>reinspection_r18_001</name>
+      <pose>52.5 50 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>reinspection_r18_002</name>
+      <pose>52.5 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>reinspection_r18_003</name>
+      <pose>55.4 56.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_floor_control_box</uri>
+      <name>front_r19_control_1</name>
+      <pose>21.78391 11.22795 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_floor_control_box</uri>
+      <name>front_r19_control_2</name>
+      <pose>22.05322 7.413952 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_floor_control_box</uri>
+      <name>front_r19_control_3</name>
+      <pose>19.25653 6.766552 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_525</name>
+      <pose>145 8 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_526</name>
+      <pose>146.0683 8 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_527</name>
+      <pose>147.1367 8 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_528</name>
+      <pose>148.205 8 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_529</name>
+      <pose>149.2733 8 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_530</name>
+      <pose>145 10.69625 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_531</name>
+      <pose>146.0683 10.69625 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_532</name>
+      <pose>147.1367 10.69625 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_533</name>
+      <pose>148.205 10.69625 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_534</name>
+      <pose>149.2733 10.69625 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_535</name>
+      <pose>145 13.39249 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_536</name>
+      <pose>146.0683 13.39249 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_537</name>
+      <pose>147.1367 13.39249 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_538</name>
+      <pose>148.205 13.39249 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_539</name>
+      <pose>149.2733 13.39249 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_540</name>
+      <pose>145 16.08874 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_541</name>
+      <pose>146.0683 16.08874 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_542</name>
+      <pose>147.1367 16.08874 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_543</name>
+      <pose>148.205 16.08874 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_544</name>
+      <pose>136.3 11.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_press_exit_fin_bank</uri>
+      <name>transfer_r20_axle_end_check_table_545</name>
+      <pose>136.7795 8.41081 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_546</name>
+      <pose>136.3 17.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_press_exit_fin_bank</uri>
+      <name>transfer_r20_axle_end_check_table_547</name>
+      <pose>136.7795 14.41081 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_548</name>
+      <pose>154.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_549</name>
+      <pose>157.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_550</name>
+      <pose>160.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_551</name>
+      <pose>163.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_552</name>
+      <pose>166.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_553</name>
+      <pose>169.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_554</name>
+      <pose>172.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_555</name>
+      <pose>175.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_556</name>
+      <pose>178.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_557</name>
+      <pose>181.5 9.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_558</name>
+      <pose>154.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_559</name>
+      <pose>157.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_560</name>
+      <pose>160.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_561</name>
+      <pose>163.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_562</name>
+      <pose>166.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_563</name>
+      <pose>169.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_564</name>
+      <pose>172.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_565</name>
+      <pose>175.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_566</name>
+      <pose>178.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_inspection_track</uri>
+      <name>transfer_r20_inspection_track_567</name>
+      <pose>181.5 16.1 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>transfer_r20_wheelset_agv_568</name>
+      <pose>139.4 11.2 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>transfer_r20_wheelset_agv_569</name>
+      <pose>140.4 17 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>transfer_r20_wheelset_agv_570</name>
+      <pose>150.92 10.74 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>transfer_r20_wheelset_571</name>
+      <pose>150.92 10.74 0.34 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_transfer_auxiliary_cell</uri>
+      <name>transfer_r20_transfer_auxiliary_cell_572</name>
+      <pose>80.63 44.17 0 0 0 3.141593</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_529</name>
+      <pose>96.4 26 0.34 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_530</name>
+      <pose>97.55439 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_531</name>
+      <pose>98.70878 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_532</name>
+      <pose>99.86317 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_533</name>
+      <pose>101.0176 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_534</name>
+      <pose>102.1719 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_535</name>
+      <pose>103.3263 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_536</name>
+      <pose>104.4807 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_537</name>
+      <pose>105.6351 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_538</name>
+      <pose>106.7895 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_539</name>
+      <pose>107.9439 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_540</name>
+      <pose>109.0983 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_541</name>
+      <pose>110.2527 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_542</name>
+      <pose>111.4071 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_543</name>
+      <pose>112.5615 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_544</name>
+      <pose>113.7158 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_545</name>
+      <pose>114.8702 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_546</name>
+      <pose>116.0246 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_547</name>
+      <pose>96.4 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_548</name>
+      <pose>97.55439 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_549</name>
+      <pose>98.70878 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_550</name>
+      <pose>99.86317 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_551</name>
+      <pose>101.0176 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_552</name>
+      <pose>102.1719 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_553</name>
+      <pose>103.3263 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_554</name>
+      <pose>104.4807 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_555</name>
+      <pose>105.6351 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_556</name>
+      <pose>106.7895 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_557</name>
+      <pose>107.9439 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_558</name>
+      <pose>109.0983 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_559</name>
+      <pose>110.2527 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_560</name>
+      <pose>111.4071 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_561</name>
+      <pose>112.5615 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_562</name>
+      <pose>113.7158 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_563</name>
+      <pose>114.8702 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_564</name>
+      <pose>116.0246 22.18911 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_565</name>
+      <pose>96.4 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_566</name>
+      <pose>97.55439 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_567</name>
+      <pose>98.70878 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_568</name>
+      <pose>99.86317 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_569</name>
+      <pose>101.0176 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_570</name>
+      <pose>102.1719 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_571</name>
+      <pose>103.3263 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_572</name>
+      <pose>104.4807 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_573</name>
+      <pose>105.6351 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_574</name>
+      <pose>106.7895 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_575</name>
+      <pose>107.9439 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_576</name>
+      <pose>109.0983 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_577</name>
+      <pose>110.2527 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_578</name>
+      <pose>111.4071 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_579</name>
+      <pose>112.5615 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_580</name>
+      <pose>113.7158 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_581</name>
+      <pose>114.8702 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_582</name>
+      <pose>116.0246 18.37823 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_583</name>
+      <pose>96.4 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_584</name>
+      <pose>97.55439 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_585</name>
+      <pose>98.70878 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_586</name>
+      <pose>99.86317 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_587</name>
+      <pose>101.0176 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_588</name>
+      <pose>102.1719 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_589</name>
+      <pose>103.3263 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_590</name>
+      <pose>104.4807 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_591</name>
+      <pose>105.6351 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_592</name>
+      <pose>106.7895 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_593</name>
+      <pose>107.9439 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_594</name>
+      <pose>109.0983 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_595</name>
+      <pose>110.2527 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_596</name>
+      <pose>111.4071 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_597</name>
+      <pose>112.5615 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_598</name>
+      <pose>113.7158 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_599</name>
+      <pose>114.8702 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>component_r21_wheelset_600</name>
+      <pose>116.0246 14.56734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset_agv</uri>
+      <name>component_r21_wheelset_agv_601</name>
+      <pose>96.4 26 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_greasing_station</uri>
+      <name>greasing_r23_greasing_station_1</name>
+      <pose>77.16266 10.59752 0 0 0 3.141593</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>greasing_r23_wheelset_1</name>
+      <pose>77.16266 10.59752 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_greasing_station</uri>
+      <name>greasing_r23_greasing_station_2</name>
+      <pose>77.16266 18.57133 0 0 0 3.141593</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>greasing_r23_wheelset_2</name>
+      <pose>77.16266 18.57133 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_greasing_station</uri>
+      <name>greasing_r23_greasing_station_3</name>
+      <pose>77.16266 26.54513 0 0 0 3.141593</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>greasing_r23_wheelset_3</name>
+      <pose>77.16266 26.54513 0.11 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_wheelset</uri>
+      <name>greasing_r23_portal_exit_wheel</name>
+      <pose>78.68592 26.54513 0.3133172 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_preparation_infeed_bench</uri>
+      <name>preparation_r24_infeed_1</name>
+      <pose>74.50206 10.59752 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_preparation_infeed_bench</uri>
+      <name>preparation_r24_infeed_2</name>
+      <pose>74.50206 18.57133 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_preparation_infeed_bench</uri>
+      <name>preparation_r24_infeed_3</name>
+      <pose>74.50206 26.54513 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_preparation_fin_unit</uri>
+      <name>preparation_r24_fin_unit</name>
+      <pose>75.65978 30.20082 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_transfer_boundary_post</uri>
+      <name>transfer_r20_cache_back_post_138_section</name>
+      <pose>138 22.2 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_transfer_boundary_post</uri>
+      <name>transfer_r20_cache_back_post_144_section</name>
+      <pose>144 22.2 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_transfer_boundary_post</uri>
+      <name>transfer_r20_cache_back_post_149.4_section</name>
+      <pose>149.4 22.2 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_transfer_boundary_post</uri>
+      <name>transfer_r20_room_post_a_section</name>
+      <pose>82.3 49.9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_transfer_boundary_post</uri>
+      <name>transfer_r20_room_post_b_section</name>
+      <pose>82.3 41.9 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://wsv1_transfer_boundary_post</uri>
+      <name>transfer_r20_room_post_c_section</name>
+      <pose>74.3 41.9 0 0 0 0</pose>
+    </include>
+    <plugin name="wheelset_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/wheelset_review</namespace>
+      </ros>
+      <update_rate>20</update_rate>
+    </plugin>
+    <model name="review_camera">
+      <static>true</static>
+      <pose>81.6999 23.7155 5.068878 0 0.6869846 2.53525</pose>
+      <link name="camera_link">
+        <sensor name="review_sensor" type="camera">
+          <always_on>true</always_on>
+          <update_rate>2</update_rate>
+          <visualize>false</visualize>
+          <camera>
+            <horizontal_fov>0.92</horizontal_fov>
+            <image>
+              <width>1280</width>
+              <height>720</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>1032.0</far>
+            </clip>
+          </camera>
+          <plugin name="review_camera_ros" filename="libgazebo_ros_camera.so">
+            <ros>
+              <namespace>/wheelset_review</namespace>
+              <remapping>image_raw:=image_raw</remapping>
+              <remapping>camera_info:=camera_info</remapping>
+            </ros>
+            <camera_name>reference</camera_name>
+            <frame_name>camera_link</frame_name>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+  </world>
+</sdf>

@@ -1,0 +1,3053 @@
+{
+  "scene_id": "rail_freight_workshop_v1",
+  "schema_version": 1,
+  "frame_id": "map",
+  "units": {
+    "length": "m",
+    "speed": "m/s",
+    "time": "s"
+  },
+  "evidence": {
+    "level": "process_referenced_synthetic",
+    "label_zh": "工艺参考型仿真场景（非实测车间）",
+    "basis_zh": "区域划分与物流关系依据铁路货车检修公开工艺资料：车辆分解、车体/转向架/轮轴/制动/钩缓等专业检修、部件回送与整车组装，以及检修车间内部物料配送的一般组织方式。",
+    "assumptions_zh": [
+      "车间范围 140 x 90 m、主通道宽 3.0 m、支线宽 2.2 m、名义行驶速度 1.0 m/s 均为研究假设参数，不是现场测绘尺寸，也不代表工业规范。",
+      "道路宽度是否安全必须按选定 AGV 的外廓、载荷、转弯扫掠、制动距离、定位误差与人车隔离要求另行校核；本文件不构成车间建设依据。",
+      "工序时间、工位作业容量与库存容量为示例取值，仅供调度实验使用。"
+    ],
+    "not_measured_zh": [
+      "本场景没有任何实测车间尺寸、实测路径长度或实测行驶时间。",
+      "不得引用本文件中的几何参数声称来自某实际车间。"
+    ],
+    "evidence_table_zh": {
+      "real_cad": "真实 CAD/DXF 或授权测绘：工程级布局与可行性评估",
+      "process_referenced_synthetic": "公开检修工艺 + 假设尺寸：工艺参考型仿真场景（本文件）",
+      "abstract_benchmark": "自建 Ring/Grid/Hub：算法与机制对照算例",
+      "scaled_testbed": "SCOUT Mini 试验场：缩比或局部物理试验"
+    }
+  },
+  "bounds_m": [
+    140,
+    90
+  ],
+  "agv_envelope": {
+    "length_m": 1.2,
+    "width_m": 0.9,
+    "height_m": 0.4,
+    "min_clearance_m": 0.3,
+    "note_zh": "缩比验证平台 SCOUT Mini 的外廓量级；全尺寸场景须按实际 AGV 重新校核通过宽度"
+  },
+  "resource_semantics_zh": {
+    "intersection": "路口：可进入方向与冲突区，容量按可同时占据的车辆数计",
+    "lane": "通道：中心线、长度由几何计算、宽度、方向、限速；physical_channel 相同的两个方向共享同一条物理通道",
+    "single_lane": "单车道双向：lane_count=1 且两个方向的边属于同一 physical_channel，任一时间只允许一辆车占用",
+    "service_dock": "装卸交接位：AGV 服务容量，卸货/装货后必须离开",
+    "wait_area": "等待区：车辆等待槽位数，与物料库存容量相互独立",
+    "station": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用"
+  },
+  "open_items_zh": [
+    "v1 未建模\"双向双车道\"（两个方向各有独立路面、互不冲突）。当前预约层对存在反向边的通道一律按共享物理资源处理，因此本场景把主通道与支线都显式定义为单车道双向，语义一致。要支持独立双车道，需先让预约层读到\"两个方向是否共用路面\"。",
+    "轨行区、起重作业区与人员通道尚未作为禁行区几何落图，v1 仅按工艺区域避让。"
+  ],
+  "zones": [
+    {
+      "id": "MAIN_AISLE_S",
+      "name_zh": "南主通道",
+      "kind": "traffic",
+      "polygon": [
+        [
+          8,
+          28.5
+        ],
+        [
+          136,
+          28.5
+        ],
+        [
+          136,
+          31.5
+        ],
+        [
+          8,
+          31.5
+        ]
+      ],
+      "node_kind": "traffic_or_buffer"
+    },
+    {
+      "id": "MAIN_AISLE_N",
+      "name_zh": "北主通道",
+      "kind": "traffic",
+      "polygon": [
+        [
+          25,
+          58.5
+        ],
+        [
+          125,
+          58.5
+        ],
+        [
+          125,
+          61.5
+        ],
+        [
+          25,
+          61.5
+        ]
+      ],
+      "node_kind": "traffic_or_buffer"
+    },
+    {
+      "id": "ZONE_BODY",
+      "name_zh": "车体检修",
+      "kind": "workstation",
+      "note_zh": "车体钢结构、板材与焊接件检修",
+      "polygon": [
+        [
+          22,
+          71
+        ],
+        [
+          28,
+          71
+        ],
+        [
+          28,
+          82
+        ],
+        [
+          22,
+          82
+        ]
+      ],
+      "node_kind": "workstation"
+    },
+    {
+      "id": "ZONE_BOGIE",
+      "name_zh": "转向架检修",
+      "kind": "workstation",
+      "note_zh": "转向架分解、检测、组装与试验",
+      "polygon": [
+        [
+          42,
+          71
+        ],
+        [
+          48,
+          71
+        ],
+        [
+          48,
+          82
+        ],
+        [
+          42,
+          82
+        ]
+      ],
+      "node_kind": "workstation"
+    },
+    {
+      "id": "ZONE_WHEELSET",
+      "name_zh": "轮轴检修",
+      "kind": "workstation",
+      "note_zh": "轮对与轴承检测、压装与维修",
+      "polygon": [
+        [
+          62,
+          71
+        ],
+        [
+          68,
+          71
+        ],
+        [
+          68,
+          82
+        ],
+        [
+          62,
+          82
+        ]
+      ],
+      "node_kind": "workstation"
+    },
+    {
+      "id": "ZONE_BRAKE",
+      "name_zh": "制动装置检修",
+      "kind": "workstation",
+      "note_zh": "制动阀、制动缸与配件清洗检修试验",
+      "polygon": [
+        [
+          82,
+          71
+        ],
+        [
+          88,
+          71
+        ],
+        [
+          88,
+          82
+        ],
+        [
+          82,
+          82
+        ]
+      ],
+      "node_kind": "workstation"
+    },
+    {
+      "id": "ZONE_COUPLER",
+      "name_zh": "钩缓装置检修",
+      "kind": "workstation",
+      "note_zh": "车钩缓冲装置分解检修与组装",
+      "polygon": [
+        [
+          102,
+          71
+        ],
+        [
+          108,
+          71
+        ],
+        [
+          108,
+          82
+        ],
+        [
+          102,
+          82
+        ]
+      ],
+      "node_kind": "workstation"
+    },
+    {
+      "id": "ZONE_DOOR",
+      "name_zh": "车门与开闭件检修",
+      "kind": "workstation",
+      "note_zh": "车门、开闭机构与附属件检修",
+      "polygon": [
+        [
+          122,
+          71
+        ],
+        [
+          128,
+          71
+        ],
+        [
+          128,
+          82
+        ],
+        [
+          122,
+          82
+        ]
+      ],
+      "node_kind": "workstation"
+    },
+    {
+      "id": "ZONE_DISASSEMBLY",
+      "name_zh": "拆解区",
+      "kind": "logistics",
+      "note_zh": "车辆分解、部件拆除与分类",
+      "polygon": [
+        [
+          5,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          5,
+          12
+        ]
+      ],
+      "node_kind": "disassembly"
+    },
+    {
+      "id": "ZONE_STORE",
+      "name_zh": "备件库",
+      "kind": "logistics",
+      "note_zh": "备品备件与工装存放、向工位补给",
+      "polygon": [
+        [
+          42,
+          13
+        ],
+        [
+          48,
+          13
+        ],
+        [
+          48,
+          12
+        ],
+        [
+          42,
+          12
+        ]
+      ],
+      "node_kind": "traffic_or_buffer"
+    },
+    {
+      "id": "ZONE_BUFFER_IN",
+      "name_zh": "待检缓存",
+      "kind": "logistics",
+      "note_zh": "拆解件待检暂存",
+      "polygon": [
+        [
+          62,
+          13
+        ],
+        [
+          68,
+          13
+        ],
+        [
+          68,
+          12
+        ],
+        [
+          62,
+          12
+        ]
+      ],
+      "node_kind": "traffic_or_buffer"
+    },
+    {
+      "id": "ZONE_BUFFER_OUT",
+      "name_zh": "检后缓存",
+      "kind": "logistics",
+      "note_zh": "检修完成件暂存待组装",
+      "polygon": [
+        [
+          82,
+          13
+        ],
+        [
+          88,
+          13
+        ],
+        [
+          88,
+          12
+        ],
+        [
+          82,
+          12
+        ]
+      ],
+      "node_kind": "traffic_or_buffer"
+    },
+    {
+      "id": "ZONE_PARK",
+      "name_zh": "停车充电区",
+      "kind": "logistics",
+      "note_zh": "AGV 待命与充电；不得占用检修工位",
+      "polygon": [
+        [
+          122,
+          13
+        ],
+        [
+          128,
+          13
+        ],
+        [
+          128,
+          12
+        ],
+        [
+          122,
+          12
+        ]
+      ],
+      "node_kind": "traffic_or_buffer"
+    },
+    {
+      "id": "ZONE_ASSEMBLY",
+      "name_zh": "组装区",
+      "kind": "logistics",
+      "note_zh": "部件回装、工位交接与整车检修",
+      "polygon": [
+        [
+          133,
+          13
+        ],
+        [
+          139,
+          13
+        ],
+        [
+          139,
+          12
+        ],
+        [
+          133,
+          12
+        ]
+      ],
+      "node_kind": "assembly"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "J_S_8",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 8,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_S_25",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 25,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_S_45",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 45,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_S_65",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 65,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_S_85",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 85,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_S_105",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 105,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_S_125",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 125,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_S_136",
+      "zone": "MAIN_AISLE_S",
+      "layer": "road",
+      "type": "intersection",
+      "x": 136,
+      "y": 30,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_N_25",
+      "zone": "MAIN_AISLE_N",
+      "layer": "road",
+      "type": "intersection",
+      "x": 25,
+      "y": 60,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_N_45",
+      "zone": "MAIN_AISLE_N",
+      "layer": "road",
+      "type": "intersection",
+      "x": 45,
+      "y": 60,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_N_65",
+      "zone": "MAIN_AISLE_N",
+      "layer": "road",
+      "type": "intersection",
+      "x": 65,
+      "y": 60,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_N_85",
+      "zone": "MAIN_AISLE_N",
+      "layer": "road",
+      "type": "intersection",
+      "x": 85,
+      "y": 60,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_N_105",
+      "zone": "MAIN_AISLE_N",
+      "layer": "road",
+      "type": "intersection",
+      "x": 105,
+      "y": 60,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "J_N_125",
+      "zone": "MAIN_AISLE_N",
+      "layer": "road",
+      "type": "intersection",
+      "x": 125,
+      "y": 60,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "node_kind": "aisle"
+    },
+    {
+      "id": "R_BODY",
+      "zone": "ZONE_BODY",
+      "layer": "road",
+      "type": "intersection",
+      "x": 25,
+      "y": 63,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_BODY",
+      "zone": "ZONE_BODY",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 25,
+      "y": 68,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_BODY",
+      "zone": "ZONE_BODY",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 25,
+      "y": 74,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_BODY",
+      "zone": "ZONE_BODY",
+      "layer": "process",
+      "type": "station",
+      "x": 25,
+      "y": 80,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 4,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "workstation"
+    },
+    {
+      "id": "R_BOGIE",
+      "zone": "ZONE_BOGIE",
+      "layer": "road",
+      "type": "intersection",
+      "x": 45,
+      "y": 63,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_BOGIE",
+      "zone": "ZONE_BOGIE",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 45,
+      "y": 68,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_BOGIE",
+      "zone": "ZONE_BOGIE",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 45,
+      "y": 74,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_BOGIE",
+      "zone": "ZONE_BOGIE",
+      "layer": "process",
+      "type": "station",
+      "x": 45,
+      "y": 80,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 4,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "workstation"
+    },
+    {
+      "id": "R_WHEELSET",
+      "zone": "ZONE_WHEELSET",
+      "layer": "road",
+      "type": "intersection",
+      "x": 65,
+      "y": 63,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_WHEELSET",
+      "zone": "ZONE_WHEELSET",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 65,
+      "y": 68,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_WHEELSET",
+      "zone": "ZONE_WHEELSET",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 65,
+      "y": 74,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_WHEELSET",
+      "zone": "ZONE_WHEELSET",
+      "layer": "process",
+      "type": "station",
+      "x": 65,
+      "y": 80,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 4,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "workstation"
+    },
+    {
+      "id": "R_BRAKE",
+      "zone": "ZONE_BRAKE",
+      "layer": "road",
+      "type": "intersection",
+      "x": 85,
+      "y": 63,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_BRAKE",
+      "zone": "ZONE_BRAKE",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 85,
+      "y": 68,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_BRAKE",
+      "zone": "ZONE_BRAKE",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 85,
+      "y": 74,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_BRAKE",
+      "zone": "ZONE_BRAKE",
+      "layer": "process",
+      "type": "station",
+      "x": 85,
+      "y": 80,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 4,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "workstation"
+    },
+    {
+      "id": "R_COUPLER",
+      "zone": "ZONE_COUPLER",
+      "layer": "road",
+      "type": "intersection",
+      "x": 105,
+      "y": 63,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_COUPLER",
+      "zone": "ZONE_COUPLER",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 105,
+      "y": 68,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_COUPLER",
+      "zone": "ZONE_COUPLER",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 105,
+      "y": 74,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_COUPLER",
+      "zone": "ZONE_COUPLER",
+      "layer": "process",
+      "type": "station",
+      "x": 105,
+      "y": 80,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 4,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "workstation"
+    },
+    {
+      "id": "R_DOOR",
+      "zone": "ZONE_DOOR",
+      "layer": "road",
+      "type": "intersection",
+      "x": 125,
+      "y": 63,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_DOOR",
+      "zone": "ZONE_DOOR",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 125,
+      "y": 68,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_DOOR",
+      "zone": "ZONE_DOOR",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 125,
+      "y": 74,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_DOOR",
+      "zone": "ZONE_DOOR",
+      "layer": "process",
+      "type": "station",
+      "x": 125,
+      "y": 80,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 4,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "workstation"
+    },
+    {
+      "id": "R_DISASSEMBLY",
+      "zone": "ZONE_DISASSEMBLY",
+      "layer": "road",
+      "type": "intersection",
+      "x": 8,
+      "y": 27,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_DISASSEMBLY",
+      "zone": "ZONE_DISASSEMBLY",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 8,
+      "y": 22,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_DISASSEMBLY",
+      "zone": "ZONE_DISASSEMBLY",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 8,
+      "y": 16,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_DISASSEMBLY",
+      "zone": "ZONE_DISASSEMBLY",
+      "layer": "process",
+      "type": "station",
+      "x": 8,
+      "y": 10,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 8,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "disassembly"
+    },
+    {
+      "id": "R_STORE",
+      "zone": "ZONE_STORE",
+      "layer": "road",
+      "type": "intersection",
+      "x": 45,
+      "y": 27,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_STORE",
+      "zone": "ZONE_STORE",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 45,
+      "y": 22,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_STORE",
+      "zone": "ZONE_STORE",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 45,
+      "y": 16,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_STORE",
+      "zone": "ZONE_STORE",
+      "layer": "process",
+      "type": "station",
+      "x": 45,
+      "y": 10,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 8,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "R_BUFFER_IN",
+      "zone": "ZONE_BUFFER_IN",
+      "layer": "road",
+      "type": "intersection",
+      "x": 65,
+      "y": 27,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_BUFFER_IN",
+      "zone": "ZONE_BUFFER_IN",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 65,
+      "y": 22,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_BUFFER_IN",
+      "zone": "ZONE_BUFFER_IN",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 65,
+      "y": 16,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_BUFFER_IN",
+      "zone": "ZONE_BUFFER_IN",
+      "layer": "process",
+      "type": "station",
+      "x": 65,
+      "y": 10,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 8,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "R_BUFFER_OUT",
+      "zone": "ZONE_BUFFER_OUT",
+      "layer": "road",
+      "type": "intersection",
+      "x": 85,
+      "y": 27,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_BUFFER_OUT",
+      "zone": "ZONE_BUFFER_OUT",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 85,
+      "y": 22,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_BUFFER_OUT",
+      "zone": "ZONE_BUFFER_OUT",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 85,
+      "y": 16,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_BUFFER_OUT",
+      "zone": "ZONE_BUFFER_OUT",
+      "layer": "process",
+      "type": "station",
+      "x": 85,
+      "y": 10,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 8,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "R_PARK",
+      "zone": "ZONE_PARK",
+      "layer": "road",
+      "type": "intersection",
+      "x": 125,
+      "y": 27,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_PARK",
+      "zone": "ZONE_PARK",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 125,
+      "y": 22,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_PARK",
+      "zone": "ZONE_PARK",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 125,
+      "y": 16,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_PARK",
+      "zone": "ZONE_PARK",
+      "layer": "process",
+      "type": "station",
+      "x": 125,
+      "y": 10,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 8,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "R_ASSEMBLY",
+      "zone": "ZONE_ASSEMBLY",
+      "layer": "road",
+      "type": "intersection",
+      "x": 136,
+      "y": 27,
+      "agv_capacity": 2,
+      "agv_access": true,
+      "note_zh": "支线路口：让行与冲突区",
+      "node_kind": "aisle"
+    },
+    {
+      "id": "Q_ASSEMBLY",
+      "zone": "ZONE_ASSEMBLY",
+      "layer": "road",
+      "type": "wait_area",
+      "x": 136,
+      "y": 22,
+      "agv_capacity": 2,
+      "queue_slots": 2,
+      "agv_access": true,
+      "note_zh": "车辆等待槽位：把等待从主通道上挪走",
+      "node_kind": "buffer"
+    },
+    {
+      "id": "D_ASSEMBLY",
+      "zone": "ZONE_ASSEMBLY",
+      "layer": "road",
+      "type": "service_dock",
+      "x": 136,
+      "y": 16,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "agv_access": true,
+      "note_zh": "装卸交接位：服务容量 1；卸完必须离开，不得长期占用",
+      "node_kind": "dock"
+    },
+    {
+      "id": "W_ASSEMBLY",
+      "zone": "ZONE_ASSEMBLY",
+      "layer": "process",
+      "type": "station",
+      "x": 136,
+      "y": 10,
+      "agv_capacity": 1,
+      "service_capacity": 1,
+      "stock_capacity": 8,
+      "agv_access": true,
+      "note_zh": "工位与物料库存：stock_capacity 是物料位，agv_capacity 是车辆位，两者独立；物料占用不等于车辆持续占用",
+      "node_kind": "assembly"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "L_J_S_8__J_S_25",
+      "from": "J_S_8",
+      "to": "J_S_25",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_S_0",
+      "centerline": [
+        [
+          8,
+          30
+        ],
+        [
+          25,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_25__J_S_45",
+      "from": "J_S_25",
+      "to": "J_S_45",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_S_1",
+      "centerline": [
+        [
+          25,
+          30
+        ],
+        [
+          45,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_45__J_S_65",
+      "from": "J_S_45",
+      "to": "J_S_65",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_S_2",
+      "centerline": [
+        [
+          45,
+          30
+        ],
+        [
+          65,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_65__J_S_85",
+      "from": "J_S_65",
+      "to": "J_S_85",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_S_3",
+      "centerline": [
+        [
+          65,
+          30
+        ],
+        [
+          85,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_85__J_S_105",
+      "from": "J_S_85",
+      "to": "J_S_105",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_S_4",
+      "centerline": [
+        [
+          85,
+          30
+        ],
+        [
+          105,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_105__J_S_125",
+      "from": "J_S_105",
+      "to": "J_S_125",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_S_5",
+      "centerline": [
+        [
+          105,
+          30
+        ],
+        [
+          125,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_125__J_S_136",
+      "from": "J_S_125",
+      "to": "J_S_136",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_S_6",
+      "centerline": [
+        [
+          125,
+          30
+        ],
+        [
+          136,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_25__J_N_45",
+      "from": "J_N_25",
+      "to": "J_N_45",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_N_0",
+      "centerline": [
+        [
+          25,
+          60
+        ],
+        [
+          45,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_45__J_N_65",
+      "from": "J_N_45",
+      "to": "J_N_65",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_N_1",
+      "centerline": [
+        [
+          45,
+          60
+        ],
+        [
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_65__J_N_85",
+      "from": "J_N_65",
+      "to": "J_N_85",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_N_2",
+      "centerline": [
+        [
+          65,
+          60
+        ],
+        [
+          85,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_85__J_N_105",
+      "from": "J_N_85",
+      "to": "J_N_105",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_N_3",
+      "centerline": [
+        [
+          85,
+          60
+        ],
+        [
+          105,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_105__J_N_125",
+      "from": "J_N_105",
+      "to": "J_N_125",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 3,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_N_4",
+      "centerline": [
+        [
+          105,
+          60
+        ],
+        [
+          125,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_25__J_N_25",
+      "from": "J_S_25",
+      "to": "J_N_25",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_X_0",
+      "centerline": [
+        [
+          25,
+          30
+        ],
+        [
+          25,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_45__J_N_45",
+      "from": "J_S_45",
+      "to": "J_N_45",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_X_1",
+      "centerline": [
+        [
+          45,
+          30
+        ],
+        [
+          45,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_65__J_N_65",
+      "from": "J_S_65",
+      "to": "J_N_65",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_X_2",
+      "centerline": [
+        [
+          65,
+          30
+        ],
+        [
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_85__J_N_85",
+      "from": "J_S_85",
+      "to": "J_N_85",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_X_3",
+      "centerline": [
+        [
+          85,
+          30
+        ],
+        [
+          85,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_105__J_N_105",
+      "from": "J_S_105",
+      "to": "J_N_105",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_X_4",
+      "centerline": [
+        [
+          105,
+          30
+        ],
+        [
+          105,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_125__J_N_125",
+      "from": "J_S_125",
+      "to": "J_N_125",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_X_5",
+      "centerline": [
+        [
+          125,
+          30
+        ],
+        [
+          125,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_25__R_BODY",
+      "from": "J_N_25",
+      "to": "R_BODY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_BODY_0",
+      "centerline": [
+        [
+          25,
+          60
+        ],
+        [
+          25,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_R_BODY__Q_BODY",
+      "from": "R_BODY",
+      "to": "Q_BODY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BODY_1",
+      "centerline": [
+        [
+          25,
+          63
+        ],
+        [
+          25,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_BODY__D_BODY",
+      "from": "Q_BODY",
+      "to": "D_BODY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BODY_2",
+      "centerline": [
+        [
+          25,
+          68
+        ],
+        [
+          25,
+          74
+        ]
+      ]
+    },
+    {
+      "id": "L_D_BODY__W_BODY",
+      "from": "D_BODY",
+      "to": "W_BODY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_BODY_3",
+      "centerline": [
+        [
+          25,
+          74
+        ],
+        [
+          25,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_45__R_BOGIE",
+      "from": "J_N_45",
+      "to": "R_BOGIE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_BOGIE_0",
+      "centerline": [
+        [
+          45,
+          60
+        ],
+        [
+          45,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_R_BOGIE__Q_BOGIE",
+      "from": "R_BOGIE",
+      "to": "Q_BOGIE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BOGIE_1",
+      "centerline": [
+        [
+          45,
+          63
+        ],
+        [
+          45,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_BOGIE__D_BOGIE",
+      "from": "Q_BOGIE",
+      "to": "D_BOGIE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BOGIE_2",
+      "centerline": [
+        [
+          45,
+          68
+        ],
+        [
+          45,
+          74
+        ]
+      ]
+    },
+    {
+      "id": "L_D_BOGIE__W_BOGIE",
+      "from": "D_BOGIE",
+      "to": "W_BOGIE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_BOGIE_3",
+      "centerline": [
+        [
+          45,
+          74
+        ],
+        [
+          45,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_65__R_WHEELSET",
+      "from": "J_N_65",
+      "to": "R_WHEELSET",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_WHEELSET_0",
+      "centerline": [
+        [
+          65,
+          60
+        ],
+        [
+          65,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_R_WHEELSET__Q_WHEELSET",
+      "from": "R_WHEELSET",
+      "to": "Q_WHEELSET",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_WHEELSET_1",
+      "centerline": [
+        [
+          65,
+          63
+        ],
+        [
+          65,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_WHEELSET__D_WHEELSET",
+      "from": "Q_WHEELSET",
+      "to": "D_WHEELSET",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_WHEELSET_2",
+      "centerline": [
+        [
+          65,
+          68
+        ],
+        [
+          65,
+          74
+        ]
+      ]
+    },
+    {
+      "id": "L_D_WHEELSET__W_WHEELSET",
+      "from": "D_WHEELSET",
+      "to": "W_WHEELSET",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_WHEELSET_3",
+      "centerline": [
+        [
+          65,
+          74
+        ],
+        [
+          65,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_85__R_BRAKE",
+      "from": "J_N_85",
+      "to": "R_BRAKE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_BRAKE_0",
+      "centerline": [
+        [
+          85,
+          60
+        ],
+        [
+          85,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_R_BRAKE__Q_BRAKE",
+      "from": "R_BRAKE",
+      "to": "Q_BRAKE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BRAKE_1",
+      "centerline": [
+        [
+          85,
+          63
+        ],
+        [
+          85,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_BRAKE__D_BRAKE",
+      "from": "Q_BRAKE",
+      "to": "D_BRAKE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BRAKE_2",
+      "centerline": [
+        [
+          85,
+          68
+        ],
+        [
+          85,
+          74
+        ]
+      ]
+    },
+    {
+      "id": "L_D_BRAKE__W_BRAKE",
+      "from": "D_BRAKE",
+      "to": "W_BRAKE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_BRAKE_3",
+      "centerline": [
+        [
+          85,
+          74
+        ],
+        [
+          85,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_105__R_COUPLER",
+      "from": "J_N_105",
+      "to": "R_COUPLER",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_COUPLER_0",
+      "centerline": [
+        [
+          105,
+          60
+        ],
+        [
+          105,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_R_COUPLER__Q_COUPLER",
+      "from": "R_COUPLER",
+      "to": "Q_COUPLER",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_COUPLER_1",
+      "centerline": [
+        [
+          105,
+          63
+        ],
+        [
+          105,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_COUPLER__D_COUPLER",
+      "from": "Q_COUPLER",
+      "to": "D_COUPLER",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_COUPLER_2",
+      "centerline": [
+        [
+          105,
+          68
+        ],
+        [
+          105,
+          74
+        ]
+      ]
+    },
+    {
+      "id": "L_D_COUPLER__W_COUPLER",
+      "from": "D_COUPLER",
+      "to": "W_COUPLER",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_COUPLER_3",
+      "centerline": [
+        [
+          105,
+          74
+        ],
+        [
+          105,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "L_J_N_125__R_DOOR",
+      "from": "J_N_125",
+      "to": "R_DOOR",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_DOOR_0",
+      "centerline": [
+        [
+          125,
+          60
+        ],
+        [
+          125,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_R_DOOR__Q_DOOR",
+      "from": "R_DOOR",
+      "to": "Q_DOOR",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_DOOR_1",
+      "centerline": [
+        [
+          125,
+          63
+        ],
+        [
+          125,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_DOOR__D_DOOR",
+      "from": "Q_DOOR",
+      "to": "D_DOOR",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_DOOR_2",
+      "centerline": [
+        [
+          125,
+          68
+        ],
+        [
+          125,
+          74
+        ]
+      ]
+    },
+    {
+      "id": "L_D_DOOR__W_DOOR",
+      "from": "D_DOOR",
+      "to": "W_DOOR",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_DOOR_3",
+      "centerline": [
+        [
+          125,
+          74
+        ],
+        [
+          125,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_8__R_DISASSEMBLY",
+      "from": "J_S_8",
+      "to": "R_DISASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_DISASSEMBLY_0",
+      "centerline": [
+        [
+          8,
+          30
+        ],
+        [
+          8,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_R_DISASSEMBLY__Q_DISASSEMBLY",
+      "from": "R_DISASSEMBLY",
+      "to": "Q_DISASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_DISASSEMBLY_1",
+      "centerline": [
+        [
+          8,
+          27
+        ],
+        [
+          8,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_DISASSEMBLY__D_DISASSEMBLY",
+      "from": "Q_DISASSEMBLY",
+      "to": "D_DISASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_DISASSEMBLY_2",
+      "centerline": [
+        [
+          8,
+          22
+        ],
+        [
+          8,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "L_D_DISASSEMBLY__W_DISASSEMBLY",
+      "from": "D_DISASSEMBLY",
+      "to": "W_DISASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_DISASSEMBLY_3",
+      "centerline": [
+        [
+          8,
+          16
+        ],
+        [
+          8,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_45__R_STORE",
+      "from": "J_S_45",
+      "to": "R_STORE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_STORE_0",
+      "centerline": [
+        [
+          45,
+          30
+        ],
+        [
+          45,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_R_STORE__Q_STORE",
+      "from": "R_STORE",
+      "to": "Q_STORE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_STORE_1",
+      "centerline": [
+        [
+          45,
+          27
+        ],
+        [
+          45,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_STORE__D_STORE",
+      "from": "Q_STORE",
+      "to": "D_STORE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_STORE_2",
+      "centerline": [
+        [
+          45,
+          22
+        ],
+        [
+          45,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "L_D_STORE__W_STORE",
+      "from": "D_STORE",
+      "to": "W_STORE",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_STORE_3",
+      "centerline": [
+        [
+          45,
+          16
+        ],
+        [
+          45,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_65__R_BUFFER_IN",
+      "from": "J_S_65",
+      "to": "R_BUFFER_IN",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_BUFFER_IN_0",
+      "centerline": [
+        [
+          65,
+          30
+        ],
+        [
+          65,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_R_BUFFER_IN__Q_BUFFER_IN",
+      "from": "R_BUFFER_IN",
+      "to": "Q_BUFFER_IN",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BUFFER_IN_1",
+      "centerline": [
+        [
+          65,
+          27
+        ],
+        [
+          65,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_BUFFER_IN__D_BUFFER_IN",
+      "from": "Q_BUFFER_IN",
+      "to": "D_BUFFER_IN",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BUFFER_IN_2",
+      "centerline": [
+        [
+          65,
+          22
+        ],
+        [
+          65,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "L_D_BUFFER_IN__W_BUFFER_IN",
+      "from": "D_BUFFER_IN",
+      "to": "W_BUFFER_IN",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_BUFFER_IN_3",
+      "centerline": [
+        [
+          65,
+          16
+        ],
+        [
+          65,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_85__R_BUFFER_OUT",
+      "from": "J_S_85",
+      "to": "R_BUFFER_OUT",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_BUFFER_OUT_0",
+      "centerline": [
+        [
+          85,
+          30
+        ],
+        [
+          85,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_R_BUFFER_OUT__Q_BUFFER_OUT",
+      "from": "R_BUFFER_OUT",
+      "to": "Q_BUFFER_OUT",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BUFFER_OUT_1",
+      "centerline": [
+        [
+          85,
+          27
+        ],
+        [
+          85,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_BUFFER_OUT__D_BUFFER_OUT",
+      "from": "Q_BUFFER_OUT",
+      "to": "D_BUFFER_OUT",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BUFFER_OUT_2",
+      "centerline": [
+        [
+          85,
+          22
+        ],
+        [
+          85,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "L_D_BUFFER_OUT__W_BUFFER_OUT",
+      "from": "D_BUFFER_OUT",
+      "to": "W_BUFFER_OUT",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_BUFFER_OUT_3",
+      "centerline": [
+        [
+          85,
+          16
+        ],
+        [
+          85,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_125__R_PARK",
+      "from": "J_S_125",
+      "to": "R_PARK",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_PARK_0",
+      "centerline": [
+        [
+          125,
+          30
+        ],
+        [
+          125,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_R_PARK__Q_PARK",
+      "from": "R_PARK",
+      "to": "Q_PARK",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_PARK_1",
+      "centerline": [
+        [
+          125,
+          27
+        ],
+        [
+          125,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_PARK__D_PARK",
+      "from": "Q_PARK",
+      "to": "D_PARK",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_PARK_2",
+      "centerline": [
+        [
+          125,
+          22
+        ],
+        [
+          125,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "L_D_PARK__W_PARK",
+      "from": "D_PARK",
+      "to": "W_PARK",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_PARK_3",
+      "centerline": [
+        [
+          125,
+          16
+        ],
+        [
+          125,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "L_J_S_136__R_ASSEMBLY",
+      "from": "J_S_136",
+      "to": "R_ASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 1,
+      "physical_channel": "CH_ASSEMBLY_0",
+      "centerline": [
+        [
+          136,
+          30
+        ],
+        [
+          136,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_R_ASSEMBLY__Q_ASSEMBLY",
+      "from": "R_ASSEMBLY",
+      "to": "Q_ASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_ASSEMBLY_1",
+      "centerline": [
+        [
+          136,
+          27
+        ],
+        [
+          136,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "L_Q_ASSEMBLY__D_ASSEMBLY",
+      "from": "Q_ASSEMBLY",
+      "to": "D_ASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_ASSEMBLY_2",
+      "centerline": [
+        [
+          136,
+          22
+        ],
+        [
+          136,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "L_D_ASSEMBLY__W_ASSEMBLY",
+      "from": "D_ASSEMBLY",
+      "to": "W_ASSEMBLY",
+      "direction": "two_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.5,
+      "physical_channel": "CH_ASSEMBLY_3",
+      "centerline": [
+        [
+          136,
+          16
+        ],
+        [
+          136,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "L_W_BODY__R_BODY",
+      "from": "W_BODY",
+      "to": "R_BODY",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BODY_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          25,
+          80
+        ],
+        [
+          26.6,
+          80
+        ],
+        [
+          26.6,
+          63
+        ],
+        [
+          25,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_W_BOGIE__R_BOGIE",
+      "from": "W_BOGIE",
+      "to": "R_BOGIE",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BOGIE_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          45,
+          80
+        ],
+        [
+          46.6,
+          80
+        ],
+        [
+          46.6,
+          63
+        ],
+        [
+          45,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_W_WHEELSET__R_WHEELSET",
+      "from": "W_WHEELSET",
+      "to": "R_WHEELSET",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_WHEELSET_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          65,
+          80
+        ],
+        [
+          66.6,
+          80
+        ],
+        [
+          66.6,
+          63
+        ],
+        [
+          65,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_W_BRAKE__R_BRAKE",
+      "from": "W_BRAKE",
+      "to": "R_BRAKE",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BRAKE_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          85,
+          80
+        ],
+        [
+          86.6,
+          80
+        ],
+        [
+          86.6,
+          63
+        ],
+        [
+          85,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_W_COUPLER__R_COUPLER",
+      "from": "W_COUPLER",
+      "to": "R_COUPLER",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_COUPLER_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          105,
+          80
+        ],
+        [
+          106.6,
+          80
+        ],
+        [
+          106.6,
+          63
+        ],
+        [
+          105,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_W_DOOR__R_DOOR",
+      "from": "W_DOOR",
+      "to": "R_DOOR",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_DOOR_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          125,
+          80
+        ],
+        [
+          126.6,
+          80
+        ],
+        [
+          126.6,
+          63
+        ],
+        [
+          125,
+          63
+        ]
+      ]
+    },
+    {
+      "id": "L_W_DISASSEMBLY__R_DISASSEMBLY",
+      "from": "W_DISASSEMBLY",
+      "to": "R_DISASSEMBLY",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_DISASSEMBLY_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          8,
+          10
+        ],
+        [
+          6.4,
+          10
+        ],
+        [
+          6.4,
+          27
+        ],
+        [
+          8,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_W_STORE__R_STORE",
+      "from": "W_STORE",
+      "to": "R_STORE",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_STORE_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          45,
+          10
+        ],
+        [
+          43.4,
+          10
+        ],
+        [
+          43.4,
+          27
+        ],
+        [
+          45,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_W_BUFFER_IN__R_BUFFER_IN",
+      "from": "W_BUFFER_IN",
+      "to": "R_BUFFER_IN",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BUFFER_IN_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          65,
+          10
+        ],
+        [
+          63.4,
+          10
+        ],
+        [
+          63.4,
+          27
+        ],
+        [
+          65,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_W_BUFFER_OUT__R_BUFFER_OUT",
+      "from": "W_BUFFER_OUT",
+      "to": "R_BUFFER_OUT",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_BUFFER_OUT_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          85,
+          10
+        ],
+        [
+          83.4,
+          10
+        ],
+        [
+          83.4,
+          27
+        ],
+        [
+          85,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_W_PARK__R_PARK",
+      "from": "W_PARK",
+      "to": "R_PARK",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_PARK_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          125,
+          10
+        ],
+        [
+          123.4,
+          10
+        ],
+        [
+          123.4,
+          27
+        ],
+        [
+          125,
+          27
+        ]
+      ]
+    },
+    {
+      "id": "L_W_ASSEMBLY__R_ASSEMBLY",
+      "from": "W_ASSEMBLY",
+      "to": "R_ASSEMBLY",
+      "direction": "one_way",
+      "lane_count": 1,
+      "width_m": 2.2,
+      "speed_limit_mps": 0.8,
+      "physical_channel": "CH_ASSEMBLY_RET",
+      "note_zh": "回程单向道：车辆取/放完从工位侧直接回路口，不再借道 D 的进出车道",
+      "centerline": [
+        [
+          136,
+          10
+        ],
+        [
+          134.4,
+          10
+        ],
+        [
+          134.4,
+          27
+        ],
+        [
+          136,
+          27
+        ]
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "brake_parts",
+      "name_zh": "制动配件",
+      "from_zones": [
+        "STORE"
+      ],
+      "to_zones": [
+        "BRAKE"
+      ],
+      "unit": "箱",
+      "note_zh": "备件库向制动检修区补给阀件、缸体与密封件"
+    },
+    {
+      "id": "coupler_parts",
+      "name_zh": "钩缓配件",
+      "from_zones": [
+        "STORE"
+      ],
+      "to_zones": [
+        "COUPLER"
+      ],
+      "unit": "箱",
+      "note_zh": "备件库向钩缓检修区补给钩体、缓冲器与配件"
+    },
+    {
+      "id": "wheelset_parts",
+      "name_zh": "轮轴配件",
+      "from_zones": [
+        "STORE"
+      ],
+      "to_zones": [
+        "WHEELSET"
+      ],
+      "unit": "托",
+      "note_zh": "轴承、密封与压装配件；轮对本体由轮轴间专用设备转运，不由 AGV 承担"
+    },
+    {
+      "id": "bogie_parts",
+      "name_zh": "转向架配件",
+      "from_zones": [
+        "STORE"
+      ],
+      "to_zones": [
+        "BOGIE"
+      ],
+      "unit": "箱",
+      "note_zh": "弹簧、闸瓦与紧固件等小件；转向架构架由专用承载设备转运"
+    },
+    {
+      "id": "door_parts",
+      "name_zh": "车门与开闭件配件",
+      "from_zones": [
+        "STORE"
+      ],
+      "to_zones": [
+        "DOOR"
+      ],
+      "unit": "箱",
+      "note_zh": "车门锁闭机构、铰链与附属件"
+    },
+    {
+      "id": "body_parts",
+      "name_zh": "车体配件与焊材",
+      "from_zones": [
+        "STORE"
+      ],
+      "to_zones": [
+        "BODY"
+      ],
+      "unit": "箱",
+      "note_zh": "板材、型材与焊接耗材"
+    },
+    {
+      "id": "tooling",
+      "name_zh": "工装与工具箱",
+      "from_zones": [
+        "STORE"
+      ],
+      "to_zones": [
+        "BODY",
+        "BOGIE",
+        "WHEELSET",
+        "BRAKE",
+        "COUPLER",
+        "DOOR"
+      ],
+      "unit": "件",
+      "note_zh": "通用工装；可送往任一检修工位"
+    },
+    {
+      "id": "disassembled_pending",
+      "name_zh": "拆解件（待检）",
+      "from_zones": [
+        "DISASSEMBLY"
+      ],
+      "to_zones": [
+        "BUFFER_IN"
+      ],
+      "unit": "托",
+      "note_zh": "拆解区拆下的部件送待检缓存"
+    },
+    {
+      "id": "disassembled_direct",
+      "name_zh": "拆解件（直送检修）",
+      "from_zones": [
+        "DISASSEMBLY"
+      ],
+      "to_zones": [
+        "BODY",
+        "BOGIE",
+        "WHEELSET"
+      ],
+      "unit": "托",
+      "note_zh": "拆解后工艺明确的大件直送对应检修区，不经缓存"
+    },
+    {
+      "id": "pending_to_station",
+      "name_zh": "待检件送修",
+      "from_zones": [
+        "BUFFER_IN"
+      ],
+      "to_zones": [
+        "BODY",
+        "BOGIE",
+        "WHEELSET",
+        "BRAKE",
+        "COUPLER",
+        "DOOR"
+      ],
+      "unit": "托",
+      "note_zh": "待检缓存按检修工艺分派到各专业检修工位"
+    },
+    {
+      "id": "repaired_to_buffer",
+      "name_zh": "检修完成件",
+      "from_zones": [
+        "BODY",
+        "BOGIE",
+        "WHEELSET",
+        "BRAKE",
+        "COUPLER",
+        "DOOR"
+      ],
+      "to_zones": [
+        "BUFFER_OUT"
+      ],
+      "unit": "托",
+      "note_zh": "检修合格件送检后缓存等待组装；从工位 W 取货"
+    },
+    {
+      "id": "buffer_out_to_assembly",
+      "name_zh": "送组装区",
+      "from_zones": [
+        "BUFFER_OUT"
+      ],
+      "to_zones": [
+        "ASSEMBLY"
+      ],
+      "unit": "托",
+      "note_zh": "检后缓存按组装节拍送往组装区"
+    },
+    {
+      "id": "rework_back",
+      "name_zh": "返修件",
+      "from_zones": [
+        "ASSEMBLY"
+      ],
+      "to_zones": [
+        "BODY",
+        "BOGIE",
+        "WHEELSET",
+        "BRAKE",
+        "COUPLER",
+        "DOOR"
+      ],
+      "unit": "托",
+      "note_zh": "组装或检验发现不合格，退回对应检修工位返修"
+    },
+    {
+      "id": "return_to_store",
+      "name_zh": "退料",
+      "from_zones": [
+        "BODY",
+        "BOGIE",
+        "WHEELSET",
+        "BRAKE",
+        "COUPLER",
+        "DOOR",
+        "ASSEMBLY",
+        "BUFFER_IN",
+        "BUFFER_OUT"
+      ],
+      "to_zones": [
+        "STORE"
+      ],
+      "unit": "托",
+      "note_zh": "剩余物料、换下件与不合格备件退回备件库"
+    }
+  ]
+}

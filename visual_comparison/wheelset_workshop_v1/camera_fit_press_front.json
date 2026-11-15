@@ -1,0 +1,161 @@
+{
+  "camera": "press_front",
+  "reference_second": 62,
+  "image_size": [
+    1280,
+    720
+  ],
+  "mode": "verify_stored_pose_against_current_geometry",
+  "stored_pose": [
+    [
+      127.0885248498255,
+      17.412823272424127,
+      4.836221473206401
+    ],
+    [
+      135.19298750034545,
+      17.218212493882127,
+      -1.0186749213681852
+    ]
+  ],
+  "fitted_parameters": [
+    127.0885248498255,
+    17.412823272424127,
+    4.836221473206401,
+    -0.024008178549961224,
+    0.6254839123127995
+  ],
+  "registration": "manual_sparse_landmark_fit",
+  "pixel_reading_tolerance_estimate": 8,
+  "world_geometry_measured": false,
+  "after_fit_rmse_px": 8.003544993001665,
+  "after_check_rmse_px": 15.276627908191797,
+  "landmarks": [
+    {
+      "name": "left_wheel_hub",
+      "world_point": [
+        133,
+        18.07,
+        0.78
+      ],
+      "source_pixel": [
+        502,
+        329
+      ],
+      "role": "fit",
+      "current_projection": [
+        495.72772953125116,
+        330.6405072052438
+      ]
+    },
+    {
+      "name": "right_wheel_hub",
+      "world_point": [
+        133,
+        16.53,
+        0.78
+      ],
+      "source_pixel": [
+        781,
+        329
+      ],
+      "role": "fit",
+      "current_projection": [
+        773.1969110914226,
+        326.8704626802042
+      ]
+    },
+    {
+      "name": "left_beam_end",
+      "world_point": [
+        133.45,
+        19.55,
+        1.45
+      ],
+      "source_pixel": [
+        219,
+        179
+      ],
+      "role": "fit",
+      "current_projection": [
+        223.29744059339566,
+        187.38227935025535
+      ]
+    },
+    {
+      "name": "right_beam_end",
+      "world_point": [
+        133.45,
+        15.05,
+        1.45
+      ],
+      "source_pixel": [
+        1028,
+        180
+      ],
+      "role": "fit",
+      "current_projection": [
+        1037.266640819432,
+        178.11409751170328
+      ]
+    },
+    {
+      "name": "front_motor_end",
+      "world_point": [
+        132.35,
+        17.3,
+        0.35
+      ],
+      "source_pixel": [
+        637,
+        470
+      ],
+      "role": "fit",
+      "current_projection": [
+        637.467158650874,
+        464.13043480285364
+      ]
+    },
+    {
+      "name": "left_ram_end",
+      "world_point": [
+        133,
+        18.38,
+        0.78
+      ],
+      "source_pixel": [
+        433,
+        329
+      ],
+      "role": "check",
+      "current_projection": [
+        439.5921777764138,
+        331.4032352616118
+      ]
+    },
+    {
+      "name": "right_ram_end",
+      "world_point": [
+        133,
+        16.22,
+        0.78
+      ],
+      "source_pixel": [
+        849,
+        329
+      ],
+      "role": "check",
+      "current_projection": [
+        828.771376346829,
+        326.11535824918207
+      ]
+    }
+  ],
+  "geometry_adjusted_using_same_reference": true,
+  "check_points_note": "Two additional points excluded from pose fitting, but from the same source frame; not an independent scene-validation set.",
+  "applied": true,
+  "claim_boundary": "Sparse landmark alignment only; not full-image, full-scene, engineering-dimension, or dynamics acceptance.",
+  "build_fingerprint": "a5d904d45f00c611351ac24534889f55cdbdd6cc41cb23434a5c4cca90dbfb88",
+  "gazebo_image_sha256": "9dd532c166f05201df2eafa012391efc4b25ba6dd21ad00808ae2173f995a7c3",
+  "reference_frame_sha256": "6e4dff4c79fd1f7104ec663f379cc9bdd338d1ece3eff6a3f0c960308438c3c6"
+}
