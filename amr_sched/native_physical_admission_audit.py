@@ -34,8 +34,11 @@ def inspect_physical_membership(owner, robot_id, *, expected_routes, now):
         require(robot.cur_node in sim.network.nodes and
                 sim.network.node(robot.cur_node).kind is NodeKind.BUFFER,
                 "NO_VERIFIED_BUFFER_PARKING")
-        require(robot.cur_task is None and robot.state is AgvState.IDLE and not robot.route
-                and robot_id not in sim._jobs and robot_id not in sim._transit,
+        # Simulator.poll_execution marks a fault-latched, stopped robot BLOCKED.
+        # This is expected during operator pause, not evidence of motion; the
+        # no-job/no-transit and fresh STOPPED checks below remain mandatory.
+        require(robot.cur_task is None and robot.state in (AgvState.IDLE,AgvState.BLOCKED)
+                and not robot.route and robot_id not in sim._jobs and robot_id not in sim._transit,
                 "COMMITTED_ROBOT_MOTION_OR_CARGO")
         require(robot_id not in sim._node_claim,"UNSETTLED_NODE_CLAIM")
         require(not any(t.assigned_agv==robot_id and t.status.value != 'completed' for t in sim.tasks),
