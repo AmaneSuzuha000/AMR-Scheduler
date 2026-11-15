@@ -71,3 +71,23 @@ def test_physical_candidate_fails_closed(case,expected):
     v=inspect(owner,routes=routes,now=now)
     assert not v['ready'] and expected in v['reasons']
     assert v['physical_authorization'] is False
+
+def test_existing_control_channel_preview_cannot_move_or_mutate():
+    from amr_sched.fleet_control import FleetControl
+    owner=paused_fixture()
+    ctl=FleetControl(owner)
+    st=ctl.state()
+    body=dict(type='control_request',session_id=st['session_id'],
+         scene_id=st['scene_id'],run_id=st['run_id'],request_id='preview-1',
+         operation='preview_fleet_membership',
+         payload={'robot_id':'R1','routes':st['routes']})
+    before=deepcopy(([(a.cur_node,a.cur_task) for a in owner.sim.agvs],
+         owner.sim._res.pins(),[(r,g.recovery_token()) for r,g in owner.sim.executions.items()]))
+    response=ctl.handle(body)
+    assert not response['accepted']
+    assert response['reason']=='PREVIEW_ONLY_NO_PHYSICAL_COMMIT'
+    assert response['readiness']['ready'] and not response['readiness']['physical_authorization']
+    assert owner.writes==[]
+    assert before==([(a.cur_node,a.cur_task) for a in owner.sim.agvs],
+        owner.sim._res.pins(),[(r,g.recovery_token()) for r,g in owner.sim.executions.items()])
+    assert ctl.handle(body)==response
