@@ -1,0 +1,15 @@
+{
+  "source_host": "suzuha@192.168.3.130",
+  "source_path": "/home/suzuha/scout_gazebo_ws/src/scout_gazebo_description",
+  "files_sha256": {
+    "README.md": "9e6e59c8702500a6e5ded11305719bcad54c8f473a2e7b1d713a2acc5c58d4d9",
+    "scout_gazebo_description/CMakeLists.txt": "3f561f33c80a3fa0577fb7b15595dcd6a6b5f097fd3b837023038a70db99600c",
+    "scout_gazebo_description/package.xml": "4afe667ad6f905c1a586fcb6fe8a915a72f13c74bed92b14aba5532a9acf8e11",
+    "scout_gazebo_description/meshes/scout_mini_base_link.dae": "5b7536b48ddecfcab48c90ece54c69ec524242ce64b6073cfd60757ad1dd478a",
+    "scout_gazebo_description/meshes/wheel.dae": "71d7c2c16c03782d127b84fcddba7393f057566885a20c1257dcfbbf2e65439c",
+    "scout_gazebo_description/urdf/scout_mini.gazebo.xacro": "360139a0589c3861ed43a2c81ef0c6ad995351e009196cfb5b145bfde7bf1334",
+    "scout_gazebo_description/urdf/scout_mini.urdf.xacro": "b3d113594313c0861bac010bcfcdd7ee3e56f5560d207ab04e00864a43d9b1e2"
+  },
+  "local_change": "CMake install directories reduced to bundled urdf/meshes",
+  "provenance_status": "Local derived assets; upstream per-mesh attribution/license mapping pending"
+}

@@ -1,0 +1,117 @@
+# Nav2 局部导航：把 Python 给的全局路线变成速度指令。
+#
+# 为什么不用 nav2_bringup 的默认全家桶：默认配置带 AMCL、地图服务器和全局规划器，
+# 那等于让 Nav2 自己再规划一条全局路线 —— 正是三层架构里明令禁止的"重复 Python 的
+# 车队全局规划"。这里只开控制器、代价地图和恢复行为三件套，全局路线由 Python 下发。
+#
+# 坐标系：Gazebo 世界 = 车间网络 / 25（GzFrame），所以这里全部用 odom 坐标系，
+# 不做 map->odom 变换（没有 AMCL 在跑）。
+bt_navigator:
+  ros__parameters:
+    use_sim_time: true
+    global_frame: odom
+    robot_base_frame: base_footprint
+    odom_topic: /odom
+    bt_xml_filename: ""            # 用默认 NavigateToPose 树
+
+controller_server:
+  ros__parameters:
+    use_sim_time: true
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    # Humble 里这两个名字是单数且是字符串，不是数组。写成数组会在参数声明阶段直接
+    # 抛 InvalidParameterTypeException，controller_server 带着 -6 退出。
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      # 实测：Scout Mini 用 libgazebo_ros_planar_move 驱动时，起转阶段 10 s 内
+      # 只走 0.10 m（机器人有惯量、控制器要先对齐朝向），默认的 0.3 m / 10 s
+      # 会在这段时间里判成"没有进展"并中止。这里放宽到 0.10 m / 20 s ——
+      # 依据是实测位移，不是为了让结果好看而随手改大。
+      required_movement_radius: 0.10
+      movement_time_allowance: 20.0
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.15
+      yaw_goal_tolerance: 0.20
+    # Regulated Pure Pursuit：沿给定路径走，不自己找路。这正是"局部跟踪"该做的事。
+    FollowPath:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 0.30
+      lookahead_dist: 0.50
+      # 起点到第一个目标点只有 0.68 m（1/25 缩比），转角处需要先转再走。
+      use_rotate_to_heading: true
+      min_lookahead_dist: 0.30
+      max_lookahead_dist: 0.80
+      use_velocity_scaled_lookahead_dist: false
+      transform_tolerance: 0.5
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 1.5
+      use_regulated_linear_velocity_scaling: true
+      use_cost_regulated_linear_velocity_scaling: false
+      regulated_linear_scaling_min_radius: 0.6
+      regulated_linear_scaling_min_speed: 0.10
+      use_rotate_to_heading: true
+      allow_reversing: false
+      rotate_to_heading_min_angle: 0.5
+      max_angular_accel: 2.0
+      rotate_to_heading_angular_vel: 0.8
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 5.0
+      publish_frequency: 2.0
+      global_frame: odom
+      robot_base_frame: base_footprint
+      rolling_window: true
+      # width/height 在这个版本的 costmap 里声明为整数，写 4.0 会在参数声明阶段抛
+      # InvalidParameterTypeException（integer -> double 不允许）。写 4。
+      width: 4
+      height: 4
+      resolution: 0.05
+      robot_radius: 0.22
+      plugins: ["obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+          # 车间里轨道只有 1 cm 高，雷达在 0.18 m，扫平面在轨道之上：
+          # 实测 720 束全部返回 inf。所以这张代价地图现在看到的是空世界。
+          # 不改成"假装有障碍"，而是把这件事写在证据文档里。
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.30
+
+# 三层架构里 Nav2 不做全局规划，但 navigation_launch.py 仍会起一份 global_costmap，
+# 它默认找 map 帧。没有 AMCL 就没有 map 帧，于是每秒刷一条 canTransform 超时。
+# 把它的参考帧也设成 odom，让它闭嘴 —— 而不是加一个空的 map->odom 变换掩盖问题。
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      use_sim_time: true
+      global_frame: odom
+      robot_base_frame: base_footprint
+      update_frequency: 1.0
+      publish_frequency: 0.5
+      resolution: 0.05
+      robot_radius: 0.22
+      plugins: ["inflation_layer"]
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.30
