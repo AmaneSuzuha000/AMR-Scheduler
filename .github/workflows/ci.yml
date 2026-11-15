@@ -43,6 +43,18 @@ jobs:
           path: system12_evidence/native_dynamic_matrix.json
           retention-days: 30
 
+      - name: SYSTEM12 post-hoc crew/tool mechanism stress
+        if: ${{ matrix.python-version == '3.12' }}
+        run: python tools/research/system12_resource_stress.py --out system12_evidence/native_crew_stress.json
+
+      - name: Archive SYSTEM12 post-hoc mechanism data
+        if: ${{ matrix.python-version == '3.12' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: system12-native-crew-mechanism
+          path: system12_evidence/native_crew_stress.json
+          retention-days: 30
+
       - name: Check experiment data integrity
         run: python tools/data_manifest.py --check
 
