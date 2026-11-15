@@ -1,0 +1,32 @@
+name: upstream RAWSim-O
+
+# 上游 RAWSim-O 的 C# 构建。本课题交付物是 Python（amr_sched/），
+# 这里只在改动上游源码时才跑，避免每次 push 都消耗 CI 时间。
+
+
+on:
+  push:
+    paths:
+      - 'RAWSimO.*/**'
+      - 'MaTiTiny*/**'
+      - 'RAWSimO.sln'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build & test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['6.0.x' ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Build
+        run: dotnet build --configuration XPlat
+      - name: Test
+        run: dotnet test --configuration XPlat --verbosity normal
