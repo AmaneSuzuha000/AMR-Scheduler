@@ -178,7 +178,7 @@ simulation/wheelset_workshop/process_runs/
 visual_comparison/
 simulation/wheelset_workshop/worlds/camera_*.world
 
-# ---------- 内部结项、论文答辩与核验脚手架 (Internal Defense & Acceptance Tools) ----------
+# ---------- 内部科研草稿、论文答辩与核验脚手架 (Internal Research & Acceptance Tools) ----------
 docs/*
 !docs/architecture/
 !docs/architecture/**
@@ -191,6 +191,11 @@ tools/capture_hid_evidence.py
 tools/export_pdf.py
 tools/*_export.ps1
 tools/verify_numbers.py
+
+# ---------- 实验原始运行记录与追踪证据 (Raw Experiment Dumps & Execution Traces) ----------
+evidence/
+tools/run_paper_experiments.py
+
 
 
 
