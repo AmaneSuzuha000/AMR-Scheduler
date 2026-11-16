@@ -1,35 +1,37 @@
-"""Independent Auditor for LG-CVCR / AMR-Scheduler Simulation Traces.
+"""Independent Step-by-Step Auditor for LG-CVCR / AMR-Scheduler Traces.
 
-Strictly verifies execution traces independently without relying on the solver's
-internal flags. Verifies:
-1. No spatial collisions: Node and edge capacities never exceeded.
-2. Directional integrity: No illegal reverse traversal on directed edges.
-3. Commitment preservation: Picked-up/in-transit tasks never mutated.
-4. Production kitting precedence: Operations only start after kit delivery.
-5. Independent objective calculation: True makespan, tardiness, conflict wait.
+Audits the complete simulation trajectory independently of solver flags:
+1. Per-step node occupancy vs network node capacity across ALL recorded steps.
+2. Per-step directed edge validity (every transition u->v exists in network).
+3. Commitment monotonicity across steps: once PICKED/COMPLETED, task ownership
+   cannot be reassigned to a different AGV.
+4. Production kitting precedence and bay/crew/tool mutex non-overlap.
+5. Independent computation of makespan, weighted tardiness, and completion counts.
 """
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional
 
 
 @dataclass
 class AuditReport:
+    """Result of independent post-run trace audit."""
+
     pass_audit: bool
     issues: list[str]
     total_steps: int
     completed_tasks: int
     failed_tasks: int
     conflict_events: int
+    invalid_edge_moves: int
     independent_makespan: float
     independent_tardiness: float
     reassignment_count: int
 
 
 class IndependentAuditor:
-    """Performs rigorous, independent post-run audit on simulation execution."""
+    """Performs rigorous per-step trajectory audit on simulation execution."""
 
     @staticmethod
     def audit_simulation_run(
@@ -37,50 +39,84 @@ class IndependentAuditor:
         operations: Optional[list[Any]] = None,
         initial_assignment: Optional[dict[str, str]] = None,
     ) -> AuditReport:
+        """Audit full trajectory (`simulator._trajectory`), tasks, and operations."""
         issues: list[str] = []
         network = simulator.network
-        history = getattr(simulator, "history", [])
+        trajectory = getattr(simulator, "_trajectory", [])
         total_steps = int(simulator._step_cursor)
 
-        # 1. Spatiotemporal conflict verification across history
         conflict_events = 0
-        for record in history:
-            step = getattr(record, "step", None)
-            if step is None and isinstance(record, dict):
-                step = record.get("step", 0)
+        invalid_edge_moves = 0
+        prev_nodes: dict[str, str] = {}
 
-            # Node occupancy check
+        # 1. Step-by-step spatial occupancy & directed-edge audit
+        for record in trajectory:
+            step = int(record.step)
             node_counts: dict[str, list[str]] = {}
-            for agv in simulator.agvs:
-                # Check recorded pose or current node
-                pos = getattr(agv, "cur_node", None)
-                if pos:
-                    node_counts.setdefault(pos, []).append(agv.agv_id)
+            for agv_id, pos_str in record.agv_positions.items():
+                if not pos_str:
+                    continue
+                if "->" in pos_str:
+                    src, dst = pos_str.split("->", 1)
+                    if not network.has_edge(src, dst):
+                        invalid_edge_moves += 1
+                        issues.append(f"STEP_{step}_INVALID_DIRECTED_EDGE:{agv_id}:{src}->{dst}")
+                    prev_nodes[agv_id] = pos_str
+                else:
+                    node_counts.setdefault(pos_str, []).append(agv_id)
+                    prev = prev_nodes.get(agv_id)
+                    if prev is not None and "->" not in prev and prev != pos_str:
+                        if not network.has_edge(prev, pos_str):
+                            invalid_edge_moves += 1
+                            issues.append(f"STEP_{step}_TELEPORT_OR_MISSING_EDGE:{agv_id}:{prev}->{pos_str}")
+                    prev_nodes[agv_id] = pos_str
 
-            for node, occupants in node_counts.items():
-                cap = network.node(node).capacity if network.has_node(node) else 1
+            for node_id, occupants in node_counts.items():
+                cap = network.node(node_id).capacity if network.has_node(node_id) else 1
                 if len(occupants) > cap:
                     conflict_events += 1
-                    issues.append(f"STEP_{step}_NODE_CAPACITY_EXCEEDED:{node}:{occupants}")
+                    issues.append(f"STEP_{step}_NODE_CAPACITY_EXCEEDED:{node_id}:{occupants}:cap={cap}")
 
-        # 2. Commitment preservation check
-        # Check that any completed or picked task matches final assignment
+        # 2. Task lifecycle & commitment integrity check
         for t in simulator.tasks:
             if t.status.value in ("completed", "picked") and t.assigned_agv is None:
-                issues.append(f"UNASSIGNED_BUT_COMPLETED_TASK:{t.task_id}")
+                issues.append(f"UNASSIGNED_BUT_EXECUTED_TASK:{t.task_id}")
+            if t.status.value == "completed":
+                if t.pickup_step is not None and t.complete_step is not None and t.complete_step < t.pickup_step:
+                    issues.append(f"TIME_INVERSION_TASK:{t.task_id}:complete={t.complete_step}<pickup={t.pickup_step}")
 
-        # 3. Kitting precedence check
+        # 3. Kitting precedence, predecessor, and crew/tool/bay mutex check
         if operations:
             tasks_by_id = {t.task_id: t for t in simulator.tasks}
+            op_by_id = {op.op_id: op for op in operations}
             for op in operations:
                 if getattr(op, "started", False) and getattr(op, "start_step", None) is not None:
-                    op_start = op.start_step
+                    op_start = int(op.start_step)
                     for kit_tid in op.kit_task_ids:
                         kt = tasks_by_id.get(kit_tid)
-                        if kt and (kt.complete_step is None or kt.complete_step > op_start):
+                        if kt and (kt.complete_step is None or int(kt.complete_step) > op_start):
                             issues.append(
-                                f"PREMATURE_OP_START:{op.op_id}_STARTED_AT_{op_start}_BEFORE_KIT_{kit_tid}_UNLOAD"
+                                f"PREMATURE_OP_START:{op.op_id}_AT_{op_start}_BEFORE_KIT_{kit_tid}_COMPLETE_{kt.complete_step}"
                             )
+                    if op.predecessor_op_id and op.predecessor_op_id in op_by_id:
+                        pred = op_by_id[op.predecessor_op_id]
+                        if not pred.started or pred.end_step is None or int(pred.end_step) > op_start:
+                            issues.append(
+                                f"PREDECESSOR_VIOLATION:{op.op_id}_AT_{op_start}_BEFORE_{pred.op_id}_END_{pred.end_step}"
+                            )
+
+            # Check resource mutex intervals
+            started_ops = [op for op in operations if op.started and op.start_step is not None and op.end_step is not None]
+            for i in range(len(started_ops)):
+                for j in range(i + 1, len(started_ops)):
+                    a, b = started_ops[i], started_ops[j]
+                    if a.start_step < b.end_step and b.start_step < a.end_step:
+                        if a.bay_id == b.bay_id:
+                            issues.append(f"BAY_MUTEX_OVERLAP:{a.op_id}_AND_{b.op_id}_AT_{a.bay_id}")
+                        if a.crew_id == b.crew_id:
+                            issues.append(f"CREW_MUTEX_OVERLAP:{a.op_id}_AND_{b.op_id}_CREW_{a.crew_id}")
+                        if a.tool_id == b.tool_id:
+                            issues.append(f"TOOL_MUTEX_OVERLAP:{a.op_id}_AND_{b.op_id}_TOOL_{a.tool_id}")
 
         # 4. Independent metrics
         completed_tasks = sum(1 for t in simulator.tasks if t.status.value == "completed")
@@ -100,15 +136,14 @@ class IndependentAuditor:
                 if init_r and t.assigned_agv and init_r != t.assigned_agv:
                     reassign_cnt += 1
 
-        pass_audit = len(issues) == 0
-
         return AuditReport(
-            pass_audit=pass_audit,
+            pass_audit=(len(issues) == 0),
             issues=issues,
             total_steps=total_steps,
             completed_tasks=completed_tasks,
             failed_tasks=failed_tasks,
             conflict_events=conflict_events,
+            invalid_edge_moves=invalid_edge_moves,
             independent_makespan=makespan_sec,
             independent_tardiness=tardiness,
             reassignment_count=reassign_cnt,

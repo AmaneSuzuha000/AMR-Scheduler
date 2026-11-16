@@ -485,8 +485,36 @@ class Simulator:
         self._operator_paused = False
         #: Step cursor. Initialized at construction so external reads before reset() do not fail.
         self._step_cursor = 0
+        # Software fleet admission gate, faulted-AGV mask, and CVCR task-assignment pins.
+        self._admitted_agvs: set[str] | None = None
+        self._faulted_agvs: set[str] = set()
+        self._pinned_task_agv: dict[str, str] = {}
+        self._fleet_revision: int = 1
+        self._reservation_revision: int = 1
+        self._production_revision: int = 1
 
     # ---------- Helpers ----------
+
+    def set_admitted_agvs(self, agv_ids: set[str] | list[str] | tuple[str, ...] | None) -> None:
+        """Set active software fleet admission set; None admits all AGVs."""
+        if agv_ids is None:
+            self._admitted_agvs = None
+        else:
+            known = {a.agv_id for a in self.agvs}
+            self._admitted_agvs = {str(x) for x in agv_ids if str(x) in known}
+        self._fleet_revision += 1
+
+    def set_agv_faulted(self, agv_id: str, faulted: bool = True) -> None:
+        """Mark or clear a simulated software fault on an AGV (blocks dispatch and retreat)."""
+        if faulted:
+            self._faulted_agvs.add(str(agv_id))
+        else:
+            self._faulted_agvs.discard(str(agv_id))
+        self._fleet_revision += 1
+
+    def set_task_assignment_pins(self, mapping: dict[str, str]) -> None:
+        """Pin task IDs to specific AGV IDs so native _assign_step honors CVCR assignments."""
+        self._pinned_task_agv.update({str(k): str(v) for k, v in mapping.items()})
 
     def execution_for(self, robot_id: str) -> ExternalExecution | None:
         """Return only this robot's feedback gate; algorithm mode has none."""
@@ -1370,6 +1398,12 @@ class Simulator:
         self._ideal_odometer = 0.0
         self._material_waste_steps = 0.0
         self._deadlock_breaks = 0
+        self._admitted_agvs = None
+        self._faulted_agvs.clear()
+        self._pinned_task_agv.clear()
+        self._fleet_revision = 1
+        self._reservation_revision = 1
+        self._production_revision = 1
 
         for agv in self.agvs:
             agv.cur_node = agv.start_node
@@ -1696,6 +1730,8 @@ class Simulator:
 
         for agv in self.agvs:
             if agv.agv_id in self._jobs or agv.agv_id in self._transit:
+                continue
+            if agv.agv_id in self._faulted_agvs:
                 continue
             node = agv.cur_node or agv.start_node
             if node not in wanted:
@@ -2040,6 +2076,8 @@ class Simulator:
 
     def _assign_step(self, step: int, *, urgent_only: bool = False) -> None:
         idle = [a for a in self.agvs if a.cur_task is None and a.agv_id not in self._transit
+                and a.agv_id not in self._faulted_agvs
+                and (self._admitted_agvs is None or a.agv_id in self._admitted_agvs)
                 and (not self.executions or (self.execution_for(a.agv_id).bound
                                              and not self.execution_for(a.agv_id).fault))]
         if not idle:
@@ -2055,8 +2093,30 @@ class Simulator:
         ]
         if not pending:
             return
+
+        # Dispatch pinned CVCR assignments to their designated admitted AGV first.
+        idle_by_id = {a.agv_id: a for a in idle}
+        unpinned: list[Task] = []
+        used_agvs: set[str] = set()
+        for task in pending:
+            pin_agv = self._pinned_task_agv.get(task.task_id)
+            if pin_agv is not None:
+                agv = idle_by_id.get(pin_agv)
+                if agv is not None and agv.agv_id not in used_agvs:
+                    if self._try_assign(agv, task, step):
+                        used_agvs.add(agv.agv_id)
+                    else:
+                        self._planning_retries += 1
+                # If the pinned AGV is busy or not admitted, keep it pinned rather than
+                # letting GreedyAllocator hand it to a non-admitted AGV.
+                continue
+            unpinned.append(task)
+
+        rem_idle = [a for a in idle if a.agv_id not in used_agvs]
+        if not unpinned or not rem_idle:
+            return
         pairs = self.allocator.allocate(
-            self.network, idle, pending, step, self._max_speed(), self._travel_cache
+            self.network, rem_idle, unpinned, step, self._max_speed(), self._travel_cache
         )
         for agv, task in pairs:
             if not self._try_assign(agv, task, step):

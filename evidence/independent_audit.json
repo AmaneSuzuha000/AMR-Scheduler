@@ -1,15 +1,15 @@
 {
   "schema": "amr-lgcvcr.independent-audit.v1",
-  "total_runs": 30,
+  "total_runs": 294,
   "all_runs_audit_pass": true,
   "total_collision_events": 0,
   "system07_baseline_completions": [
-    "5/6",
-    "5/6",
-    "5/6",
-    "5/6",
-    "5/6",
-    "5/6"
+    "4/6",
+    "4/6",
+    "4/6",
+    "4/6",
+    "4/6",
+    "4/6"
   ],
   "system07_recovered_completions": [
     "6/6",
@@ -20,13 +20,13 @@
     "6/6"
   ],
   "system08_mean_cmax": {
-    "ALL_ADMIT": 518.3333333333334,
-    "STATIC_FOUR": 768.3333333333334,
-    "SYSTEM08_ADMISSION": 518.3333333333334
+    "ALL_ADMIT": 1145.3333333333333,
+    "STATIC_FOUR": 1200.0,
+    "SYSTEM08_ADMISSION": 1100.1666666666667
   },
   "system08_mean_conflicts": {
-    "ALL_ADMIT": 263.5,
-    "STATIC_FOUR": 113.66666666666667,
-    "SYSTEM08_ADMISSION": 263.5
+    "ALL_ADMIT": 3496.5,
+    "STATIC_FOUR": 2020.6666666666667,
+    "SYSTEM08_ADMISSION": 1784.5
   }
 }

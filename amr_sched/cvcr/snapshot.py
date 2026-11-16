@@ -109,7 +109,9 @@ class NativeSnapshotCapture:
         simulator: Any,
         operations: list[OperationSnapshot] | None = None,
         version: dict[str, int] | None = None,
+        hide_future_releases: bool = False,
     ) -> NativeSnapshot:
+        """Capture an immutable snapshot of state strictly observable at simulator._step_cursor."""
         tick = int(simulator._step_cursor)
         now_mono = time.monotonic()
 
@@ -120,9 +122,12 @@ class NativeSnapshotCapture:
         world_fp = hashlib.sha256(topo_sig.encode("utf-8")).hexdigest()[:16]
 
         # 2. Robots
+        faulted_set = getattr(simulator, "_faulted_agvs", set())
         robot_snaps: list[RobotSnapshot] = []
         for agv in simulator.agvs:
             st_val = str(agv.state.value if hasattr(agv.state, "value") else agv.state)
+            if agv.agv_id in faulted_set:
+                st_val = "faulted"
             f_until = getattr(agv, "faulted_until_step", 0)
             if st_val in ("blocked", "faulted"):
                 f_until = max(f_until, tick + 999)
@@ -139,9 +144,13 @@ class NativeSnapshotCapture:
             )
             robot_snaps.append(r_snap)
 
-        # 3. Tasks - only include tasks released at or before current tick
+        # 3. Tasks - enforce causal observability for exogenous/hidden future releases
         task_snaps: list[TaskSnapshot] = []
         for t in simulator.tasks:
+            if t.release_step > tick and (
+                hide_future_releases or getattr(t, "hidden_until_release", False)
+            ):
+                continue
             status_val = str(t.status.value if hasattr(t.status, "value") else t.status)
             t_snap = TaskSnapshot(
                 task_id=str(t.task_id),
