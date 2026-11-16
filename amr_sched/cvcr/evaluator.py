@@ -656,6 +656,7 @@ class CVCREvaluator:
             order_unload_ticks.update(unloads)
             if not ok:
                 all_ok = False
+                break
 
         op_s, op_e, op_rr, obj, starv = self._compute_objective(
             assignment, order_unload_ticks, op_priority, all_ok, op_bay_overrides, op_crew_overrides
@@ -732,6 +733,7 @@ class CVCREvaluator:
             order_unload_ticks.update(unloads)
             if not ok:
                 all_ok = False
+                break
 
         op_s, op_e, op_rr, obj, starv = self._compute_objective(
             assignment, order_unload_ticks, op_priority, all_ok, op_bay_overrides, op_crew_overrides
@@ -827,17 +829,18 @@ class CVCREvaluator:
             if not ok:
                 all_ok = False
                 break
+                break
 
         # Restore persistent table back to incumbent before returning
         self._restore_inc_table(changed_rids)
 
         if not all_ok:
             self.b2_fallbacks += 1
-            return self._eval_b1(assignment, op_priority, op_res_ready_hint, op_bay_overrides, op_crew_overrides)
+        else:
+            self.b2_inc_hits += 1
 
-        self.b2_inc_hits += 1
         op_s, op_e, op_rr, obj, starv = self._compute_objective(
-            assignment, order_unload_ticks, op_priority, True, op_bay_overrides, op_crew_overrides
+            assignment, order_unload_ticks, op_priority, all_ok, op_bay_overrides, op_crew_overrides
         )
         return EvalResult(
             robot_paths=robot_paths,
@@ -847,7 +850,7 @@ class CVCREvaluator:
             op_end=op_e,
             op_res_ready=op_rr,
             objective=obj,
-            valid=True,
+            valid=all_ok,
             starvation_ticks=starv,
             eval_latency_ms=(time.perf_counter() - t0) * 1000.0,
             mode="B2",

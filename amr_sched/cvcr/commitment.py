@@ -88,7 +88,9 @@ def classify_commitments(
     d_tasks: set[str] = set()
     for t in snapshot.tasks:
         if t.task_id in releasable_tasks:
-            if t.assigned_agv is None or t.assigned_agv in d_robots or t.release_step >= t_commit - 1:
+            if t.assigned_agv is not None and t.assigned_agv in d_robots:
+                d_tasks.add(t.task_id)
+            elif getattr(t, "priority", None) in ("urgent", "high") or (t.release_step == t_commit and t_commit > 0):
                 d_tasks.add(t.task_id)
 
     # 4. Build 4-domain coupling graph over tasks
