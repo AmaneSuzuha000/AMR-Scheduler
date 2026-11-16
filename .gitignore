@@ -87,11 +87,8 @@ _verify/
 controllog.txt
 exception.txt
 
-# 一次性调试临时脚本
+# 一次性调试临时脚本与过程探针
 tools/_*.py
-tools/fix_a.py
-tools/pod_test.py
-tools/pod_fix_test.py
 tools/VisOnlyProbe/
 
 # Web 控制台与复现运行时临时缓存
@@ -182,7 +179,9 @@ visual_comparison/
 simulation/wheelset_workshop/worlds/camera_*.world
 
 # ---------- 内部结项、论文答辩与核验脚手架 (Internal Defense & Acceptance Tools) ----------
-docs/
+docs/*
+!docs/architecture/
+!docs/architecture/**
 tools/build_docx.py
 tools/build_slides.py
 tools/build_script.py

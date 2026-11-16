@@ -16,6 +16,11 @@ from amr_sched.reservation import Interval
 
 
 def _find_library() -> str | None:
+    # Priority 0: explicit environment variable override
+    env_path = os.environ.get("AMR_RESERVATION_CORE_PATH")
+    if env_path and Path(env_path).exists():
+        return env_path
+
     # Priority 1: crates/target/release
     repo_root = Path(__file__).resolve().parent.parent
     candidates = [

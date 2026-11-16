@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ctypes
 import math
+import os
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,11 @@ from amr_sched.rust_reservation import RustReservationTable, _find_library, _LIB
 
 
 def _find_planner_library() -> str | None:
+    # Priority 0: explicit environment variable override
+    env_path = os.environ.get("AMR_SPACETIME_PLANNER_PATH")
+    if env_path and Path(env_path).exists():
+        return env_path
+
     repo_root = Path(__file__).resolve().parent.parent.parent
     candidates = [
         repo_root / "crates" / "target" / "release" / "spacetime_planner.dll",

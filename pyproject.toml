@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amr-scheduler"
+version = "0.2.0"
+description = "High-performance Multi-AMR Coordination & Spatiotemporal Reservation Scheduling Platform"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-only" }
+authors = [
+    { name = "AmaneSuzuha000" }
+]
+keywords = [
+    "amr",
+    "agv",
+    "scheduling",
+    "multi-robot",
+    "spatiotemporal-reservation",
+    "digital-twin",
+    "railway-maintenance"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Rust",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+viz = [
+    "matplotlib>=3.8",
+    "Pillow>=10.0",
+]
+web = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "pydantic>=2.0",
+    "httpx>=0.27",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-mock>=3.12",
+    "ruff>=0.4.0",
+    "mypy>=1.9.0",
+    "PyYAML>=6.0",
+]
+all = [
+    "amr-scheduler[viz,web,dev]",
+]
+
+[project.scripts]
+amr-sched = "amr_sched.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["amr_sched*"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["Tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
