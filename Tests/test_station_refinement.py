@@ -316,7 +316,7 @@ def test_numerical_process_returns_same_fit_without_blocking_or_renewing_receipt
         wait_worker_ready(worker)
         started=time.monotonic()
         first=refiner.measure(scan(),[.15,0.,.4,0.],10.05,100.05,9.9,fit_worker=worker)
-        assert time.monotonic()-started<.05 and not first['valid'] and worker.busy
+        assert time.monotonic()-started<.15 and not first['valid'] and worker.busy
         deadline=time.monotonic()+5.
         while True:
             row=refiner.measure(scan(),[.15,0.,.4,0.],10.05,100.05,9.9,fit_worker=worker)

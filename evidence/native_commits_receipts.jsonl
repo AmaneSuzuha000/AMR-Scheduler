@@ -1,0 +1,3 @@
+{"scale": "4a_8t", "receipt_digest": "7199c1ae2469076d5146656e997cf5bc26d89097fbc7d621e8f99a6218e84dd4", "accepted": true, "reasons": ["TRANSACTION_COMMITTED_SUCCESSFULLY"], "committed_tick": 0, "physical_authorization": false}
+{"scale": "4a_12t", "receipt_digest": "45afad65dbac8c22a03d8c66d3e68d50f8005e6a1aa603fd77f798a009a7c22a", "accepted": true, "reasons": ["TRANSACTION_COMMITTED_SUCCESSFULLY"], "committed_tick": 0, "physical_authorization": false}
+{"scale": "6a_12t", "receipt_digest": "9703825201bff85d7edb9ce45142fe18d2afeadc7fd360559c72831e51408125", "accepted": true, "reasons": ["TRANSACTION_COMMITTED_SUCCESSFULLY"], "committed_tick": 0, "physical_authorization": false}
