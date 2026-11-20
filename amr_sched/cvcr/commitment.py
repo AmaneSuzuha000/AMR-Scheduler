@@ -20,7 +20,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Optional
 
-from amr_sched.cvcr.snapshot import NativeSnapshot, OperationSnapshot, TaskSnapshot
+from amr_sched.cvcr.snapshot import NativeSnapshot, OperationSnapshot, TaskSnapshot, op_predecessors
 
 TIER_IRREVOCABLE = "PHYSICALLY_IRREVOCABLE"
 TIER_EXECUTING_HARD = "EXECUTING_HARD"
@@ -54,7 +54,7 @@ def classify_commitments(
             op_tiers[op.op_id] = TIER_IRREVOCABLE
         elif op.started:
             op_tiers[op.op_id] = TIER_EXECUTING_HARD
-        elif op.predecessor_op_id is not None:
+        elif op_predecessors(op):
             op_tiers[op.op_id] = TIER_CONDITIONAL
         else:
             op_tiers[op.op_id] = TIER_SOFT
@@ -79,18 +79,31 @@ def classify_commitments(
             task_tiers[t.task_id] = TIER_SOFT
             releasable_tasks.add(t.task_id)
 
-    # 3. Disturbed robots & tasks
+    # 3. Disturbed robots & tasks (including L1/L2 execution feedback faults & significant drifts)
     d_robots = set(disturbed_robots or set())
+    fb = getattr(snapshot, "execution_feedback", None)
+    delayed_robots: set[str] = set()
     for r in snapshot.robots:
-        if r.faulted_until > t_commit or r.state in ("blocked", "faulted"):
+        if r.faulted_until > t_commit or r.state == "faulted":
             d_robots.add(r.robot_id)
+        if fb is not None:
+            r_fb = fb.robot_states.get(r.robot_id)
+            if r_fb is not None:
+                if r_fb.is_hard_faulted:
+                    d_robots.add(r.robot_id)
+                elif r_fb.is_degraded and fb.robot_ready_offset_steps(r.robot_id) >= 4:
+                    delayed_robots.add(r.robot_id)
 
     d_tasks: set[str] = set()
     for t in snapshot.tasks:
         if t.task_id in releasable_tasks:
-            if t.assigned_agv is not None and t.assigned_agv in d_robots:
+            if t.assigned_agv is not None and (t.assigned_agv in d_robots or t.assigned_agv in delayed_robots):
                 d_tasks.add(t.task_id)
-            elif getattr(t, "priority", None) in ("urgent", "high") or (t.release_step == t_commit and t_commit > 0):
+            elif (
+                getattr(t, "is_urgent", False)
+                or str(getattr(t, "priority", "")).lower() in ("urgent", "high", "1")
+                or (t.release_step == t_commit and t_commit > 0)
+            ):
                 d_tasks.add(t.task_id)
 
     # 4. Build 4-domain coupling graph over tasks
@@ -119,10 +132,11 @@ def classify_commitments(
 
     # Domain 2: PRECEDENCE (tasks feeding predecessor <-> successor ops)
     for op in snapshot.operations:
-        if op.predecessor_op_id and op.predecessor_op_id in tasks_by_op:
-            for u in tasks_by_op[op.predecessor_op_id]:
-                for v in tasks_by_op.get(op.op_id, []):
-                    _add_edge(u, v, "PRECEDENCE")
+        for pid in op_predecessors(op):
+            if pid in tasks_by_op:
+                for u in tasks_by_op[pid]:
+                    for v in tasks_by_op.get(op.op_id, []):
+                        _add_edge(u, v, "PRECEDENCE")
 
     # Domain 3: SHARED_RESOURCE (ops sharing crew_id or tool_id or bay_id)
     ops = snapshot.operations
@@ -181,16 +195,17 @@ def select_release_set(
     if scope_mode in ("S4_GLOBAL_RESCHEDULING", "GLOBAL"):
         return set(releasable)
 
-    seeds = {t for t in clf.disturbed_tasks if t in releasable}
-    if not seeds:
-        seeds = set(sorted(releasable)[:2])
+    seeds_list = sorted(t for t in clf.disturbed_tasks if t in releasable)
+    if not seeds_list:
+        seeds_list = sorted(releasable)[:2]
+    seeds = set(seeds_list)
 
     if scope_mode == "S0_DIRECT_AFFECTED":
         return seeds
 
     if scope_mode == "S1_FIXED_NEIGHBORHOOD":
         out = set(seeds)
-        for u in list(seeds):
+        for u in seeds_list:
             for v in sorted(clf.adj.get(u, ())):
                 if v in releasable:
                     out.add(v)
@@ -200,7 +215,7 @@ def select_release_set(
 
     if scope_mode == "S2_CROSS_DOMAIN_CLOSURE":
         out = set(seeds)
-        q = deque(seeds)
+        q = deque(seeds_list)
         while q and len(out) < max_release:
             u = q.popleft()
             for v in sorted(clf.adj.get(u, ())):
@@ -233,7 +248,7 @@ def select_release_set(
         return score
 
     out = set(seeds)
-    candidates = sorted(releasable - seeds, key=urgency_score, reverse=True)
+    candidates = sorted(sorted(releasable - seeds), key=urgency_score, reverse=True)
     for c in candidates:
         if len(out) >= max_release:
             break

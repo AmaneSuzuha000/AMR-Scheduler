@@ -42,3 +42,51 @@ fn test_sipp_jump_wait_obstacle() {
     assert_eq!(res.arrival_steps, vec![10, 12]);
     assert_eq!(res.wait_steps, 8);
 }
+
+#[test]
+fn test_sipp_ltm_cutoff_and_agv_guide() {
+    let mut g = PlannerGraph::new();
+    g.add_edge("N0", "N1", 4, 1, 1);
+    g.add_edge("N1", "N3", 4, 1, 1);
+    g.add_edge("N0", "N2", 5, 1, 1);
+    g.add_edge("N2", "N3", 5, 1, 1);
+
+    let tbl = ReservationTable::new();
+    let planner = SippPlanner::new(10_000);
+
+    g.set_traffic_batch_script("N0\tN1\t24\n");
+    g.set_traffic_cutoff(10);
+    assert_eq!(planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_1", 30).unwrap().nodes, vec!["N2", "N3"]);
+    assert_eq!(planner.plan(&g, &tbl, "N0", "N3", 10, "AGV_1", 40).unwrap().nodes, vec!["N1", "N3"]);
+    g.clear_traffic_penalties();
+
+    g.set_agv_guide_script("AGV_2\t24\tN0\tN2\nAGV_2\t24\tN2\tN3\n");
+    assert_eq!(planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_1", 30).unwrap().nodes, vec!["N1", "N3"]);
+    assert_eq!(planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_2", 30).unwrap().nodes, vec!["N2", "N3"]);
+}
+
+#[test]
+fn test_sipp_and_astar_indexed_parity() {
+    use spacetime_planner::SpacetimeAStarPlanner;
+    let mut g = PlannerGraph::new();
+    g.add_edge("N0", "N1", 3, 1, 1);
+    g.add_edge("N1", "N2", 3, 1, 1);
+    g.add_edge("N0", "N3", 4, 1, 1);
+    g.add_edge("N3", "N2", 4, 1, 1);
+
+    let mut tbl = ReservationTable::new();
+    tbl.reserve_node("N1", Interval::new(3, 8), "BLK");
+
+    let sipp = SippPlanner::new(10_000);
+    let astar = SpacetimeAStarPlanner::new(10_000);
+    let s0 = g.node_index("N0").unwrap();
+    let g0 = g.node_index("N2").unwrap();
+
+    let p_sipp_str = sipp.plan(&g, &tbl, "N0", "N2", 0, "A1", 30).unwrap();
+    let p_sipp_idx = sipp.plan_indexed_idx(&g, &tbl, s0, g0, 0, "A1", 30).unwrap().to_planned_path(&g);
+    assert_eq!(p_sipp_str, p_sipp_idx);
+
+    let p_astar_str = astar.plan(&g, &tbl, "N0", "N2", 0, "A1", 30).unwrap();
+    let p_astar_idx = astar.plan_indexed_idx(&g, &tbl, s0, g0, 0, "A1", 30).unwrap().to_planned_path(&g);
+    assert_eq!(p_astar_str, p_astar_idx);
+}

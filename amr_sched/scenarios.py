@@ -234,9 +234,15 @@ def generate_scenario(
             raise ValueError("start_pool is empty")
     else:
         pool: list[str] = []
-        for n in net.nodes_of_kind(NodeKind.BUFFER, NodeKind.DISASSEMBLY, NodeKind.ASSEMBLY):
-            pool.extend([n.node_id] * max(1, n.capacity))
-        starts = sorted(pool)
+        primary_kinds = {NodeKind.BUFFER, NodeKind.DISASSEMBLY, NodeKind.ASSEMBLY}
+        for n in sorted(net.nodes.values(), key=lambda x: x.node_id):
+            if n.kind in primary_kinds:
+                pool.extend([n.node_id] * max(1, n.capacity))
+        if len(pool) < config.n_agvs:
+            for n in sorted(net.nodes.values(), key=lambda x: x.node_id):
+                if n.kind not in primary_kinds:
+                    pool.extend([n.node_id] * max(1, n.capacity))
+        starts = pool
     agvs: list[Agv] = []
     for i in range(config.n_agvs):
         start = starts[i % len(starts)]

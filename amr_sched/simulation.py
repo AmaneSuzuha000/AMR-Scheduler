@@ -379,6 +379,7 @@ class Simulator:
         executions: dict[str, ExternalExecution] | None = None,
         handlings: dict | None = None,
         inventory=None,
+        perturbation_model=None,
     ) -> None:
         self.network = network
         self.tasks = tasks
@@ -488,10 +489,19 @@ class Simulator:
         # Software fleet admission gate, faulted-AGV mask, and CVCR task-assignment pins.
         self._admitted_agvs: set[str] | None = None
         self._faulted_agvs: set[str] = set()
+        self._fault_history: list[tuple[int, str, bool]] = []
         self._pinned_task_agv: dict[str, str] = {}
+        self._pinned_task_queues: dict[str, list[str]] = {}
+        self._traffic_weights_q3: dict[tuple[str, str], int] = {}
+        self._traffic_cutoff_step: int = 0
+        self._guide_corridors: dict[str, list[tuple[str, str]]] = {}
+        self._guide_pen_q3: int = 3
+        self._op_priorities: dict[str, int] = {}
         self._fleet_revision: int = 1
         self._reservation_revision: int = 1
         self._production_revision: int = 1
+        self._perturbation_model = perturbation_model
+        self._p2_execution_aware: bool = False
 
     # ---------- Helpers ----------
 
@@ -506,15 +516,106 @@ class Simulator:
 
     def set_agv_faulted(self, agv_id: str, faulted: bool = True) -> None:
         """Mark or clear a simulated software fault on an AGV (blocks dispatch and retreat)."""
+        agv_key = str(agv_id)
+        self._fault_history.append((int(self._step_cursor), agv_key, bool(faulted)))
         if faulted:
-            self._faulted_agvs.add(str(agv_id))
+            self._faulted_agvs.add(agv_key)
         else:
-            self._faulted_agvs.discard(str(agv_id))
+            self._faulted_agvs.discard(agv_key)
+            agv = next((a for a in self.agvs if a.agv_id == agv_key), None)
+            if agv is not None and hasattr(self, "_jobs") and agv_key in self._jobs:
+                job = self._jobs[agv_key]
+                task = self._task_by_id.get(job.task_id) if job.task_id else None
+                cur = agv.cur_node or agv.start_node
+                if job.leg == "park" or task is None:
+                    del self._jobs[agv_key]
+                    agv.cur_task = None
+                    agv.state = AgvState.IDLE
+                elif cur != job.goal:
+                    job.hops = []
+                    job.idx = 0
+                    job.leg = "loaded_yield" if task.status is TaskStatus.PICKED else "empty_yield"
+                    self._load_end[agv_key] = self._step_cursor
+                    agv.state = AgvState.BLOCKED
+                else:
+                    job.hops = []
+                    job.idx = 0
+                    if job.leg == "to_pickup":
+                        self._load_end[agv_key] = max(
+                            self._load_end.get(agv_key, 0), self._step_cursor + 1
+                        )
+                    elif job.leg == "to_dropoff":
+                        self._drop_end[agv_key] = max(
+                            self._drop_end.get(agv_key, 0), self._step_cursor + 1
+                        )
+            elif agv is not None and agv.state == AgvState.BLOCKED:
+                agv.state = AgvState.IDLE
         self._fleet_revision += 1
+
+    def is_faulted_at_step(self, agv_id: str, step: int) -> bool:
+        """Return whether `agv_id` was in faulted state at discrete simulation `step`."""
+        cur = False
+        for ev_step, ev_agv, ev_flag in self._fault_history:
+            if ev_step <= step and ev_agv == agv_id:
+                cur = ev_flag
+        return cur
 
     def set_task_assignment_pins(self, mapping: dict[str, str]) -> None:
         """Pin task IDs to specific AGV IDs so native _assign_step honors CVCR assignments."""
         self._pinned_task_agv.update({str(k): str(v) for k, v in mapping.items()})
+
+    def set_task_queues(self, queues: dict[str, list[str]] | None) -> None:
+        """Install ordered per-AGV c_i task execution queues for subsequent _assign_step ticks."""
+        if not queues:
+            self._pinned_task_queues.clear()
+            return
+        self._pinned_task_queues = {
+            str(rid): [str(tid) for tid in seq]
+            for rid, seq in queues.items()
+        }
+
+    def set_traffic_weights(
+        self,
+        weights: dict[tuple[str, str], int] | None,
+        cutoff_step: int = 0,
+    ) -> None:
+        """Install online LTM Q3 edge penalties and optional horizon cutoff step."""
+        self._traffic_cutoff_step = max(0, int(cutoff_step)) if weights else 0
+        if not weights:
+            self._traffic_weights_q3.clear()
+            if hasattr(self.planner, "clear_traffic_weights"):
+                self.planner.clear_traffic_weights()
+            return
+        self._traffic_weights_q3 = {
+            (str(s), str(d)): max(0, min(64, int(w)))
+            for (s, d), w in weights.items()
+            if int(w) > 0
+        }
+
+    def set_guide_corridors(
+        self,
+        guide_corridors: dict[str, list[tuple[str, str]]] | None,
+        off_guide_pen_q3: int = 3,
+    ) -> None:
+        """Install per-AGV CVCR coordinated soft corridor guidance for subsequent path plans."""
+        if not guide_corridors:
+            self._guide_corridors.clear()
+            if hasattr(self.planner, "clear_agv_guides"):
+                self.planner.clear_agv_guides()
+            return
+        self._guide_corridors = {
+            str(rid): [(str(u), str(v)) for (u, v) in edges]
+            for rid, edges in guide_corridors.items()
+            if edges
+        }
+        self._guide_pen_q3 = max(0, min(64, int(off_guide_pen_q3)))
+
+    def set_op_priorities(self, priorities: dict[str, int] | None) -> None:
+        """Install explicit CVCR operation priority tie-breakers for NativeProductionTracker."""
+        if not priorities:
+            self._op_priorities.clear()
+            return
+        self._op_priorities = {str(k): int(v) for k, v in priorities.items()}
 
     def execution_for(self, robot_id: str) -> ExternalExecution | None:
         """Return only this robot's feedback gate; algorithm mode has none."""
@@ -1031,8 +1132,22 @@ class Simulator:
                 and not self._physical_route_possible(agv.agv_id,src,goal)):
             return None
 
+        routing_net = self._routing_network()
+        if hasattr(self.planner, "sync_traffic_weights"):
+            self.planner.sync_traffic_weights(
+                routing_net,
+                getattr(self, "_traffic_weights_q3", None),
+                cutoff_step=getattr(self, "_traffic_cutoff_step", 0),
+            )
+        if hasattr(self.planner, "sync_agv_guides"):
+            self.planner.sync_agv_guides(
+                routing_net,
+                getattr(self, "_guide_corridors", None),
+                off_guide_pen_q3=getattr(self, "_guide_pen_q3", 12),
+            )
+
         path = self.planner.plan(
-            network=self._routing_network(),
+            network=routing_net,
             start=src,
             goal=goal,
             start_step=start_step,
@@ -1140,7 +1255,7 @@ class Simulator:
                 claim = self._node_claim.pop(agv.agv_id, None)
                 if claim is not None:
                     self._res.release_node(claim[0], claim[1], agv.agv_id)
-            if agv.agv_id in self._transit:
+            if agv.agv_id in self._transit or agv.agv_id in self._faulted_agvs:
                 continue
             node = agv.cur_node
             if node is None:
@@ -1166,6 +1281,13 @@ class Simulator:
                    dwell: int = 1) -> bool:
         if self.executions and tuple(sorted((src, dst))) in self._closed_corridors:
             return False
+        if self._perturbation_model is not None:
+            if self._perturbation_model.is_corridor_blocked(src, dst, t):
+                self._perturbation_model.on_blocked_entry(agv.agv_id, src, dst, t)
+                return False
+            if self._perturbation_model.is_local_stalled(agv.agv_id, t):
+                self._perturbation_model.on_local_fail_tick(agv.agv_id, t)
+                return False
         n = self._hop_steps(src, dst)
         arrive = t + n
         # Never step outside the simulation horizon.
@@ -1197,7 +1319,8 @@ class Simulator:
             # Do not use the channel as a queue for a full destination. A vehicle
             # en route owns its destination slot until it reaches the node.
             claims = sum((tr[1] if tr else other.cur_node) == dst
-                         for other in self.agvs if other.agv_id != agv.agv_id
+                         for other in self.agvs
+                         if other.agv_id != agv.agv_id and other.agv_id not in self._faulted_agvs
                          for tr in (self._transit.get(other.agv_id),))
             if claims >= self.network.node(dst).capacity:
                 return False
@@ -1243,7 +1366,32 @@ class Simulator:
 
     def _commit_move(self, agv: Agv, src: str, dst: str, t: int,
                      dwell: int = 1) -> None:
-        n = self._hop_steps(src, dst)
+        gate = self.execution_for(agv.agv_id)
+        n_nom = self._hop_steps(src, dst)
+        n = n_nom
+        if gate is None and self._perturbation_model is not None:
+            n_samp = self._perturbation_model.sample_hop_steps(agv.agv_id, src, dst, t, n_nom)
+            max_n = max(1, self.config.max_steps - t)
+            if n_samp > max_n:
+                n_samp = max_n
+            if n_samp < n_nom:
+                early_arr = t + n_samp
+                cap_dst = self.network.node(dst).capacity
+                claims_dst = sum(
+                    (tr[1] if tr else other.cur_node) == dst
+                    for other in self.agvs
+                    if other.agv_id != agv.agv_id and other.agv_id not in self._faulted_agvs
+                    for tr in (self._transit.get(other.agv_id),)
+                )
+                if claims_dst >= cap_dst or not self._res.is_node_free(
+                    dst,
+                    Interval(early_arr, early_arr + max(1, dwell)),
+                    cap_dst,
+                    exclude_agv=agv.agv_id,
+                ):
+                    n_samp = n_nom
+            n = n_samp
+            self._perturbation_model.record_transit(agv.agv_id, src, dst, t, n_nom, n)
         arrive = t + n
         self._res.reserve_edge(src, dst, Interval(t, arrive), agv.agv_id)
         if self.network.has_edge(dst, src):
@@ -1269,7 +1417,6 @@ class Simulator:
         # Odometer accumulation: the length of the edge actually travelled.
         # Compared with "the static shortest-path distance from task origin to
         # destination", it reveals how much of a detour the planner took.
-        gate = self.execution_for(agv.agv_id)
         if gate is None:
             self._odometer += self.network.edge(src, dst).length
         else:
@@ -1400,7 +1547,17 @@ class Simulator:
         self._deadlock_breaks = 0
         self._admitted_agvs = None
         self._faulted_agvs.clear()
+        self._fault_history.clear()
         self._pinned_task_agv.clear()
+        self._pinned_task_queues.clear()
+        self._traffic_weights_q3.clear()
+        self._traffic_cutoff_step = 0
+        self._guide_corridors.clear()
+        self._op_priorities.clear()
+        if hasattr(self.planner, "clear_traffic_weights"):
+            self.planner.clear_traffic_weights()
+        if hasattr(self.planner, "clear_agv_guides"):
+            self.planner.clear_agv_guides()
         self._fleet_revision = 1
         self._reservation_revision = 1
         self._production_revision = 1
@@ -1412,6 +1569,13 @@ class Simulator:
             agv.route = []
             agv.depart_step = None
             agv.reset_stats()
+        if self._perturbation_model is not None:
+            self._perturbation_model.reset(
+                self.network,
+                self.tasks,
+                self.agvs,
+                excluded_agvs=sorted(self._faulted_agvs),
+            )
 
     def step_once(self) -> bool:
         """Advance one simulation step. Returns True if it should continue, False if
@@ -1507,7 +1671,7 @@ class Simulator:
     def _occupancy_check(self) -> None:
         seen: dict[str, list[str]] = {}
         for agv in self.agvs:
-            if agv.agv_id in self._transit:
+            if agv.agv_id in self._transit or agv.agv_id in self._faulted_agvs:
                 continue
             if agv.cur_node is None:
                 continue
@@ -1605,6 +1769,8 @@ class Simulator:
         if timeout <= 0:
             return
         for agv in self.agvs:
+            if agv.agv_id in self._faulted_agvs:
+                continue
             since = self._blocked_since.get(agv.agv_id)
             if since is None or step - since < timeout:
                 continue
@@ -2094,21 +2260,60 @@ class Simulator:
         if not pending:
             return
 
-        # Dispatch pinned CVCR assignments to their designated admitted AGV first.
+        # Dispatch ordered per-AGV c_i queues first when explicitly provided, then pinned assignments.
         idle_by_id = {a.agv_id: a for a in idle}
         unpinned: list[Task] = []
         used_agvs: set[str] = set()
-        for task in pending:
-            pin_agv = self._pinned_task_agv.get(task.task_id)
-            if pin_agv is not None:
-                agv = idle_by_id.get(pin_agv)
-                if agv is not None and agv.agv_id not in used_agvs:
-                    if self._try_assign(agv, task, step):
+        dispatched_tids: set[str] = set()
+        queued_owners: dict[str, str] = {}
+
+        if self._pinned_task_queues:
+            pending_by_id = {t.task_id: t for t in pending}
+            for q_rid, q_list in self._pinned_task_queues.items():
+                if q_rid in self._faulted_agvs or (
+                    self._admitted_agvs is not None and q_rid not in self._admitted_agvs
+                ):
+                    continue
+                for tid in q_list:
+                    queued_owners.setdefault(tid, q_rid)
+                agv = idle_by_id.get(q_rid)
+                if agv is None or agv.agv_id in used_agvs:
+                    continue
+                for tid in q_list:
+                    task_obj = pending_by_id.get(tid)
+                    if task_obj is None:
+                        continue
+                    pin_agv = self._pinned_task_agv.get(tid)
+                    if pin_agv is not None and pin_agv != agv.agv_id:
+                        continue
+                    if self._try_assign(agv, task_obj, step):
                         used_agvs.add(agv.agv_id)
+                        dispatched_tids.add(tid)
                     else:
                         self._planning_retries += 1
-                # If the pinned AGV is busy or not admitted, keep it pinned rather than
-                # letting GreedyAllocator hand it to a non-admitted AGV.
+                    break
+
+        for task in pending:
+            if task.task_id in dispatched_tids:
+                continue
+            pin_agv = self._pinned_task_agv.get(task.task_id)
+            if pin_agv is not None:
+                if pin_agv in self._faulted_agvs or (
+                    self._admitted_agvs is not None and pin_agv not in self._admitted_agvs
+                ):
+                    self._pinned_task_agv.pop(task.task_id, None)
+                else:
+                    agv = idle_by_id.get(pin_agv)
+                    if agv is not None and agv.agv_id not in used_agvs:
+                        if self._try_assign(agv, task, step):
+                            used_agvs.add(agv.agv_id)
+                        else:
+                            self._planning_retries += 1
+                        continue
+                    elif self._admitted_agvs is not None:
+                        continue
+            q_owner = queued_owners.get(task.task_id)
+            if q_owner is not None:
                 continue
             unpinned.append(task)
 
@@ -2141,11 +2346,51 @@ class Simulator:
                     agv.state = AgvState.BLOCKED
                     agv.blocked_steps += 1
                     continue
+            if agv.agv_id in self._faulted_agvs:
+                agv.state = AgvState.BLOCKED
+                agv.blocked_steps += 1
+                if agv.agv_id in self._transit:
+                    del self._transit[agv.agv_id]
+                if self._perturbation_model is not None:
+                    self._perturbation_model.clear_transit(agv.agv_id)
+                self._res.release_all(agv.agv_id)
+                self._res.transfer_pins(agv.agv_id, [])
+                continue
             # 1) In transit
             tr = self._transit.get(agv.agv_id)
             if tr is not None:
                 src, dst, _depart, arrive = tr
                 agv.busy_steps += 1
+                if (
+                    gate is None
+                    and self._perturbation_model is not None
+                    and self._perturbation_model.is_local_stalled(agv.agv_id, step)
+                    and step + 1 < self.config.max_steps
+                ):
+                    self._perturbation_model.on_local_fail_tick(agv.agv_id, step)
+                    new_arrive = min(self.config.max_steps, max(arrive, step + 1) + 1)
+                    if new_arrive > arrive:
+                        self._res.reserve_edge(src, dst, Interval(arrive, new_arrive), agv.agv_id)
+                        if self.network.has_edge(dst, src):
+                            self._res.reserve_edge(dst, src, Interval(arrive, new_arrive), agv.agv_id)
+                        old_claim = self._node_claim.get(agv.agv_id)
+                        dwell_len = (old_claim[1].end - old_claim[1].start) if old_claim is not None else 1
+                        claim_end = min(self.config.max_steps + 1, new_arrive + max(1, dwell_len))
+                        if new_arrive < claim_end:
+                            new_claim = Interval(new_arrive, claim_end)
+                            self._res.reserve_node(dst, new_claim, agv.agv_id)
+                            self._node_claim[agv.agv_id] = (dst, new_claim)
+                        self._transit[agv.agv_id] = (src, dst, _depart, new_arrive)
+                        self._perturbation_model.bump_transit_arrival(agv.agv_id, new_arrive)
+                        arrive = new_arrive
+                    if new_arrive > step + 1:
+                        self._blocked += 1
+                        agv.blocked_steps += 1
+                        agv.state = AgvState.BLOCKED
+                        if agv.agv_id not in self._blocked_since:
+                            self._conflict_wait_events += 1
+                        self._blocked_since.setdefault(agv.agv_id, step)
+                        continue
                 arrived = (step + 1 >= arrive if gate is None else gate.state == "arrived")
                 if arrived:
                     # Hard guarantee: verify once more against the **actual occupancy**
@@ -2156,6 +2401,7 @@ class Simulator:
                         1 for b in self.agvs
                         if b.agv_id != agv.agv_id
                         and b.agv_id not in self._transit
+                        and b.agv_id not in self._faulted_agvs
                         and b.cur_node == dst
                     )
                     if occ >= self.network.node(dst).capacity:
@@ -2194,6 +2440,23 @@ class Simulator:
                     # capacity-2 aisle node. Releasing is left to ``_refresh_node_holds``
                     # on the next step, which also converts it into a dwell reservation.
                     del self._transit[agv.agv_id]
+                    if self._perturbation_model is not None:
+                        self._perturbation_model.clear_transit(agv.agv_id)
+                        if gate is None:
+                            job_arr = self._jobs.get(agv.agv_id)
+                            if job_arr is not None and job_arr.idx >= len(job_arr.hops) and job_arr.task_id:
+                                t_arr = self._task_by_id.get(job_arr.task_id)
+                                if t_arr is not None:
+                                    if job_arr.leg == "to_pickup":
+                                        self._load_end[agv.agv_id] = max(
+                                            self._load_end.get(agv.agv_id, 0),
+                                            step + 1 + self._load_steps(t_arr),
+                                        )
+                                    elif job_arr.leg == "to_dropoff":
+                                        self._drop_end[agv.agv_id] = max(
+                                            self._drop_end.get(agv.agv_id, 0),
+                                            step + 1 + self._unload_steps(t_arr),
+                                        )
                     if gate is not None:
                         assert gate.consume_arrival()
                         self._res.transfer_pins(agv.agv_id, [dst])

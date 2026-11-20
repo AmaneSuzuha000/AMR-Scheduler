@@ -29,12 +29,12 @@ impl ReservationEntry {
 pub struct ReservationTable {
     /// Node reservations: node_id -> sorted entries by span.start
     node_table: HashMap<String, Vec<ReservationEntry>>,
-    /// Directed edge reservations: (src, dst) -> sorted entries by span.start
-    edge_table: HashMap<(String, String), Vec<ReservationEntry>>,
+    /// Directed edge reservations: src -> dst -> sorted entries by span.start
+    edge_table: HashMap<String, HashMap<String, Vec<ReservationEntry>>>,
     /// Physical node occupancy (pinned, no expiry)
     pinned_nodes: HashMap<String, HashSet<String>>,
-    /// Physical edge occupancy (pinned, no expiry)
-    pinned_edges: HashMap<(String, String), HashSet<String>>,
+    /// Physical edge occupancy: src -> dst -> owners
+    pinned_edges: HashMap<String, HashMap<String, HashSet<String>>>,
 }
 
 impl ReservationTable {
@@ -69,8 +69,10 @@ impl ReservationTable {
         for owners in self.pinned_nodes.values_mut() {
             owners.remove(agv_id);
         }
-        for owners in self.pinned_edges.values_mut() {
-            owners.remove(agv_id);
+        for sub in self.pinned_edges.values_mut() {
+            for owners in sub.values_mut() {
+                owners.remove(agv_id);
+            }
         }
 
         // Assign new ownership
@@ -82,7 +84,9 @@ impl ReservationTable {
         }
         for (src, dst) in edges {
             self.pinned_edges
-                .entry((src.clone(), dst.clone()))
+                .entry(src.clone())
+                .or_default()
+                .entry(dst.clone())
                 .or_default()
                 .insert(agv_id.to_string());
         }
@@ -100,12 +104,14 @@ impl ReservationTable {
         }
 
         let mut edges_out = HashMap::new();
-        for ((src, dst), v) in &self.pinned_edges {
-            if !v.is_empty() {
-                let mut list: Vec<String> = v.iter().cloned().collect();
-                list.sort();
-                let edge_key = format!("{}->{}", src, dst);
-                edges_out.insert(edge_key, list);
+        for (src, dst_map) in &self.pinned_edges {
+            for (dst, v) in dst_map {
+                if !v.is_empty() {
+                    let mut list: Vec<String> = v.iter().cloned().collect();
+                    list.sort();
+                    let edge_key = format!("{}->{}", src, dst);
+                    edges_out.insert(edge_key, list);
+                }
             }
         }
 
@@ -126,7 +132,7 @@ impl ReservationTable {
 
     #[inline]
     fn pin_owners_edge(&self, src: &str, dst: &str, exclude: Option<&str>) -> HashSet<String> {
-        match self.pinned_edges.get(&(src.to_string(), dst.to_string())) {
+        match self.pinned_edges.get(src).and_then(|m| m.get(dst)) {
             Some(owners) => owners
                 .iter()
                 .filter(|&o| exclude.map_or(true, |ex| o != ex))
@@ -207,8 +213,7 @@ impl ReservationTable {
     ) -> Vec<String> {
         let mut conflict_set: HashSet<String> = HashSet::new();
 
-        let edge_key = (src.to_string(), dst.to_string());
-        if let Some(entries) = self.edge_table.get(&edge_key) {
+        if let Some(entries) = self.edge_table.get(src).and_then(|m| m.get(dst)) {
             for entry in Self::get_overlapping(entries, span, exclude_agv) {
                 conflict_set.insert(entry.agv_id.clone());
             }
@@ -235,20 +240,203 @@ impl ReservationTable {
         capacity: usize,
         exclude_agv: Option<&str>,
     ) -> bool {
-        let hits = match self.node_table.get(node) {
-            Some(entries) => Self::get_overlapping(entries, span, exclude_agv),
-            None => Vec::new(),
-        };
+        if capacity == 0 {
+            return false;
+        }
+        let entries_slice: &[ReservationEntry] = self
+            .node_table
+            .get(node)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
 
-        let pins = self.pin_owners_node(node, exclude_agv);
-        let mut hits_owners: HashSet<&str> = HashSet::new();
-        for h in &hits {
-            hits_owners.insert(&h.agv_id);
+        let mut hit_count: usize = 0;
+        for entry in entries_slice {
+            if entry.span.start >= span.end {
+                break;
+            }
+            if let Some(ex) = exclude_agv {
+                if entry.agv_id == ex {
+                    continue;
+                }
+            }
+            if entry.span.overlaps(&span) {
+                hit_count += 1;
+                if hit_count >= capacity {
+                    return false;
+                }
+            }
         }
 
-        let pins_not_in_hits = pins.iter().filter(|p| !hits_owners.contains(p.as_str())).count();
+        let mut pins_not_in_hits: usize = 0;
+        if let Some(owners) = self.pinned_nodes.get(node) {
+            for owner in owners {
+                if let Some(ex) = exclude_agv {
+                    if owner == ex {
+                        continue;
+                    }
+                }
+                let mut in_hits = false;
+                for entry in entries_slice {
+                    if entry.span.start >= span.end {
+                        break;
+                    }
+                    if entry.agv_id == *owner && entry.span.overlaps(&span) {
+                        in_hits = true;
+                        break;
+                    }
+                }
+                if !in_hits {
+                    pins_not_in_hits += 1;
+                    if hit_count + pins_not_in_hits >= capacity {
+                        return false;
+                    }
+                }
+            }
+        }
 
-        hits.len() + pins_not_in_hits < capacity
+        hit_count + pins_not_in_hits < capacity
+    }
+
+    /// Fast undirected bidirectional corridor capacity check matching
+    /// `len(unique(edge_conflicts(p0, p1) ∪ edge_conflicts(p1, p0))) < physical_capacity`
+    /// without HashSet or String-vec allocations.
+    #[inline]
+    pub fn is_undirected_edge_free(
+        &self,
+        p0: &str,
+        p1: &str,
+        span: Interval,
+        physical_capacity: usize,
+        exclude_agv: Option<&str>,
+    ) -> bool {
+        if physical_capacity == 0 {
+            return false;
+        }
+        let dirs: [Option<(&str, &str)>; 2] = if p0 == p1 {
+            [Some((p0, p1)), None]
+        } else {
+            [Some((p0, p1)), Some((p1, p0))]
+        };
+
+        // Fast path for capacity == 1 (common single-lane aisle): zero container allocations
+        if physical_capacity == 1 {
+            for dir_opt in dirs {
+                let Some((a, b)) = dir_opt else {
+                    continue;
+                };
+                if let Some(entries) = self.edge_table.get(a).and_then(|m| m.get(b)) {
+                    for entry in entries {
+                        if entry.span.start >= span.end {
+                            break;
+                        }
+                        if let Some(ex) = exclude_agv {
+                            if entry.agv_id == ex {
+                                continue;
+                            }
+                        }
+                        if entry.span.overlaps(&span) {
+                            return false;
+                        }
+                    }
+                }
+                if let Some(owners) = self.pinned_edges.get(a).and_then(|m| m.get(b)) {
+                    for owner in owners {
+                        if let Some(ex) = exclude_agv {
+                            if owner == ex {
+                                continue;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        let mut seen_small: [&str; 8] = [""; 8];
+        let mut seen_len: usize = 0;
+        let mut seen_overflow: Vec<&str> = Vec::new();
+
+        #[inline]
+        fn push_owner<'a>(
+            agv: &'a str,
+            physical_capacity: usize,
+            seen_small: &mut [&'a str; 8],
+            seen_len: &mut usize,
+            seen_overflow: &mut Vec<&'a str>,
+        ) -> bool {
+            if *seen_len < 8 {
+                for &s in &seen_small[..*seen_len] {
+                    if s == agv {
+                        return false;
+                    }
+                }
+                seen_small[*seen_len] = agv;
+                *seen_len += 1;
+                *seen_len >= physical_capacity
+            } else {
+                for &s in &seen_small[..] {
+                    if s == agv {
+                        return false;
+                    }
+                }
+                for &s in seen_overflow.iter() {
+                    if s == agv {
+                        return false;
+                    }
+                }
+                seen_overflow.push(agv);
+                (*seen_len + seen_overflow.len()) >= physical_capacity
+            }
+        }
+
+        for dir_opt in dirs {
+            let Some((a, b)) = dir_opt else {
+                continue;
+            };
+            if let Some(entries) = self.edge_table.get(a).and_then(|m| m.get(b)) {
+                for entry in entries {
+                    if entry.span.start >= span.end {
+                        break;
+                    }
+                    if let Some(ex) = exclude_agv {
+                        if entry.agv_id == ex {
+                            continue;
+                        }
+                    }
+                    if entry.span.overlaps(&span)
+                        && push_owner(
+                            entry.agv_id.as_str(),
+                            physical_capacity,
+                            &mut seen_small,
+                            &mut seen_len,
+                            &mut seen_overflow,
+                        )
+                    {
+                        return false;
+                    }
+                }
+            }
+            if let Some(owners) = self.pinned_edges.get(a).and_then(|m| m.get(b)) {
+                for owner in owners {
+                    if let Some(ex) = exclude_agv {
+                        if owner == ex {
+                            continue;
+                        }
+                    }
+                    if push_owner(
+                        owner.as_str(),
+                        physical_capacity,
+                        &mut seen_small,
+                        &mut seen_len,
+                        &mut seen_overflow,
+                    ) {
+                        return false;
+                    }
+                }
+            }
+        }
+        true
     }
 
     /// Checks whether directed edge capacity constraint is satisfied over `span`.
@@ -261,21 +449,62 @@ impl ReservationTable {
         capacity: usize,
         exclude_agv: Option<&str>,
     ) -> bool {
-        let edge_key = (src.to_string(), dst.to_string());
-        let hits = match self.edge_table.get(&edge_key) {
-            Some(entries) => Self::get_overlapping(entries, span, exclude_agv),
-            None => Vec::new(),
-        };
+        if capacity == 0 {
+            return false;
+        }
+        let entries_slice: &[ReservationEntry] = self
+            .edge_table
+            .get(src)
+            .and_then(|m| m.get(dst))
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
 
-        let pins = self.pin_owners_edge(src, dst, exclude_agv);
-        let mut hits_owners: HashSet<&str> = HashSet::new();
-        for h in &hits {
-            hits_owners.insert(&h.agv_id);
+        let mut hit_count: usize = 0;
+        for entry in entries_slice {
+            if entry.span.start >= span.end {
+                break;
+            }
+            if let Some(ex) = exclude_agv {
+                if entry.agv_id == ex {
+                    continue;
+                }
+            }
+            if entry.span.overlaps(&span) {
+                hit_count += 1;
+                if hit_count >= capacity {
+                    return false;
+                }
+            }
         }
 
-        let pins_not_in_hits = pins.iter().filter(|p| !hits_owners.contains(p.as_str())).count();
+        let mut pins_not_in_hits: usize = 0;
+        if let Some(owners) = self.pinned_edges.get(src).and_then(|m| m.get(dst)) {
+            for owner in owners {
+                if let Some(ex) = exclude_agv {
+                    if owner == ex {
+                        continue;
+                    }
+                }
+                let mut in_hits = false;
+                for entry in entries_slice {
+                    if entry.span.start >= span.end {
+                        break;
+                    }
+                    if entry.agv_id == *owner && entry.span.overlaps(&span) {
+                        in_hits = true;
+                        break;
+                    }
+                }
+                if !in_hits {
+                    pins_not_in_hits += 1;
+                    if hit_count + pins_not_in_hits >= capacity {
+                        return false;
+                    }
+                }
+            }
+        }
 
-        hits.len() + pins_not_in_hits < capacity
+        hit_count + pins_not_in_hits < capacity
     }
 
     /// High performance check for opposing edge conflicts:
@@ -364,8 +593,7 @@ impl ReservationTable {
         let pins = self.pin_owners_edge(src, dst, exclude_agv);
         let pin_count = pins.len();
 
-        let edge_key = (src.to_string(), dst.to_string());
-        if let Some(entries) = self.edge_table.get(&edge_key) {
+        if let Some(entries) = self.edge_table.get(src).and_then(|m| m.get(dst)) {
             for entry in entries {
                 if let Some(ex) = exclude_agv {
                     if entry.agv_id == ex {
@@ -430,9 +658,13 @@ impl ReservationTable {
         if span.is_empty() {
             return;
         }
-        let key = (src.into(), dst.into());
         let agv_str = agv_id.into();
-        let bucket = self.edge_table.entry(key).or_default();
+        let bucket = self
+            .edge_table
+            .entry(src.into())
+            .or_default()
+            .entry(dst.into())
+            .or_default();
         let entry = ReservationEntry::new(span, agv_str);
 
         let idx = bucket.partition_point(|x| x.span.start <= span.start);
@@ -441,9 +673,10 @@ impl ReservationTable {
 
     /// Releases one vehicle's reservation on a specific edge over one window.
     pub fn release_edge(&mut self, src: &str, dst: &str, span: Interval, agv_id: &str) {
-        let key = (src.to_string(), dst.to_string());
-        if let Some(bucket) = self.edge_table.get_mut(&key) {
-            bucket.retain(|e| !(e.agv_id == agv_id && e.span == span));
+        if let Some(sub) = self.edge_table.get_mut(src) {
+            if let Some(bucket) = sub.get_mut(dst) {
+                bucket.retain(|e| !(e.agv_id == agv_id && e.span == span));
+            }
         }
     }
 
@@ -459,8 +692,10 @@ impl ReservationTable {
         for bucket in self.node_table.values_mut() {
             bucket.retain(|e| e.agv_id != agv_id);
         }
-        for bucket in self.edge_table.values_mut() {
-            bucket.retain(|e| e.agv_id != agv_id);
+        for sub in self.edge_table.values_mut() {
+            for bucket in sub.values_mut() {
+                bucket.retain(|e| e.agv_id != agv_id);
+            }
         }
     }
 
@@ -470,10 +705,62 @@ impl ReservationTable {
             bucket.retain(|e| e.span.end > step);
             !bucket.is_empty()
         });
-        self.edge_table.retain(|_, bucket| {
-            bucket.retain(|e| e.span.end > step);
-            !bucket.is_empty()
+        self.edge_table.retain(|_, sub| {
+            sub.retain(|_, bucket| {
+                bucket.retain(|e| e.span.end > step);
+                !bucket.is_empty()
+            });
+            !sub.is_empty()
         });
+    }
+
+    /// Replaces the entire reservation table state from `src`, reusing allocations where possible.
+    pub fn restore_from(&mut self, src: &ReservationTable) {
+        self.clone_from(src);
+    }
+
+    /// Applies a newline-delimited batch of node/edge reservations for `agv_id`:
+    /// lines formatted as `N\tnode\tstart\tend` or `E\tsrc\tdst\tstart\tend`.
+    pub fn reserve_batch_lines(&mut self, agv_id: &str, script: &str) -> usize {
+        let mut count = 0usize;
+        for line in script.split('\n') {
+            if line.is_empty() {
+                continue;
+            }
+            let mut it = line.split('\t');
+            match it.next() {
+                Some("N") => {
+                    if let (Some(node), Some(s_str), Some(e_str)) =
+                        (it.next(), it.next(), it.next())
+                    {
+                        if let (Ok(s), Ok(e)) = (s_str.parse::<i64>(), e_str.parse::<i64>()) {
+                            if let Ok(span) = Interval::try_new(s, e) {
+                                if !span.is_empty() {
+                                    self.reserve_node(node, span, agv_id);
+                                    count += 1;
+                                }
+                            }
+                        }
+                    }
+                }
+                Some("E") => {
+                    if let (Some(src), Some(dst), Some(s_str), Some(e_str)) =
+                        (it.next(), it.next(), it.next(), it.next())
+                    {
+                        if let (Ok(s), Ok(e)) = (s_str.parse::<i64>(), e_str.parse::<i64>()) {
+                            if let Ok(span) = Interval::try_new(s, e) {
+                                if !span.is_empty() {
+                                    self.reserve_edge(src, dst, span, agv_id);
+                                    count += 1;
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        count
     }
 
     // ---------- Statistics & Snapshots ----------
@@ -517,35 +804,39 @@ impl ReservationTable {
         let span = Interval::new(lo, hi);
         let mut out: HashMap<String, Vec<(i64, i64, String)>> = HashMap::new();
 
-        for ((src, dst), entries) in &self.edge_table {
-            let key = if src <= dst {
-                format!("{}|{}", src, dst)
-            } else {
-                format!("{}|{}", dst, src)
-            };
+        for (src, dst_map) in &self.edge_table {
+            for (dst, entries) in dst_map {
+                let key = if src <= dst {
+                    format!("{}|{}", src, dst)
+                } else {
+                    format!("{}|{}", dst, src)
+                };
 
-            let mut hits = Vec::new();
-            for e in entries {
-                if e.span.overlaps(&span) {
-                    hits.push((e.span.start, e.span.end, e.agv_id.clone()));
+                let mut hits = Vec::new();
+                for e in entries {
+                    if e.span.overlaps(&span) {
+                        hits.push((e.span.start, e.span.end, e.agv_id.clone()));
+                    }
                 }
-            }
-            if !hits.is_empty() {
-                hits.sort();
-                out.entry(key).or_default().extend(hits);
+                if !hits.is_empty() {
+                    hits.sort();
+                    out.entry(key).or_default().extend(hits);
+                }
             }
         }
 
-        for ((src, dst), owners) in &self.pinned_edges {
-            let key = if src <= dst {
-                format!("{}|{}", src, dst)
-            } else {
-                format!("{}|{}", dst, src)
-            };
-            for owner in owners {
-                out.entry(key.clone())
-                    .or_default()
-                    .push((lo, hi, owner.clone()));
+        for (src, dst_map) in &self.pinned_edges {
+            for (dst, owners) in dst_map {
+                let key = if src <= dst {
+                    format!("{}|{}", src, dst)
+                } else {
+                    format!("{}|{}", dst, src)
+                };
+                for owner in owners {
+                    out.entry(key.clone())
+                        .or_default()
+                        .push((lo, hi, owner.clone()));
+                }
             }
         }
 
@@ -559,7 +850,12 @@ impl ReservationTable {
     /// Total number of active reservation records across nodes and edges.
     pub fn total_reservations(&self) -> usize {
         let node_count: usize = self.node_table.values().map(|v| v.len()).sum();
-        let edge_count: usize = self.edge_table.values().map(|v| v.len()).sum();
+        let edge_count: usize = self
+            .edge_table
+            .values()
+            .flat_map(|m| m.values())
+            .map(|v| v.len())
+            .sum();
         node_count + edge_count
     }
 
@@ -576,6 +872,7 @@ impl ReservationTable {
         let edge_occupied: i64 = self
             .edge_table
             .values()
+            .flat_map(|m| m.values())
             .flat_map(|v| v.iter().map(|e| e.span.len()))
             .sum();
 
@@ -635,5 +932,25 @@ mod tests {
 
         tbl.purge_before(20);
         assert_eq!(tbl.total_reservations(), 0);
+    }
+
+    #[test]
+    fn test_undirected_edge_restore_and_batch() {
+        let mut tbl = ReservationTable::new();
+        tbl.reserve_batch_lines("A1", "N\tX\t0\t5\nE\tX\tY\t5\t9\nE\tY\tZ\t10\t12");
+        assert_eq!(tbl.total_reservations(), 3);
+        assert!(!tbl.is_node_free("X", Interval::new(2, 4), 1, None));
+        assert!(tbl.is_node_free("X", Interval::new(2, 4), 1, Some("A1")));
+        // Bidirectional exclusion on (Y, X) vs reserved (X, Y) in [5, 9)
+        assert!(!tbl.is_undirected_edge_free("X", "Y", Interval::new(6, 8), 1, None));
+        assert!(tbl.is_undirected_edge_free("X", "Y", Interval::new(6, 8), 2, None));
+        assert!(tbl.is_undirected_edge_free("X", "Y", Interval::new(6, 8), 1, Some("A1")));
+
+        let mut copy = ReservationTable::new();
+        copy.restore_from(&tbl);
+        copy.release_all("A1");
+        assert_eq!(copy.total_reservations(), 0);
+        copy.restore_from(&tbl);
+        assert_eq!(copy.total_reservations(), 3);
     }
 }

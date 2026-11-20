@@ -21,14 +21,16 @@ def _find_library() -> str | None:
     if env_path and Path(env_path).exists():
         return env_path
 
-    # Priority 1: crates/target/release
+    # Priority 1: crates/target/release & package root matching host OS ABI
     repo_root = Path(__file__).resolve().parent.parent
+    lib_name = (
+        "reservation_core.dll"
+        if sys.platform == "win32"
+        else ("libreservation_core.dylib" if sys.platform == "darwin" else "libreservation_core.so")
+    )
     candidates = [
-        repo_root / "crates" / "target" / "release" / "reservation_core.dll",
-        repo_root / "crates" / "target" / "release" / "libreservation_core.so",
-        repo_root / "crates" / "target" / "release" / "libreservation_core.dylib",
-        repo_root / "amr_sched" / "reservation_core.dll",
-        repo_root / "amr_sched" / "libreservation_core.so",
+        repo_root / "crates" / "target" / "release" / lib_name,
+        repo_root / "amr_sched" / lib_name,
     ]
     for c in candidates:
         if c.exists():
@@ -88,6 +90,17 @@ if _LIB_PATH:
 
         _LIB.reservation_table_release_all.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
         _LIB.reservation_table_release_all.restype = ctypes.c_bool
+
+        _LIB.reservation_table_restore_from.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+        _LIB.reservation_table_restore_from.restype = ctypes.c_bool
+
+        _LIB.reservation_table_clone.argtypes = [ctypes.c_void_p]
+        _LIB.reservation_table_clone.restype = ctypes.c_void_p
+
+        _LIB.reservation_table_reserve_batch.argtypes = [
+            ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p
+        ]
+        _LIB.reservation_table_reserve_batch.restype = ctypes.c_size_t
 
         _LIB.reservation_table_purge_before.argtypes = [ctypes.c_void_p, ctypes.c_int64]
 
@@ -169,13 +182,16 @@ class RustReservationTable:
     API is completely compatible with `amr_sched.reservation.ReservationTable`.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, track_shadow: bool = True) -> None:
         if _LIB is None:
             raise RuntimeError("Native reservation_core library not loaded.")
         self._ptr = _LIB.reservation_table_create()
-        # Keep track of python-side pins dictionary for rapid zero-cost inspection
+        self._track_shadow = bool(track_shadow)
+        # Keep track of python-side pins and shadow interval dicts for rapid inspection & snapshot capture
         self._pinned_nodes: dict[str, set[str]] = {}
         self._pinned_edges: dict[tuple[str, str], set[str]] = {}
+        self._node: dict[str, list[tuple[Interval, str]]] = {}
+        self._edge: dict[tuple[str, str], list[tuple[Interval, str]]] = {}
 
     def __del__(self) -> None:
         if hasattr(self, "_ptr") and self._ptr and _LIB:
@@ -185,6 +201,8 @@ class RustReservationTable:
     def clear(self) -> None:
         """Drop all finite reservations (pinned physical occupancy is preserved)."""
         _LIB.reservation_table_clear(self._ptr)
+        self._node.clear()
+        self._edge.clear()
 
     def transfer_pins(self, agv_id: str, nodes: Iterable[str],
                       edges: Iterable[tuple[str, str]] = ()) -> None:
@@ -269,38 +287,146 @@ class RustReservationTable:
     def reserve_node(self, node: str, span: Interval, agv_id: str) -> None:
         if len(span) == 0:
             return
-        _LIB.reservation_table_reserve_node(
+        ok = _LIB.reservation_table_reserve_node(
             self._ptr, node.encode("utf-8"), span.start, span.end, agv_id.encode("utf-8")
         )
+        if ok and self._track_shadow:
+            self._node.setdefault(node, []).append((span, agv_id))
 
     def reserve_edge(self, src: str, dst: str, span: Interval, agv_id: str) -> None:
         if len(span) == 0:
             return
-        _LIB.reservation_table_reserve_edge(
+        ok = _LIB.reservation_table_reserve_edge(
             self._ptr, src.encode("utf-8"), dst.encode("utf-8"), span.start, span.end, agv_id.encode("utf-8")
         )
+        if ok and self._track_shadow:
+            self._edge.setdefault((src, dst), []).append((span, agv_id))
+
+    def reserve_batch_script(self, agv_id: str, script: str) -> int:
+        """Reserve multiple node/edge intervals for one AGV in a single native C-ABI call."""
+        if not script:
+            return 0
+        n = int(_LIB.reservation_table_reserve_batch(
+            self._ptr, agv_id.encode("utf-8"), script.encode("utf-8")
+        ))
+        if self._track_shadow and n > 0:
+            for line in script.split("\n"):
+                if not line:
+                    continue
+                parts = line.split("\t")
+                if parts[0] == "N" and len(parts) == 4:
+                    iv = Interval(int(parts[2]), int(parts[3]))
+                    if len(iv) > 0:
+                        self._node.setdefault(parts[1], []).append((iv, agv_id))
+                elif parts[0] == "E" and len(parts) == 5:
+                    iv = Interval(int(parts[3]), int(parts[4]))
+                    if len(iv) > 0:
+                        self._edge.setdefault((parts[1], parts[2]), []).append((iv, agv_id))
+        return n
+
+    def restore_from(self, other: "RustReservationTable") -> bool:
+        """Restore native table state directly from `other` in a single Rust clone."""
+        ok = bool(_LIB.reservation_table_restore_from(self._ptr, other._ptr))
+        if ok and self._track_shadow:
+            self._node = {k: list(v) for k, v in other._node.items()}
+            self._edge = {k: list(v) for k, v in other._edge.items()}
+            self._pinned_nodes = {k: set(v) for k, v in other._pinned_nodes.items()}
+            self._pinned_edges = {k: set(v) for k, v in other._pinned_edges.items()}
+        return ok
+
+    def clone_fast(self) -> "RustReservationTable":
+        """Create a lightweight native Rust clone (`track_shadow=False`) in a single FFI call."""
+        cls = type(self)
+        inst = cls.__new__(cls)
+        inst._ptr = _LIB.reservation_table_clone(self._ptr)
+        if not inst._ptr:
+            raise RuntimeError("reservation_table_clone failed")
+        inst._track_shadow = False
+        inst._pinned_nodes = {}
+        inst._pinned_edges = {}
+        inst._node = {}
+        inst._edge = {}
+        return inst
 
     def release_node(self, node: str, span: Interval, agv_id: str) -> None:
         _LIB.reservation_table_release_node(
             self._ptr, node.encode("utf-8"), span.start, span.end, agv_id.encode("utf-8")
         )
+        if self._track_shadow and node in self._node:
+            self._node[node] = [
+                (iv, o) for iv, o in self._node[node]
+                if not (o == agv_id and iv.start == span.start and iv.end == span.end)
+            ]
+            if not self._node[node]:
+                del self._node[node]
 
     def release_edge(self, src: str, dst: str, span: Interval, agv_id: str) -> None:
         _LIB.reservation_table_release_edge(
             self._ptr, src.encode("utf-8"), dst.encode("utf-8"), span.start, span.end, agv_id.encode("utf-8")
         )
+        key = (src, dst)
+        if self._track_shadow and key in self._edge:
+            self._edge[key] = [
+                (iv, o) for iv, o in self._edge[key]
+                if not (o == agv_id and iv.start == span.start and iv.end == span.end)
+            ]
+            if not self._edge[key]:
+                del self._edge[key]
 
     def release_all(self, agv_id: str) -> None:
         _LIB.reservation_table_release_all(self._ptr, agv_id.encode("utf-8"))
+        if not self._track_shadow:
+            return
+        for k in list(self._node.keys()):
+            kept = [(iv, o) for iv, o in self._node[k] if o != agv_id]
+            if kept:
+                self._node[k] = kept
+            else:
+                del self._node[k]
+        for k in list(self._edge.keys()):
+            kept = [(iv, o) for iv, o in self._edge[k] if o != agv_id]
+            if kept:
+                self._edge[k] = kept
+            else:
+                del self._edge[k]
 
     def purge_before(self, step: int) -> None:
         _LIB.reservation_table_purge_before(self._ptr, step)
+        if not self._track_shadow:
+            return
+        for k in list(self._node.keys()):
+            kept = [(iv, o) for iv, o in self._node[k] if iv.end > step]
+            if kept:
+                self._node[k] = kept
+            else:
+                del self._node[k]
+        for k in list(self._edge.keys()):
+            kept = [(iv, o) for iv, o in self._edge[k] if iv.end > step]
+            if kept:
+                self._edge[k] = kept
+            else:
+                del self._edge[k]
 
     def total_reservations(self) -> int:
         return int(_LIB.reservation_table_total_reservations(self._ptr))
 
     def utilization(self, horizon: int, n_nodes: int, n_edges: int) -> float:
         return float(_LIB.reservation_table_utilization(self._ptr, horizon, n_nodes, n_edges))
+
+    def snapshot(self, lo: int, hi: int) -> dict[str, list[tuple[int, int, str]]]:
+        """Return node occupancy over [lo, hi) from Python shadow tables when tracking is enabled."""
+        if not self._track_shadow:
+            return {}
+        span = Interval(lo, hi)
+        out: dict[str, list[tuple[int, int, str]]] = {}
+        for node, entries in self._node.items():
+            hits = [(iv.start, iv.end, owner) for iv, owner in entries if iv.overlaps(span)]
+            if hits:
+                out[node] = sorted(hits)
+        for node, owners in self._pinned_nodes.items():
+            for owner in owners:
+                out.setdefault(node, []).append((lo, hi, owner))
+        return out
 
     def begin_transaction(self, agv_id: str) -> "RustReservationTransaction":
         """Begins an atomic reservation transaction for an AGV."""
@@ -321,6 +447,8 @@ class RustReservationTransaction:
         self._ptr = _LIB.transaction_begin(agv_id.encode("utf-8"))
         self._committed = False
         self._rolled_back = False
+        self._staged_nodes: list[tuple[str, Interval]] = []
+        self._staged_edges: list[tuple[str, str, Interval]] = []
 
     def __del__(self) -> None:
         if hasattr(self, "_ptr") and self._ptr and _LIB:
@@ -331,17 +459,21 @@ class RustReservationTransaction:
         """Stages a node occupancy window."""
         if len(span) == 0:
             return
-        _LIB.transaction_stage_node(
+        ok = _LIB.transaction_stage_node(
             self._ptr, node.encode("utf-8"), span.start, span.end, capacity
         )
+        if ok:
+            self._staged_nodes.append((node, span))
 
     def stage_edge(self, src: str, dst: str, span: Interval, capacity: int = 1) -> None:
         """Stages an edge traversal window."""
         if len(span) == 0:
             return
-        _LIB.transaction_stage_edge(
+        ok = _LIB.transaction_stage_edge(
             self._ptr, src.encode("utf-8"), dst.encode("utf-8"), span.start, span.end, capacity
         )
+        if ok:
+            self._staged_edges.append((src, dst, span))
 
     @property
     def staged_count(self) -> int:
@@ -359,13 +491,34 @@ class RustReservationTransaction:
         ok = bool(_LIB.transaction_commit(self._ptr, table._ptr))
         if ok:
             self._committed = True
+            if table._track_shadow:
+                for node, span in self._staged_nodes:
+                    table._node.setdefault(node, []).append((span, self.agv_id))
+                for src, dst, span in self._staged_edges:
+                    table._edge.setdefault((src, dst), []).append((span, self.agv_id))
         else:
             self._rolled_back = True
         return ok
 
+    def clone_fast(self) -> "RustReservationTable":
+        """Create a lightweight native Rust clone (`track_shadow=False`) in a single FFI call."""
+        cls = type(self)
+        inst = cls.__new__(cls)
+        inst._ptr = _LIB.reservation_table_clone(self._ptr)
+        if not inst._ptr:
+            raise RuntimeError("reservation_table_clone failed")
+        inst._track_shadow = False
+        inst._pinned_nodes = {}
+        inst._pinned_edges = {}
+        inst._node = {}
+        inst._edge = {}
+        return inst
+
     def rollback(self) -> None:
         """Discards all staged reservations."""
         _LIB.transaction_rollback(self._ptr)
+        self._staged_nodes.clear()
+        self._staged_edges.clear()
         self._rolled_back = True
 
     def __enter__(self) -> "RustReservationTransaction":

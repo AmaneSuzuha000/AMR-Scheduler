@@ -123,12 +123,14 @@ Deliberately does **not** handle space-time reservations; those belong to the pl
         self._edges: dict[tuple[str, str], Edge] = {}
         self._out: dict[str, list[Edge]] = {}
         self._in: dict[str, list[Edge]] = {}
+        self._tt_cache: dict[tuple[str, float], dict[str, float]] = {}
 
     # ---------- Construction ----------
 
     def add_node(self, node: Node) -> None:
         if node.node_id in self._nodes:
             raise ValueError(f"duplicate node id: {node.node_id}")
+        self._tt_cache.clear()
         self._nodes[node.node_id] = node
         self._out[node.node_id] = []
         self._in[node.node_id] = []
@@ -145,6 +147,7 @@ Deliberately does **not** handle space-time reservations; those belong to the pl
             if (math.dist(edge.centerline[0], (a.x,a.y)) > 1e-6
                     or math.dist(edge.centerline[-1], (b.x,b.y)) > 1e-6):
                 raise ValueError('centerline endpoints differ from network nodes')
+        self._tt_cache.clear()
         self._edges[key] = edge
         self._out[edge.src].append(edge)
         self._in[edge.dst].append(edge)
@@ -220,6 +223,10 @@ The returned mapping contains only **reachable** nodes; unreachable ones are abs
         """
         if source not in self._nodes:
             raise KeyError(f"no such source node: {source}")
+        cache_key = (source, float(max_speed))
+        cached = self._tt_cache.get(cache_key)
+        if cached is not None:
+            return dict(cached)
 
         INF = math.inf
         dist: dict[str, float] = {source: 0.0}
@@ -244,7 +251,8 @@ The returned mapping contains only **reachable** nodes; unreachable ones are abs
         # look up as inf, so the whole pairing was discarded. Measured effect: two
         # vehicles sitting at the pick-up point
         # could not be given a single task. Callers therefore need no separate a == b test.
-        return dist
+        self._tt_cache[cache_key] = dist
+        return dict(dist)
 
     def unreachable_pairs(self, max_speed: float) -> list[tuple[str, str]]:
         """Every unreachable (source, target) pair.

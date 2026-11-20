@@ -339,6 +339,63 @@ pub unsafe extern "C" fn reservation_table_release_all(
     })
 }
 
+/// Restores all reservations & pins in `dst` by cloning from `src`.
+#[no_mangle]
+pub unsafe extern "C" fn reservation_table_restore_from(
+    dst: *mut ReservationTable,
+    src: *const ReservationTable,
+) -> bool {
+    ffi_guard!(false, {
+        let d = match dst.as_mut() {
+            Some(t) => t,
+            None => return false,
+        };
+        let s = match src.as_ref() {
+            Some(t) => t,
+            None => return false,
+        };
+        d.restore_from(s);
+        true
+    })
+}
+
+/// Creates a new `ReservationTable` on the heap cloned directly from `src`.
+#[no_mangle]
+pub unsafe extern "C" fn reservation_table_clone(
+    src: *const ReservationTable,
+) -> *mut ReservationTable {
+    ffi_guard!(std::ptr::null_mut(), {
+        match src.as_ref() {
+            Some(s) => Box::into_raw(Box::new(s.clone())),
+            None => std::ptr::null_mut(),
+        }
+    })
+}
+
+/// Applies newline-delimited node/edge reservation batch lines for `agv_id`.
+#[no_mangle]
+pub unsafe extern "C" fn reservation_table_reserve_batch(
+    tbl: *mut ReservationTable,
+    agv_id: *const c_char,
+    script: *const c_char,
+) -> usize {
+    ffi_guard!(0, {
+        let table = match tbl.as_mut() {
+            Some(t) => t,
+            None => return 0,
+        };
+        let agv_str = match c_to_str(agv_id) {
+            Some(s) => s,
+            None => return 0,
+        };
+        let script_str = match c_to_str(script) {
+            Some(s) => s,
+            None => return 0,
+        };
+        table.reserve_batch_lines(agv_str, script_str)
+    })
+}
+
 /// Purges reservations ending before `step`.
 #[no_mangle]
 pub unsafe extern "C" fn reservation_table_purge_before(tbl: *mut ReservationTable, step: i64) {

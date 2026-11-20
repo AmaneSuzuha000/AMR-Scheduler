@@ -14,49 +14,15 @@ from amr_sched.network import Network
 from amr_sched.planners.base import PathPlanner, PlannedPath
 from amr_sched.reservation import ReservationTable
 from amr_sched.rust_reservation import RustReservationTable, _LIB as _RES_LIB
-from amr_sched.planners.rust_spacetime_astar import _find_planner_library, _PLANNER_LIB_PATH
+from amr_sched.planners.rust_spacetime_astar import (
+    _HAS_INDEXED_FFI,
+    _PLANNER_LIB as _ASTAR_PLANNER_LIB,
+    _PLANNER_LIB_PATH,
+    build_indexed_rust_graph,
+    extract_rust_reservation_ptr,
+)
 
-
-_SIPP_LIB = None
-
-if _PLANNER_LIB_PATH and _RES_LIB is not None:
-    try:
-        _SIPP_LIB = ctypes.CDLL(_PLANNER_LIB_PATH)
-
-        _SIPP_LIB.planner_graph_create.restype = ctypes.c_void_p
-        _SIPP_LIB.planner_graph_destroy.argtypes = [ctypes.c_void_p]
-
-        _SIPP_LIB.planner_graph_add_node.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t]
-        _SIPP_LIB.planner_graph_add_node.restype = ctypes.c_uint16
-
-        _SIPP_LIB.planner_graph_add_edge.argtypes = [
-            ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_size_t, ctypes.c_size_t
-        ]
-        _SIPP_LIB.planner_graph_add_edge.restype = ctypes.c_bool
-
-        _SIPP_LIB.sipp_planner_create.argtypes = [ctypes.c_size_t]
-        _SIPP_LIB.sipp_planner_create.restype = ctypes.c_void_p
-
-        _SIPP_LIB.sipp_planner_destroy.argtypes = [ctypes.c_void_p]
-
-        _SIPP_LIB.sipp_planner_plan.argtypes = [
-            ctypes.c_void_p,  # planner
-            ctypes.c_void_p,  # graph
-            ctypes.c_void_p,  # reservations
-            ctypes.c_char_p,  # start_node
-            ctypes.c_char_p,  # goal_node
-            ctypes.c_uint32,  # start_step
-            ctypes.c_char_p,  # agv_id
-            ctypes.c_uint32,  # horizon
-            ctypes.POINTER(ctypes.c_void_p),  # out_nodes_csv
-            ctypes.POINTER(ctypes.c_void_p),  # out_arrivals_csv
-            ctypes.POINTER(ctypes.c_uint32),  # out_wait_steps
-        ]
-        _SIPP_LIB.sipp_planner_plan.restype = ctypes.c_bool
-
-        _SIPP_LIB.spacetime_planner_free_string.argtypes = [ctypes.c_void_p]
-    except Exception:
-        _SIPP_LIB = None
+_SIPP_LIB = _ASTAR_PLANNER_LIB
 
 
 def is_rust_sipp_available() -> bool:
@@ -91,6 +57,11 @@ class RustSippPlanner(PathPlanner):
         self._planner = _SIPP_LIB.sipp_planner_create(max_expansions)
         self._cached_graph_net_id: Any = None
         self._cached_graph_ptr: ctypes.c_void_p | None = None
+        self._idx_map: dict[str, int] = {}
+        self._names_by_idx: list[str] = []
+        self._buf_cap: int = 512
+        self._out_nodes_buf = (ctypes.c_uint16 * 512)()
+        self._out_arr_buf = (ctypes.c_uint32 * 512)()
 
     def __del__(self) -> None:
         if hasattr(self, "_planner") and self._planner and _SIPP_LIB:
@@ -109,24 +80,14 @@ class RustSippPlanner(PathPlanner):
             _SIPP_LIB.planner_graph_destroy(self._cached_graph_ptr)
             self._cached_graph_ptr = None
 
-        g_ptr = _SIPP_LIB.planner_graph_create()
-        for node in network.nodes.values():
-            _SIPP_LIB.planner_graph_add_node(g_ptr, node.node_id.encode("utf-8"), node.capacity)
-
-        for (src, dst), edge in network.edges.items():
-            steps = self.steps_for(edge.traversal_time(self.max_speed))
-            phys_cap = min(edge.capacity, network.edge(dst, src).capacity) if network.has_edge(dst, src) else edge.capacity
-            _SIPP_LIB.planner_graph_add_edge(
-                g_ptr,
-                src.encode("utf-8"),
-                dst.encode("utf-8"),
-                steps,
-                edge.capacity,
-                phys_cap,
-            )
-
+        g_ptr, idx_map, names_by_idx = build_indexed_rust_graph(
+            network,
+            lambda e: self.steps_for(e.traversal_time(self.max_speed)),
+        )
         self._cached_graph_net_id = net_id
         self._cached_graph_ptr = g_ptr
+        self._idx_map = idx_map
+        self._names_by_idx = names_by_idx
         return g_ptr
 
     def plan(
@@ -143,25 +104,49 @@ class RustSippPlanner(PathPlanner):
             return PlannedPath(nodes=[], arrival_steps=[], wait_steps=0)
 
         g_ptr = self._get_or_build_graph(network)
+        r_ptr, _owned_rust_tbl = extract_rust_reservation_ptr(reservations)
 
-        # Get native pointer to reservation table
-        owned_rust_tbl = None
-        if isinstance(reservations, RustReservationTable):
-            r_ptr = reservations._ptr
-        else:
-            owned_rust_tbl = RustReservationTable()
-            for node, bucket in getattr(reservations, "_node", {}).items():
-                for iv, owner in bucket:
-                    owned_rust_tbl.reserve_node(node, iv, owner)
-            for (s, d), bucket in getattr(reservations, "_edge", {}).items():
-                for iv, owner in bucket:
-                    owned_rust_tbl.reserve_edge(s, d, iv, owner)
-            r_ptr = owned_rust_tbl._ptr
+        wait_steps = ctypes.c_uint32(0)
+        if _HAS_INDEXED_FFI:
+            s_idx = self._idx_map.get(start)
+            g_idx = self._idx_map.get(goal)
+            if s_idx is None or g_idx is None:
+                return None
+            agv_b = agv_id.encode("utf-8")
+            while True:
+                n_hops = int(
+                    _SIPP_LIB.sipp_planner_plan_indexed(
+                        self._planner,
+                        g_ptr,
+                        r_ptr,
+                        s_idx,
+                        g_idx,
+                        start_step,
+                        agv_b,
+                        horizon,
+                        self._out_nodes_buf,
+                        self._out_arr_buf,
+                        self._buf_cap,
+                        ctypes.byref(wait_steps),
+                    )
+                )
+                if n_hops == -2:
+                    self._buf_cap *= 2
+                    self._out_nodes_buf = (ctypes.c_uint16 * self._buf_cap)()
+                    self._out_arr_buf = (ctypes.c_uint32 * self._buf_cap)()
+                    continue
+                break
+            if n_hops < 0:
+                return None
+            names = self._names_by_idx
+            return PlannedPath(
+                nodes=[names[self._out_nodes_buf[i]] for i in range(n_hops)],
+                arrival_steps=[int(self._out_arr_buf[i]) for i in range(n_hops)],
+                wait_steps=int(wait_steps.value),
+            )
 
         nodes_ptr = ctypes.c_void_p()
         arrivals_ptr = ctypes.c_void_p()
-        wait_steps = ctypes.c_uint32(0)
-
         ok = _SIPP_LIB.sipp_planner_plan(
             self._planner,
             g_ptr,

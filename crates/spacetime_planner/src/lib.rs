@@ -5,6 +5,6 @@ pub mod ffi;
 pub mod graph;
 pub mod sipp;
 
-pub use astar::{PlannedPath, SpacetimeAStarPlanner};
+pub use astar::{IndexedPath, PlannedPath, SpacetimeAStarPlanner};
 pub use graph::{PlannerEdge, PlannerGraph};
 pub use sipp::SippPlanner;

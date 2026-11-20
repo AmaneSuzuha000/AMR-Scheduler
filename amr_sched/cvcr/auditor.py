@@ -13,6 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from amr_sched.cvcr.snapshot import align_start_to_windows, op_predecessors
+
 
 @dataclass
 class AuditReport:
@@ -38,21 +40,26 @@ class IndependentAuditor:
         simulator: Any,
         operations: Optional[list[Any]] = None,
         initial_assignment: Optional[dict[str, str]] = None,
+        require_trajectory: bool = False,
     ) -> AuditReport:
         """Audit full trajectory (`simulator._trajectory`), tasks, and operations."""
         issues: list[str] = []
         network = simulator.network
         trajectory = getattr(simulator, "_trajectory", [])
         total_steps = int(simulator._step_cursor)
+        if require_trajectory and total_steps > 0 and not trajectory:
+            issues.append("MISSING_STEP_TRAJECTORY")
 
         conflict_events = 0
         invalid_edge_moves = 0
         prev_nodes: dict[str, str] = {}
 
         # 1. Step-by-step spatial occupancy & directed-edge audit
+        faulted_set = getattr(simulator, "_faulted_agvs", set())
         for record in trajectory:
             step = int(record.step)
             node_counts: dict[str, list[str]] = {}
+            edge_counts: dict[tuple[str, str], list[str]] = {}
             for agv_id, pos_str in record.agv_positions.items():
                 if not pos_str:
                     continue
@@ -61,6 +68,7 @@ class IndependentAuditor:
                     if not network.has_edge(src, dst):
                         invalid_edge_moves += 1
                         issues.append(f"STEP_{step}_INVALID_DIRECTED_EDGE:{agv_id}:{src}->{dst}")
+                    edge_counts.setdefault((src, dst), []).append(agv_id)
                     prev_nodes[agv_id] = pos_str
                 else:
                     node_counts.setdefault(pos_str, []).append(agv_id)
@@ -72,10 +80,36 @@ class IndependentAuditor:
                     prev_nodes[agv_id] = pos_str
 
             for node_id, occupants in node_counts.items():
-                cap = network.node(node_id).capacity if network.has_node(node_id) else 1
-                if len(occupants) > cap:
+                cap = network.node(node_id).capacity if node_id in network else 1
+                has_fault_hist = bool(getattr(simulator, "_fault_history", None))
+                if has_fault_hist and hasattr(simulator, "is_faulted_at_step"):
+                    active_occ = [a for a in occupants if not simulator.is_faulted_at_step(a, step)]
+                else:
+                    active_occ = [a for a in occupants if a not in faulted_set]
+                if len(active_occ) > cap:
                     conflict_events += 1
-                    issues.append(f"STEP_{step}_NODE_CAPACITY_EXCEEDED:{node_id}:{occupants}:cap={cap}")
+                    issues.append(f"STEP_{step}_NODE_CAPACITY_EXCEEDED:{node_id}:{active_occ}:cap={cap}")
+
+            for (src, dst), occ in edge_counts.items():
+                if network.has_edge(src, dst):
+                    ecap = network.edge(src, dst).capacity
+                    if len(occ) > ecap:
+                        conflict_events += 1
+                        issues.append(f"STEP_{step}_EDGE_CAPACITY_EXCEEDED:{src}->{dst}:{occ}:cap={ecap}")
+
+            for (src, dst), occ_fwd in list(edge_counts.items()):
+                if src < dst and (dst, src) in edge_counts:
+                    occ_rev = edge_counts[(dst, src)]
+                    if occ_fwd and occ_rev:
+                        cap_fwd = network.edge(src, dst).capacity if network.has_edge(src, dst) else 1
+                        cap_rev = network.edge(dst, src).capacity if network.has_edge(dst, src) else 1
+                        phys_cap = min(cap_fwd, cap_rev)
+                        total_corridor = len(set(occ_fwd) | set(occ_rev))
+                        if total_corridor > phys_cap:
+                            conflict_events += 1
+                            issues.append(
+                                f"STEP_{step}_OPPOSING_EDGE_CONFLICT:{src}<->{dst}:{occ_fwd}_VS_{occ_rev}:phys_cap={phys_cap}"
+                            )
 
         # 2. Task lifecycle & commitment integrity check
         for t in simulator.tasks:
@@ -92,18 +126,24 @@ class IndependentAuditor:
             for op in operations:
                 if getattr(op, "started", False) and getattr(op, "start_step", None) is not None:
                     op_start = int(op.start_step)
+                    r_wins = getattr(op, "resource_windows", ())
+                    if r_wins and align_start_to_windows(op_start, r_wins) != op_start:
+                        issues.append(
+                            f"WINDOW_ALIGNMENT_VIOLATION:{op.op_id}_AT_{op_start}_WINDOWS_{list(r_wins)}"
+                        )
                     for kit_tid in op.kit_task_ids:
                         kt = tasks_by_id.get(kit_tid)
                         if kt and (kt.complete_step is None or int(kt.complete_step) > op_start):
                             issues.append(
                                 f"PREMATURE_OP_START:{op.op_id}_AT_{op_start}_BEFORE_KIT_{kit_tid}_COMPLETE_{kt.complete_step}"
                             )
-                    if op.predecessor_op_id and op.predecessor_op_id in op_by_id:
-                        pred = op_by_id[op.predecessor_op_id]
-                        if not pred.started or pred.end_step is None or int(pred.end_step) > op_start:
-                            issues.append(
-                                f"PREDECESSOR_VIOLATION:{op.op_id}_AT_{op_start}_BEFORE_{pred.op_id}_END_{pred.end_step}"
-                            )
+                    for pid in op_predecessors(op):
+                        if pid in op_by_id:
+                            pred = op_by_id[pid]
+                            if not pred.started or pred.end_step is None or int(pred.end_step) > op_start:
+                                issues.append(
+                                    f"PREDECESSOR_VIOLATION:{op.op_id}_AT_{op_start}_BEFORE_{pred.op_id}_END_{pred.end_step}"
+                                )
 
             # Check resource mutex intervals
             started_ops = [op for op in operations if op.started and op.start_step is not None and op.end_step is not None]

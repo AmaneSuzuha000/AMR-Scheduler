@@ -13,6 +13,8 @@ import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Optional
 
+from amr_sched.cvcr.execution_feedback import ExecutionFeedbackPacket
+
 
 @dataclass(frozen=True)
 class RobotSnapshot:
@@ -23,6 +25,7 @@ class RobotSnapshot:
     loaded_task_id: Optional[str] = None
     faulted_until: int = 0
     route: tuple[str, ...] = field(default_factory=tuple)
+    in_transit: bool = False
 
 
 @dataclass(frozen=True)
@@ -37,6 +40,8 @@ class TaskSnapshot:
     kit_op_id: Optional[str] = None
     pickup_step: Optional[int] = None
     complete_step: Optional[int] = None
+    priority: str = "normal"
+    is_urgent: bool = False
 
 
 @dataclass
@@ -49,6 +54,7 @@ class OperationSnapshot:
     proc_steps: int
     due_step: int
     predecessor_op_id: Optional[str] = None
+    predecessor_op_ids: tuple[str, ...] = field(default_factory=tuple)
     started: bool = False
     start_step: Optional[int] = None
     end_step: Optional[int] = None
@@ -56,6 +62,39 @@ class OperationSnapshot:
     eligible_bays: tuple[str, ...] = field(default_factory=tuple)
     eligible_crews: tuple[int, ...] = field(default_factory=tuple)
     eligible_tools: tuple[int, ...] = field(default_factory=tuple)
+    resource_windows: tuple[tuple[int, int], ...] = field(default_factory=tuple)
+
+
+def align_start_to_windows(earliest_step: int, windows: Any) -> int:
+    """Align earliest candidate op start step onto discrete `[win_start, win_close]` windows.
+
+    Returns `earliest_step` unchanged when `windows` is empty. If `earliest_step` misses all
+    explicit windows (`> last_close`), shifts start to `max(earliest_step, last_close + 40)`
+    reflecting waiting for the next backup crew/bay shift.
+    """
+    if not windows:
+        return int(earliest_step)
+    t = int(earliest_step)
+    last_close: int | None = None
+    for w_start, w_end in sorted((int(a), int(b)) for a, b in windows):
+        last_close = w_end if last_close is None else max(last_close, w_end)
+        if t <= w_end:
+            return max(t, w_start)
+    assert last_close is not None
+    return max(t, last_close + 40)
+
+
+def op_predecessors(op: Any) -> tuple[str, ...]:
+    """Return all normalized unique predecessor operation IDs for `op`."""
+    preds: list[str] = []
+    seen: set[str] = set()
+    for p in tuple(getattr(op, "predecessor_op_ids", ()) or ()) + (
+        (op.predecessor_op_id,) if getattr(op, "predecessor_op_id", None) else ()
+    ):
+        if p and p not in seen:
+            seen.add(p)
+            preds.append(str(p))
+    return tuple(preds)
 
 
 @dataclass(frozen=True)
@@ -78,6 +117,7 @@ class NativeSnapshot:
     operations: list[OperationSnapshot]
     reservations: list[ReservationSnapshot]
     now_monotonic: float
+    execution_feedback: Optional[ExecutionFeedbackPacket] = None
 
     def compute_digest(self) -> str:
         """Deterministic SHA-256 fingerprint of the snapshot."""
@@ -86,17 +126,81 @@ class NativeSnapshot:
             "tick": self.tick,
             "version": self.version,
             "world_fingerprint": self.world_fingerprint,
-            "robots": [asdict(r) for r in sorted(self.robots, key=lambda x: x.robot_id)],
-            "tasks": [asdict(t) for t in sorted(self.tasks, key=lambda x: x.task_id)],
-            "operations": [asdict(op) for op in sorted(self.operations, key=lambda x: x.op_id)],
+            "robots": [
+                {
+                    "robot_id": r.robot_id,
+                    "cur_node": r.cur_node,
+                    "state": r.state,
+                    "cur_task": r.cur_task,
+                    "loaded_task_id": r.loaded_task_id,
+                    "faulted_until": r.faulted_until,
+                    "route": list(r.route),
+                }
+                for r in sorted(self.robots, key=lambda x: x.robot_id)
+            ],
+            "tasks": [
+                {
+                    "task_id": t.task_id,
+                    "pickup": t.pickup,
+                    "dropoff": t.dropoff,
+                    "release_step": t.release_step,
+                    "due_step": t.due_step,
+                    "status": t.status,
+                    "assigned_agv": t.assigned_agv,
+                    "kit_op_id": t.kit_op_id,
+                    "pickup_step": t.pickup_step,
+                    "complete_step": t.complete_step,
+                    "priority": t.priority,
+                    "is_urgent": t.is_urgent,
+                }
+                for t in sorted(self.tasks, key=lambda x: x.task_id)
+            ],
+            "operations": [
+                {
+                    "op_id": op.op_id,
+                    "kit_task_ids": list(op.kit_task_ids),
+                    "bay_id": op.bay_id,
+                    "crew_id": op.crew_id,
+                    "tool_id": op.tool_id,
+                    "proc_steps": op.proc_steps,
+                    "due_step": op.due_step,
+                    "predecessor_op_id": op.predecessor_op_id,
+                    **(
+                        {"predecessor_op_ids": list(op.predecessor_op_ids)}
+                        if getattr(op, "predecessor_op_ids", ())
+                        else {}
+                    ),
+                    "started": op.started,
+                    "start_step": op.start_step,
+                    "end_step": op.end_step,
+                    "is_urgent": op.is_urgent,
+                    "eligible_bays": list(op.eligible_bays),
+                    "eligible_crews": list(op.eligible_crews),
+                    "eligible_tools": list(op.eligible_tools),
+                    **(
+                        {"resource_windows": [list(w) for w in op.resource_windows]}
+                        if getattr(op, "resource_windows", ())
+                        else {}
+                    ),
+                }
+                for op in sorted(self.operations, key=lambda x: x.op_id)
+            ],
             "reservations": [
-                asdict(res)
+                {
+                    "resource_type": res.resource_type,
+                    "resource_id": res.resource_id,
+                    "start_step": res.start_step,
+                    "end_step": res.end_step,
+                    "agv_id": res.agv_id,
+                }
                 for res in sorted(
                     self.reservations,
                     key=lambda x: (x.resource_type, x.resource_id, x.start_step, x.agv_id),
                 )
             ],
         }
+        if self.execution_feedback is not None and not self.execution_feedback.is_empty():
+            payload["execution_feedback"] = self.execution_feedback.canonical_payload()
         canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return hashlib.sha256(canonical).hexdigest()
 
@@ -110,6 +214,7 @@ class NativeSnapshotCapture:
         operations: list[OperationSnapshot] | None = None,
         version: dict[str, int] | None = None,
         hide_future_releases: bool = False,
+        execution_feedback: Optional[ExecutionFeedbackPacket] = None,
     ) -> NativeSnapshot:
         """Capture an immutable snapshot of state strictly observable at simulator._step_cursor."""
         tick = int(simulator._step_cursor)
@@ -123,14 +228,20 @@ class NativeSnapshotCapture:
 
         # 2. Robots
         faulted_set = getattr(simulator, "_faulted_agvs", set())
+        transit_set = getattr(simulator, "_transit", {})
         robot_snaps: list[RobotSnapshot] = []
         for agv in simulator.agvs:
             st_val = str(agv.state.value if hasattr(agv.state, "value") else agv.state)
-            if agv.agv_id in faulted_set:
+            is_phys_fault = (
+                agv.agv_id in faulted_set
+                or getattr(agv, "faulted", False)
+                or st_val == "faulted"
+            )
+            if is_phys_fault:
                 st_val = "faulted"
             f_until = getattr(agv, "faulted_until_step", 0)
-            if st_val in ("blocked", "faulted"):
-                f_until = max(f_until, tick + 999)
+            if is_phys_fault and f_until <= tick:
+                f_until = tick + 999
             r_snap = RobotSnapshot(
                 robot_id=str(agv.agv_id),
                 cur_node=str(agv.cur_node or agv.start_node),
@@ -141,6 +252,7 @@ class NativeSnapshotCapture:
                 else None,
                 faulted_until=f_until,
                 route=tuple(str(n) for n in agv.route),
+                in_transit=bool(agv.agv_id in transit_set),
             )
             robot_snaps.append(r_snap)
 
@@ -152,6 +264,12 @@ class NativeSnapshotCapture:
             ):
                 continue
             status_val = str(t.status.value if hasattr(t.status, "value") else t.status)
+            prio_raw = getattr(t, "priority", "normal")
+            prio_str = str(getattr(prio_raw, "value", getattr(prio_raw, "name", prio_raw))).lower()
+            is_urg = bool(
+                getattr(t, "is_urgent", False)
+                or prio_str in ("urgent", "high", "1", "taskpriority.urgent")
+            )
             t_snap = TaskSnapshot(
                 task_id=str(t.task_id),
                 pickup=str(t.pickup),
@@ -163,6 +281,8 @@ class NativeSnapshotCapture:
                 kit_op_id=getattr(t, "kit_op_id", None),
                 pickup_step=getattr(t, "pickup_step", None),
                 complete_step=getattr(t, "complete_step", None),
+                priority="urgent" if is_urg else "normal",
+                is_urgent=is_urg,
             )
             task_snaps.append(t_snap)
 
@@ -203,12 +323,26 @@ class NativeSnapshotCapture:
             for op in operations:
                 op_snaps.append(copy.deepcopy(op))
 
-        ver = version or {
-            "world": 1,
-            "reservation": getattr(simulator, "_reservation_revision", 1),
-            "production": getattr(simulator, "_production_revision", 1),
-            "fleet": getattr(simulator, "_fleet_revision", 1),
-        }
+        if version is not None:
+            ver = version
+        else:
+            adm = getattr(simulator, "_admitted_agvs", None)
+            adm_sig = (
+                int(hashlib.sha256(",".join(sorted(adm)).encode("utf-8")).hexdigest()[:8], 16)
+                if adm is not None
+                else -1
+            )
+            ver = {
+                "world": 1,
+                "reservation": int(getattr(simulator, "_reservation_revision", 1)),
+                "production": int(getattr(simulator, "_production_revision", 1)),
+                "fleet": int(getattr(simulator, "_fleet_revision", 1)),
+                "admitted_sig": adm_sig,
+            }
+
+        resolved_fb = execution_feedback
+        if resolved_fb is None:
+            resolved_fb = ExecutionFeedbackPacket.from_simulator_and_events(simulator)
 
         return NativeSnapshot(
             schema="amr-lgcvcr.snapshot.v1",
@@ -220,4 +354,5 @@ class NativeSnapshotCapture:
             operations=op_snaps,
             reservations=res_snaps,
             now_monotonic=now_mono,
+            execution_feedback=resolved_fb,
         )

@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from amr_sched.cvcr.snapshot import OperationSnapshot
+from amr_sched.cvcr.snapshot import OperationSnapshot, align_start_to_windows, op_predecessors
 from amr_sched.entities import Task, TaskStatus
 
 
@@ -34,6 +34,14 @@ class NativeProductionTracker:
         self.op_by_id = {op.op_id: op for op in operations}
         self.task_by_id = {t.task_id: t for t in tasks}
         self.starvation_steps = 0
+        self.op_priorities: dict[str, int] = {}
+
+    def set_op_priorities(self, priorities: dict[str, int] | None) -> None:
+        """Install explicit CVCR operation priority tie-breakers (smaller runs earlier)."""
+        if not priorities:
+            self.op_priorities = {}
+            return
+        self.op_priorities = {str(k): int(v) for k, v in priorities.items()}
 
     def _kit_ready_step(self, op: OperationSnapshot) -> Optional[int]:
         if not op.kit_task_ids:
@@ -62,18 +70,32 @@ class NativeProductionTracker:
         started_now: list[str] = []
         busy_bays, busy_crews, busy_tools = self._resources_busy(tick)
 
-        # Deterministic priority order: urgent first, then earlier due_step, then op_id
+        # Deterministic priority order: use explicit CVCR priorities when provided, else urgent/due/id
         pending_ops = [
             op for op in self.operations if not op.started
         ]
-        pending_ops.sort(key=lambda op: (0 if op.is_urgent else 1, op.due_step, op.op_id))
+        if self.op_priorities:
+            pending_ops.sort(
+                key=lambda op: (
+                    self.op_priorities.get(
+                        op.op_id,
+                        (0 if op.is_urgent else 1) * 100000 + op.due_step,
+                    ),
+                    0 if op.is_urgent else 1,
+                    op.due_step,
+                    op.op_id,
+                )
+            )
+        else:
+            pending_ops.sort(key=lambda op: (0 if op.is_urgent else 1, op.due_step, op.op_id))
 
         for op in pending_ops:
             pred_done = True
-            if op.predecessor_op_id:
-                pred = self.op_by_id.get(op.predecessor_op_id)
+            for pid in op_predecessors(op):
+                pred = self.op_by_id.get(pid)
                 if pred is None or not pred.started or pred.end_step is None or pred.end_step > tick:
                     pred_done = False
+                    break
 
             kit_ready = self._kit_ready_step(op)
             res_free = (
@@ -81,12 +103,14 @@ class NativeProductionTracker:
                 and op.crew_id not in busy_crews
                 and op.tool_id not in busy_tools
             )
+            r_wins = getattr(op, "resource_windows", ())
+            win_open = align_start_to_windows(tick, r_wins) == tick if r_wins else True
 
-            if pred_done and res_free and kit_ready is None:
-                # Resources and predecessor are ready, waiting solely on kitting transport
+            if pred_done and res_free and win_open and kit_ready is None:
+                # Resources, predecessor, and shift window are ready, waiting solely on kitting transport
                 self.starvation_steps += 1
 
-            if pred_done and kit_ready is not None and kit_ready <= tick and res_free:
+            if pred_done and kit_ready is not None and kit_ready <= tick and res_free and win_open:
                 op.started = True
                 op.start_step = tick
                 op.end_step = tick + op.proc_steps

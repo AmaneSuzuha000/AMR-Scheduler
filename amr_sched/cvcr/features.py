@@ -20,7 +20,7 @@ from typing import Any
 import numpy as np
 
 from amr_sched.cvcr.commitment import CommitmentClassification
-from amr_sched.cvcr.snapshot import NativeSnapshot
+from amr_sched.cvcr.snapshot import NativeSnapshot, op_predecessors
 
 FEATURE_NAMES = [
     "is_disturbed_robot",
@@ -101,8 +101,9 @@ def extract_task_features(
     # Downstream chain weight
     chain_w = {op.op_id: (12.0 if op.is_urgent else 4.0) for op in snapshot.operations}
     for op in snapshot.operations:
-        if op.predecessor_op_id and op.predecessor_op_id in chain_w:
-            chain_w[op.predecessor_op_id] += chain_w[op.op_id]
+        for pid in op_predecessors(op):
+            if pid in chain_w:
+                chain_w[pid] += chain_w[op.op_id]
 
     # Current robot queue load
     r_load = {r.robot_id: 0 for r in snapshot.robots}

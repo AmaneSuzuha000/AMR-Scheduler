@@ -66,3 +66,55 @@ fn test_bidirectional_opposing_edge_mutual_exclusion() {
     assert_eq!(res.arrival_steps, vec![10]);
     assert_eq!(res.wait_steps, 5);
 }
+
+#[test]
+fn test_ltm_traffic_penalty_detours_and_clears() {
+    let mut g = PlannerGraph::new();
+    // Short path: N0 -> N1 -> N3 (8 steps)
+    g.add_edge("N0", "N1", 4, 1, 1);
+    g.add_edge("N1", "N3", 4, 1, 1);
+    // Detour path: N0 -> N2 -> N3 (10 steps)
+    g.add_edge("N0", "N2", 5, 1, 1);
+    g.add_edge("N2", "N3", 5, 1, 1);
+
+    let tbl = ReservationTable::new();
+    let planner = SpacetimeAStarPlanner::new(10_000);
+
+    let p0 = planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_1", 30).unwrap();
+    assert_eq!(p0.nodes, vec!["N1", "N3"]);
+    assert_eq!(p0.arrival_steps, vec![4, 8]);
+
+    // Apply Q3 traffic penalty = 24 (+3.0 steps) on N0 -> N1: 8 + 3 = 11 > 10
+    let applied = g.set_traffic_batch_script("N0\tN1\t24\n");
+    assert_eq!(applied, 1);
+    let p1 = planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_1", 30).unwrap();
+    assert_eq!(p1.nodes, vec!["N2", "N3"]);
+    assert_eq!(p1.arrival_steps, vec![5, 10]);
+
+    // Clear restores exact shortest path
+    g.clear_traffic_penalties();
+    let p2 = planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_1", 30).unwrap();
+    assert_eq!(p2.nodes, vec!["N1", "N3"]);
+    assert_eq!(p2.arrival_steps, vec![4, 8]);
+
+    // Time-windowed LTM cutoff: penalty applies at t=0 (cutoff=10 -> detour to N2),
+    // but expires for depart_t >= 10 (restores short N1 corridor).
+    g.set_traffic_batch_script("N0\tN1\t24\n");
+    g.set_traffic_cutoff(10);
+    let p_early = planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_1", 30).unwrap();
+    assert_eq!(p_early.nodes, vec!["N2", "N3"]);
+    let p_late = planner.plan(&g, &tbl, "N0", "N3", 10, "AGV_1", 40).unwrap();
+    assert_eq!(p_late.nodes, vec!["N1", "N3"]);
+    g.clear_traffic_penalties();
+
+    // Per-AGV soft corridor guidance diverts AGV_2 onto N2 while keeping AGV_1 on N1.
+    let guided = g.set_agv_guide_script("AGV_2\t24\tN0\tN2\nAGV_2\t24\tN2\tN3\n");
+    assert_eq!(guided, 2);
+    let pg1 = planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_1", 30).unwrap();
+    let pg2 = planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_2", 30).unwrap();
+    assert_eq!(pg1.nodes, vec!["N1", "N3"]);
+    assert_eq!(pg2.nodes, vec!["N2", "N3"]);
+    g.clear_agv_guides();
+    let pg2_after = planner.plan(&g, &tbl, "N0", "N3", 0, "AGV_2", 30).unwrap();
+    assert_eq!(pg2_after.nodes, vec!["N1", "N3"]);
+}
