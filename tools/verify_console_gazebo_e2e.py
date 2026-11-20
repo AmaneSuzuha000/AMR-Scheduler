@@ -21,12 +21,13 @@ and then compares the console's last position against Gazebo's ground truth
 
 Requires the Ubuntu host with Gazebo up and the odom bridge listening on 9300.
 
-    python tools/verify_console_gazebo_e2e.py --host 192.168.3.130 --port 9300
+    python tools/verify_console_gazebo_e2e.py --host 127.0.0.1 --port 9300
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -58,7 +59,8 @@ def free_port() -> int:
 
 def ssh(host: str, inner: str, timeout: float = 180.0) -> subprocess.CompletedProcess:
     """Run a command on the chassis host with a login shell (ROS needs its setup.bash)."""
-    return subprocess.run(["ssh", "-o", "BatchMode=yes", "suzuha@%s" % host,
+    target = host if "@" in host else f"{os.environ.get('AMR_BRIDGE_USER', 'ubuntu')}@{host}"
+    return subprocess.run(["ssh", "-o", "BatchMode=yes", target,
                            "bash -lc %s" % json.dumps(inner)],
                           capture_output=True, text=True, timeout=timeout)
 
@@ -128,7 +130,7 @@ class Console:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--host", default="192.168.3.130")
+    ap.add_argument("--host", default=os.environ.get("AMR_BRIDGE_HOST", "127.0.0.1"))
     ap.add_argument("--port", type=int, default=9300)
     ap.add_argument("--route", default="R0->B1")
     ap.add_argument("--routes-file", default="~/AMR/tools/live_bridge/routes.json")
@@ -169,7 +171,8 @@ def main(argv=None) -> int:
                  # the route name contains "->", which an unquoted shell would read as a
                  # redirection and silently turn into a different (failing) command.
                  % (a.domain, a.routes_file, json.dumps(a.route)))
-        proc = subprocess.Popen(["ssh", "-o", "BatchMode=yes", "suzuha@%s" % a.host,
+        target = a.host if "@" in a.host else f"{os.environ.get('AMR_BRIDGE_USER', 'ubuntu')}@{a.host}"
+        proc = subprocess.Popen(["ssh", "-o", "BatchMode=yes", target,
                                  "bash -lc %s" % json.dumps(inner)],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         samples: list[dict] = []

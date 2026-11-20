@@ -2,75 +2,74 @@
 
 ## 1. System Overview
 
-**AMR-Scheduler** is a hybrid Python/Rust/C# research platform designed for multi-robot material delivery scheduling and coordination in discrete-workstation, batch-material, narrow-aisle railway freight car maintenance workshops.
+**AMR-Scheduler** (`v0.3.0`) is a hybrid Python / Rust / C# / ROS 2 research and digital twin platform designed for multi-robot material delivery scheduling and coordination in discrete-workstation, batch-material, narrow-aisle railway freight car maintenance workshops.
 
 ```mermaid
 flowchart TD
-    subgraph Decision_Layer["1. Python Research Brain (amr_sched)"]
-        Alloc["Task Allocation (Greedy, Hungarian, Dispatching)"]
-        CVCR["LG-CVCR Research Engine (B2 Incremental, MLPs, ALNS)"]
-        Tracker["Live Production & Kitting Tracker"]
+    subgraph Brain["1. Python Decision & Learning Layer (amr_sched)"]
+        V17["V17_EA_JOINT Hierarchical Brain (Causal Router + 50-D Set-Attn + Keep Restraint)"]
+        CVCR["LG-CVCR Incremental Evaluator (A1 / B1 / B2 Persistent Cache) & Production Tracker"]
+        P4["P4 Chronic Belief Updater, Choke Token Arbiter & Event-SMDP Feedback"]
+        Baselines["2024–2026 Causal Literature Adapters & Gymnasium Masked RL Env"]
     end
 
-    subgraph Native_Kernel["2. Native Rust Kernel (crates)"]
-        ResCore["reservation_core (Intervals, Table, Transactions, Ledger)"]
-        Planner["spacetime_planner (Spacetime A*, SIPP, Bidirectional Exclusion)"]
-        FFI["C-ABI Export Layer with Panic Catch Guards"]
+    subgraph Kernel["2. Native Rust Spatiotemporal Kernel (crates)"]
+        ResCore["reservation_core (Half-Open Intervals, Indexed Table, Atomic Tx, Commitment Ledger)"]
+        Planner["spacetime_planner (Packed-u64 Spacetime A*, Batch Parallel SIPP)"]
+        FFI["C-ABI Export Layer with ffi_guard! Panic Fences"]
     end
 
-    subgraph Simulation_Execution["3. Execution & Transaction Ownership"]
-        Sim["Discrete-Event Stepping Engine (Simulator)"]
-        TxOwner["NativeTransactionOwner (Atomic Commit / Rollback)"]
-        Auditor["IndependentAuditor (Step-by-step Invariant Verification)"]
+    subgraph Execution["3. Execution Ownership & Independent Audit"]
+        Sim["Discrete-Event Stepping Engine (Simulator — Single Authoritative Writer)"]
+        TxOwner["NativeTransactionOwner (Stale / Irrevocable / Mid-Edge Guards & Rollback)"]
+        Auditor["IndependentAuditor (Step-by-Step Occupancy, Edge & Kitting Precedence Audit)"]
     end
 
-    subgraph Presentation_Layer["4. Digital Twin & Physics Layer"]
-        RAWSim["C# RAWSim-O.Live (WPF 2D Twin via TCP JSONL)"]
-        Gazebo["ROS 2 / Gazebo 1:25 Physical Simulation (ODOM/CMD_VEL)"]
-        WebDash["FastAPI WebSocket Web Console"]
+    subgraph Twin["4. Digital Twin & Physical HIL Layer"]
+        RAWSim["C# RAWSim-O.Live (.NET 6 WPF 2D Twin via TCP JSONL)"]
+        Gazebo["ROS 2 / Nav2 / Gazebo 1:25 Workshop & AgileX SCOUT Mini vCAN Bridge"]
+        WebDash["FastAPI WebSocket Monitoring & Replay Console"]
     end
 
-    Decision_Layer <--> Native_Kernel
-    Decision_Layer --> Simulation_Execution
-    Simulation_Execution --> Presentation_Layer
+    Brain <-->|Zero-Copy C-ABI| Kernel
+    Brain --> TxOwner
+    TxOwner --> Sim
+    Sim --> Auditor
+    Sim -.->|TCP JSONL| RAWSim
+    Sim -.->|ROS 2 / Nav2 / CAN 2.0B| Gazebo
+    Sim -.->|WebSocket| WebDash
 ```
 
 ---
 
 ## 2. Layer Architecture
 
-### Layer 1: Python Decision Brain (`amr_sched/`)
-- **Task Allocation**: Dispatches pending material demands to idle or prospective AMRs based on network travel times, station affinities, and deadlines.
-- **LG-CVCR Decision Engine**:
-  - `NativeSnapshotCapture`: Extracts an authoritative, point-in-time immutable snapshot of AMRs, active tasks, committed routes, and production operations. Supports `hide_future_releases=True` to prevent future information leakage in online settings.
-  - `CVCREvaluator`: Factorial incremental evaluator (`A1` full replan, `B1` path preserve, `B2` persistent reservation cache with in-place release/restore).
-  - `LGCVCRPolicy`: Proposes legal task reallocation, bay/crew diversions, or fleet admission gates strictly within a $150\,\text{ms}$ computational budget.
+### Layer 1: Python Decision & Learning Brain (`amr_sched/`)
+- **Allocation & Dispatch (`amr_sched/allocation/`)**: Supports greedy, Hungarian optimal matching, composite dispatching rules (`FIFO`, `EDD`, `SPT`, `PRIORITY`, `CR`), and time-windowed task assignment.
+- **V10–V17 Hierarchical CVCR Stack (`amr_sched/cvcr/`)**:
+  - `NativeSnapshotCapture` (`snapshot.py`): Captures immutable point-in-time world state with `hide_future_releases=True` to guarantee zero future leakage.
+  - `classify_commitments` (`commitment.py`): Partitions tasks into `FROZEN_COMMITMENT` (picked/loading/unloading/in-transit) vs legally re-assignable/re-routable tasks.
+  - `CVCREvaluator` (`evaluator.py`): Evaluates candidate joint decisions incrementally (`A1` full replan, `B1` path preserve, `B2` persistent reservation cache with in-place release/restore) within strict compute budgets.
+  - `V17WindowProtectionPolicy` (`v17_window_protection.py`): Unifies a topology-free causal mode router (`V15_SOFT`, `V7_CALM`, `V10_GUIDED`), a 50-D Set-Attention pairwise window payoff ranker, and a Keep-Zero Conservative Regret Restraint gate.
+  - `P4` Belief & Choke Arbitration (`p4_belief_choke.py`) + Event-SMDP Feedback (`v17_event_smdp.py`): Handles recurring blockage estimation, directional single-lane bridge tokens, safe-haven holds, and execution-drift alarms (`physical_bridge.py`).
+  - **Packaged Inference Weights (`amr_sched/checkpoints/`)**: Compact pure-NumPy `.npz` checkpoints (`resolve_default_checkpoint` in `amr_sched/cvcr/checkpoints.py`) enable self-contained inference without PyTorch at runtime.
+- **RL & 2026 Venue Baselines (`amr_sched/rl/`, `amr_sched/baselines/`)**:
+  - `AMRReschedulingEnv` provides Gymnasium-compatible SMDP observations (`V7`, `V9`, `V12`, `V16`) and physics-grounded action masks.
+  - `baselines_2026.py`, `top_venue_baselines.py`, and `spga_cor2026.py` implement comparable causal proposers strictly conforming to the `CandidateProposal` + ACID `NativeTransactionOwner` contract.
 
 ### Layer 2: Native Rust Kernel (`crates/`)
-- **`reservation_core`**:
-  - Implements interval algebra (`Interval::try_new(start, end)`), node/edge interval tree locks, and bidirectional corridor exclusion.
-  - Exposes an ACID `ReservationTransaction` staging engine and an `ExecutionCommitmentLedger` for non-preemptible execution hops.
-- **`spacetime_planner`**:
-  - High-speed Spacetime A* ($41\,\mu\text{s}/\text{call}$) and Safe Interval Path Planning (SIPP, $36\,\mu\text{s}/\text{call}$) operating on 64-bit packed states.
-- **Panic Boundary Guard**:
-  - All `extern "C"` FFI entry points are guarded by `std::panic::catch_unwind(AssertUnwindSafe(|| ...))` to prevent any Rust panic from crossing the C-ABI into the host Python/C# runtimes.
+- **`reservation_core`**: Integer half-open `[start, end)` interval algebra, indexed array tables for zero-copy batch queries, bidirectional corridor mutual exclusion, ACID `ReservationTransaction` staging, and `ExecutionCommitmentLedger`.
+- **`spacetime_planner`**: Packed `u64` Spacetime A\* ($41\,\mu\text{s}$ mean call) and batch parallel Safe Interval Path Planning ($36\,\mu\text{s}$ mean call).
+- **Panic Boundary Guard**: Every `extern "C"` FFI entry point uses `ffi_guard!` (`std::panic::catch_unwind`) so Rust panics are contained cleanly and never unwind across C-ABI boundaries.
 
-### Layer 3: Simulation & Execution Ownership (`Simulator`, `Transaction`, `Auditor`)
-- **Single-Writer Execution Owner**: Only `Simulator` mutates authoritative physical world state.
-- **`NativeTransactionOwner`**:
-  - Validates candidate proposals against snapshot digest, tick monotonicity, irrevocable task assignments (carrying cargo), active node reservations, and valid graph edges.
-  - Applies atomic commits without partial state mutations.
-- **`IndependentAuditor`**:
-  - Trajectory audit inspects `_trajectory` step-by-step, verifying:
-    1. Node occupancy $\le \text{capacity}$ at every tick.
-    2. Edge traversal along valid directed network edges.
-    3. Monotonic task timeline: `release <= assign <= pickup <= complete`.
-    4. Kitting precedence: kitting tasks complete before dependent operations start.
-    5. Station bay, crew, and tool exclusive occupancy intervals never overlap.
+### Layer 3: Single-Writer Execution & Independent Audit
+- **`Simulator` (`amr_sched/simulation.py`)**: Sole authoritative writer of robot poses, task lifecycles, and reservation tables, enforcing mid-edge (`_transit`) immutability and virtual/real execution clocks.
+- **`NativeTransactionOwner` (`amr_sched/cvcr/transaction.py`)**: Atomically validates snapshot digest consistency, tick monotonicity, irrevocable task assignments, mid-edge live repairs, and edge feasibility before mutating simulator state.
+- **`IndependentAuditor` (`amr_sched/cvcr/auditor.py`)**: Independently audits recorded trajectories for node capacity, edge validity, monotonic task timelines (`release <= assign <= pickup <= complete`), kitting precedence, and exclusive workstation bay/crew/tool intervals.
 
-### Layer 4: Digital Twin & Physics Presentation Layer
-- **RAWSim-O.Live**: High-performance C# WPF visualizer connecting via loopback socket streaming JSONL frame records.
-- **Gazebo / ROS 2**: 1:25 scale physical verification environment with differential-drive robot kinematics, laser scan registration, and collision geometry.
+### Layer 4: Digital Twin, ROS 2 / Nav2 & Physical Bridge (`RAWSimO.Live/`, `tools/live_bridge/`, `tools/ros2/`, `web/`)
+- **RAWSim-O.Live**: `.NET 6` TCP JSONL consumer and topology tracker driving the C# WPF 2D visualization (`PROTOCOLS.md`).
+- **ROS 2 / Nav2 / AgileX SCOUT Mini**: Translates scheduled corridors into Nav2 parameters, RViz overlays (`amr_v15_digital_twin.rviz`), Costmap corridor projections (`costmap_corridor_projector.py`), and SCOUT Mini CAN 2.0B (`0x421`/`0x211`/`0x221`) commands with virtual `vcan0` loopback verification (`vcan_gazebo_bridge.py`).
 
 ---
 
@@ -78,17 +77,17 @@ flowchart TD
 
 | Interop Channel | Implementation | Rationale |
 | :--- | :--- | :--- |
-| **Python $\leftrightarrow$ Rust** | C-ABI `cdylib` loaded via `ctypes` | Zero-GC overhead; cross-interpreter compatibility (Python 3.10–3.14); shared dynamic library between Python and C#. |
-| **C# $\leftrightarrow$ Rust** | P/Invoke over standard `cdylib` exports | Direct native marshalling without COM or interprocess overhead. |
-| **Python $\leftrightarrow$ C# Live Twin** | Loopback TCP socket streaming JSONL | Non-blocking telemetry decoupling; allows independent GUI crashes without interrupting scheduling state. |
-| **Python $\leftrightarrow$ ROS 2 / Gazebo** | Socket bridge / ROS 2 node (`rclpy`) | Standard robotics ecosystem interface for wheel odometry and velocity commands. |
+| **Python $\leftrightarrow$ Rust** | C-ABI `cdylib` loaded via `ctypes` | Zero-GC overhead; zero-copy array pointers; compatible across Python 3.10–3.14 and C#. |
+| **C# $\leftrightarrow$ Rust** | P/Invoke over shared `cdylib` exports | Direct native marshalling without COM or IPC copies. |
+| **Python $\leftrightarrow$ C# Live Twin** | Loopback TCP socket streaming JSONL | Non-blocking telemetry decoupling (`PROTOCOLS.md`). |
+| **Python $\leftrightarrow$ ROS 2 / SCOUT** | `rclpy` bridge, Nav2 corridor projector & SocketCAN / `vcan0` | Standard industrial robotics stack for odometry, costmap locking, and E-stop safety. |
 
 ---
 
 ## 4. Safety & Physical Boundary Protocol
 
 1. **Hardware Motion Isolation**:
-   - `receipt.physical_authorization` is **strictly set to `False`** in all software simulation and algorithmic optimization loops.
-   - Real hardware actuation requires a separate physical gatekeeper with hardware E-stop, localized odometry freshness verification, and active motion leases.
-2. **Crash & Infeasible State Handling**:
-   - If a proposed reschedule is infeasible, `NativeTransactionOwner` rejects it with descriptive reason codes (e.g. `VIOLATION_IRREVOCABLE_TASK_MUTATION`), falling back to the existing valid execution schedule.
+   - `receipt.physical_authorization` remains `False` in all software optimization loops.
+   - Real or Gazebo chassis actuation flows through hardware/C++ watchdogs (`250 ms` SCOUT CAN timeout, velocity clamping `<= 1.5 m/s`, hard E-stop interlock, odometry freshness gates) and `amr_gazebo_guard`.
+2. **Rejection & Rollback Guarantee**:
+   - Any candidate violating commitment immutability (`VIOLATION_IRREVOCABLE_TASK_MUTATION`), mid-edge safety (`VIOLATION_LIVE_REPAIR_IN_TRANSIT`), or stale state is atomically rejected while preserving the prior conflict-free schedule.

@@ -261,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="场景：车间（默认，与控制台加载的地图一致）或合成环线")
     ap.add_argument("--gazebo-pose", default=None, metavar="HOST",
                     help="三维验证模式：从该 ssh 主机读 Gazebo 真值位姿，"
-                         "如 suzuha@192.168.3.130；不给则整帧都是仿真位姿")
+                         "如 user@host（或设 AMR_GAZEBO_SSH）；不给则整帧都是仿真位姿")
     ap.add_argument("--gazebo-model", default="scout_mini",
                     help="Gazebo 里那台物理车的模型名")
     args = ap.parse_args(argv)

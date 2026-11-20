@@ -17,12 +17,13 @@
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import threading
 import time
 
-DEFAULT_HOST = "suzuha@192.168.3.130"
+DEFAULT_HOST = os.environ.get("AMR_GAZEBO_SSH", "ubuntu@127.0.0.1")
 DEFAULT_MODEL = "scout_mini"
 
 #: 远端启动串。ROS_DOMAIN_ID 必须和跑 Gazebo 的那个 shell 一致，否则服务发现找不到节点。

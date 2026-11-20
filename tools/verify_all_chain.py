@@ -21,7 +21,7 @@ Usage::
 
     python tools/verify_all_chain.py            # everything that can run on this machine
     python tools/verify_all_chain.py --fast     # skip the suites, keep the joins
-    python tools/verify_all_chain.py --with-gazebo --gazebo-host 192.168.3.130
+    python tools/verify_all_chain.py --with-gazebo --gazebo-host 127.0.0.1
 """
 from __future__ import annotations
 
@@ -211,7 +211,7 @@ def main(argv=None) -> int:
                     help="host of the Gazebo machine; implies --with-gazebo")
     a = ap.parse_args(argv)
 
-    host = a.gazebo_host or ("192.168.3.130" if a.with_gazebo else "")
+    host = a.gazebo_host or (os.environ.get("AMR_BRIDGE_HOST", "127.0.0.1") if a.with_gazebo else "")
 
     results = []
     def add(item):

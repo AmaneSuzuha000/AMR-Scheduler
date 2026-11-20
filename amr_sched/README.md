@@ -1,99 +1,45 @@
-# amr_sched — multi-AGV material delivery scheduling
+# `amr_sched` — Multi-AMR Material Delivery Scheduling Core
 
-A Python scheduler prototype covering the four stages of the project:
-**R2 (modeling & method) / R3 (system design) / R4 (implementation) /
-R5 (case validation)**.
+The core Python package for **AMR-Scheduler** (`v0.3.0`), unifying discrete-event workshop simulation, Rust zero-copy spatiotemporal planning, the V10–V17 hierarchical LG-CVCR decision brain, Gymnasium SMDP RL environments, and causal literature baselines.
 
-## Quick start
+## Quick Start
 
 ```bash
-# smallest instance (20 tasks / 2 vehicles)
+# Minimal simulation (20 tasks / 2 vehicles)
 python -m amr_sched --tasks 20 --agvs 2 --seed 0
 
-# switch to the baseline planner for comparison
-python -m amr_sched --tasks 20 --agvs 2 --planner static_dijkstra
+# Workshop layout with Rust Spacetime A* or continuous SIPP
+python -m amr_sched --tasks 50 --agvs 6 --layout workshop --planner rust_spacetime_astar
+python -m amr_sched --tasks 50 --agvs 6 --layout workshop --planner rust_sipp
 
-# full instance matrix (3 scales × 3 fleets × 2 planners × 10 seeds)
-python experiments/run_matrix.py --out results/matrix.csv
-
-# paired analysis
-python experiments/analyze_matrix.py --csv results/matrix.csv
-
-# urgent-task dynamic rescheduling
-python experiments/run_reschedule.py
-python experiments/analyze_reschedule.py
-
-# allocation strategy comparison
-python experiments/run_allocation.py
-python experiments/analyze_allocation.py
-
-# visualization report
+# Visualization report
 python -m amr_sched.viz.report --tasks 20 --agvs 2 --seed 0
 
-# tests
-python -m pytest Tests -q
+# Run tests
+python -m pytest -q
 ```
 
-## Structure
+## Subpackage Layout
 
-```
+```text
 amr_sched/
-├── network.py            node-edge network model
-├── entities.py           task and AGV objects
-├── reservation.py        space-time reservation table
-├── simulation.py         discrete-time simulation loop
-├── scenarios.py          instance generation
-├── planners/
-│   ├── base.py                   planner interface
-│   ├── static_dijkstra.py        static shortest path (baseline)
-│   └── spacetime_astar.py        space-time A* with conflict resolution
-├── allocation/
-│   ├── base.py                   allocator interface
-│   ├── dispatch.py               5 dispatching rules (FIFO/EDD/SPT/PRIORITY/CR)
-│   ├── greedy.py                 greedy allocation (urgent-first, legacy)
-│   ├── hungarian.py              Hungarian algorithm (one-step optimal matching)
-│   └── rule_based.py             composable rule × allocator
-├── reschedule.py         urgent-task dynamic rescheduling
-└── viz/                  process visualization
-    ├── layout.py                 workshop layout
-    ├── gantt.py                  AGV task Gantt chart
-    ├── trajectory.py             trajectory replay
-    ├── corridor.py               aisle load heatmap
-    ├── metrics.py                metric and baseline comparison plots
-    └── report.py                 one-shot figure set + Markdown report
+├── allocation/         # Task dispatch & matching rules (FIFO/EDD/SPT/PRIORITY/CR, Hungarian, composable)
+├── baselines/          # Causal adapters for 2024–2026 top-venue AGV/FJSP baselines
+├── checkpoints/        # Packaged pure-NumPy .npz inference weights (L-RHO, V12–V17)
+├── cvcr/               # Snapshot capture, B2 evaluator, V12–V17 policies, P4 belief, Owner & Auditor
+├── planners/           # Static Dijkstra, Spacetime A*, Rust Spacetime A*, Rust batch SIPP
+├── rl/                 # Gymnasium AMRReschedulingEnv, action masking, V10/V12/V13 controllers, CUDA helpers
+├── viz/                # Workshop layout, Gantt, trajectories, corridor heatmaps, animations
+├── network.py          # Node-edge logistics topology & bidirectional aisle modeling
+├── reservation.py      # Reference Python spatiotemporal interval table
+├── rust_reservation.py # Zero-copy C-ABI ctypes binding to crates/reservation_core
+├── scenarios*.py       # Workshop, blind unseen, stress, and assembly kitting scenario generators
+└── simulation.py       # Single-writer discrete-event simulator & state machine
 ```
 
-## Four acceptance metrics
+## Design Invariants
 
-| Metric | Method | Unit |
-|---|---|---|
-| Completion time | `SimulationResult.makespan_seconds()` | s |
-| On-time rate | `SimulationResult.on_time_rate()` | ratio |
-| AGV utilization | `SimulationResult.agv_utilization()` | ratio |
-| Conflict wait | `SimulationResult.conflict_wait_steps()` | steps |
-
-## Design notes
-
-* **Discrete time**: fixed step `dt` (default 1 s) keeps runs reproducible and
-  consistent with the reservation table.
-* **Directed graph, physically unified aisles**: `edge(u,v)` and `edge(v,u)` share
-  one physical resource, so two vehicles cannot "each own an edge" on paper while
-  colliding head-on in reality.
-* **Planning is separate from execution**: the planner only produces a route; the
-  executor re-checks occupancy every step.
-* **Planning is separate from reservation**: planners only *read* the reservation
-  table; all writes go through the simulator.
-
-## Key results (measured — do not invert)
-
-* **Urgent preemption works**: urgent on-time rate 0.451 → 0.542 (p<0.0001),
-  response 180.7 → 142.7 steps (p<0.0001), with no significant degradation in
-  total completion time (p=0.30).
-* **Space-time A* does not beat the static baseline**: +0.2% to +8.3%. Do not
-  write it up as "better than baseline".
-* **The AGV inflection point is 4 vehicles**: 2→4 gives −46.1%, 4→6 only −26.4%.
-* **The allocator matters more than the dispatching rule**: changing the allocator
-  moves results by 8.8–13.2%, changing the rule by 1.4–4.1%. Completion time and
-  on-time rate trade off against each other, so the choice must be explicit.
-* **Collision events are always zero**, task completion rate 100% (verified over
-  1260 runs).
+- **Discrete-time physical consistency**: Fixed step `dt` (default `1.0 s`) aligns Python simulation and Rust integer half-open `[start, end)` intervals.
+- **Physically unified bidirectional aisles**: `edge(u, v)` and `edge(v, u)` contend on a single shared directional resource.
+- **Single-writer transactional commit**: Planners and policies emit `CandidateProposal` objects validated atomically by `NativeTransactionOwner`; active cargo commitments and mid-edge transits (`_transit`) are strictly non-preemptible.
+- **Independent trajectory auditing**: `IndependentAuditor` verifies node capacity, valid directed edges, monotonic task timelines, kitting precedence, and exclusive station bay/crew/tool intervals step by step.
