@@ -130,7 +130,7 @@ class FleetRobotNode(SensorSchedulerNode):
 class FleetRuntime:
     """Single executor, shared occupancy and checkpoint, separate native UUIDs."""
 
-    def __init__(self,sim,out,namespaces,executor,*,resume=False,runtime_files=(),tracking_offset_m=0.,latest_tf=False,best_effort_tf=False,input_thread=False,dock_takeover=None,async_logs=False):
+    def __init__(self,sim,out,namespaces,executor,*,resume=False,runtime_files=(),tracking_offset_m=0.,latest_tf=False,best_effort_tf=False,input_thread=False,dock_takeover=None,async_logs=False,cvcr_coordinator=None,costmap_projector=None):
         if sim.execution is not None or len(sim.executions)<2:
             raise ValueError('a fleet mapping with at least two physical robots is required')
         if set(namespaces)!=set(sim.executions) or len(set(namespaces.values()))!=len(namespaces):
@@ -152,6 +152,11 @@ class FleetRuntime:
         if type(async_logs) is not bool:
             raise ValueError('explicit boolean asynchronous log mode required')
         self.async_logs=async_logs
+        self.cvcr_coordinator=cvcr_coordinator
+        self.costmap_projector=costmap_projector
+        self._latest_obstacle_points=[]
+        self._latest_occupancy_grid=None
+        self._latest_laserscan=None
         self.nodes={}
         self.builder=FrameBuilder(sim)
         self.failed=False
@@ -200,6 +205,8 @@ class FleetRuntime:
                     node.restart_clock=context['clock_s']
                     node.restart_first_clock=True
                 executor.add_node(node)
+            if self.cvcr_coordinator is not None and hasattr(self.cvcr_coordinator, 'set_recovery_backends'):
+                self.cvcr_coordinator.set_recovery_backends(self.nodes)
             self.constructing=False
             self.timer=next(iter(self.nodes.values())).create_timer(.05,self.tick)
             self.persist()
@@ -311,6 +318,46 @@ class FleetRuntime:
             if self.epoch is not None:
                 due=int((clock-self.epoch)/self.sim.config.dt)
                 for _ in range(min(5,max(0,due-self.sim._step_cursor+1))):
+                    if self.cvcr_coordinator is not None:
+                        telem={}
+                        for rid,node in self.nodes.items():
+                            gate=self.sim.execution_for(rid)
+                            age=(max(0., now-gate.last_receipt) if gate and gate.last_receipt is not None else 0.)
+                            gs=getattr(node,'guard_status',None)
+                            spd=float(getattr(gs,'actual_speed',0.))/max(1e-3,float(self.sim.planner.max_speed)) if gs else 1.
+                            telem[rid]={
+                                'localization_source':'amcl',
+                                'speed_scale':max(0.05,min(2.0,spd)) if (gate and gate.command) else 1.0,
+                                'receipt_age_s':age,
+                                'local_planner_state':('faulted' if (gate and gate.fault) else ('detouring' if rid in self.sim._physical_detours else 'nominal')),
+                            }
+                        blocked_corridors=None
+                        if self.costmap_projector is not None:
+                            rpos={r:(float(n.sim.execution.pose['x']),float(n.sim.execution.pose['y']))
+                                  for r,n in self.nodes.items() if n.sim.execution.pose is not None}
+                            if self._latest_occupancy_grid is not None:
+                                origin_xy, resolution, width, height, grid_data, occ_th, ch_steps = self._latest_occupancy_grid
+                                blocked_corridors=self.costmap_projector.project_occupancy_grid(
+                                    origin_xy, resolution, width, height, grid_data,
+                                    occ_threshold=occ_th, robot_positions=rpos, clear_horizon_steps=ch_steps,
+                                )
+                            elif self._latest_laserscan is not None:
+                                pose_xyyaw, ranges, ang_min, ang_inc, rmin, rmax, ch_steps = self._latest_laserscan
+                                blocked_corridors=self.costmap_projector.project_laserscan(
+                                    pose_xyyaw, ranges, ang_min, ang_inc,
+                                    range_min=rmin, range_max=rmax, robot_positions=rpos, clear_horizon_steps=ch_steps,
+                                )
+                            else:
+                                blocked_corridors=self.costmap_projector.project_points(
+                                    self._latest_obstacle_points,robot_positions=rpos)
+                        coord_rep=self.cvcr_coordinator.step_coordination(
+                            now,nav2_telemetry=telem,blocked_corridors=blocked_corridors)
+                        if coord_rep.triggered or coord_rep.replanned_detours or coord_rep.closed_corridors or coord_rep.reopened_corridors:
+                            self.record('cvcr_step', tick=coord_rep.tick, trigger=coord_rep.trigger_reason,
+                                        accepted=coord_rep.receipt_accepted, reassigned=list(coord_rep.reassigned_tasks),
+                                        detours=list(coord_rep.replanned_detours),
+                                        closed=[list(e) for e in coord_rep.closed_corridors],
+                                        reopened=[list(e) for e in coord_rep.reopened_corridors])
                     if not self.sim.step_once():
                         self.done=True
                         if not self.sim._all_done():
@@ -435,6 +482,36 @@ class FleetRuntime:
             self.done=False
         self.record('physical_task_submit',result=answer)
         return answer
+
+    def submit_obstacle_points(self,points):
+        """Update latest continuous-space obstacle `(x, y)` points for `costmap_projector`."""
+        self._latest_occupancy_grid=None
+        self._latest_laserscan=None
+        self._latest_obstacle_points=[(float(p[0]),float(p[1])) for p in points]
+
+    def submit_occupancy_grid(self, origin_xy, resolution, width, height, data, *, occ_threshold=65, clear_horizon_steps=None):
+        """Register raw ROS 2 `nav_msgs/OccupancyGrid` data for zero-hardcoding `CostmapCorridorProjector`."""
+        self._latest_occupancy_grid=(
+            (float(origin_xy[0]), float(origin_xy[1])),
+            float(resolution),
+            int(width),
+            int(height),
+            list(data),
+            int(occ_threshold),
+            clear_horizon_steps,
+        )
+
+    def submit_laserscan(self, robot_pose_xyyaw, ranges, angle_min, angle_increment, *, range_min=0.12, range_max=12.0, clear_horizon_steps=None):
+        """Register raw ROS 2 `sensor_msgs/LaserScan` polar ranges for zero-hardcoding `CostmapCorridorProjector`."""
+        self._latest_laserscan=(
+            (float(robot_pose_xyyaw[0]), float(robot_pose_xyyaw[1]), float(robot_pose_xyyaw[2])),
+            list(ranges),
+            float(angle_min),
+            float(angle_increment),
+            float(range_min),
+            float(range_max),
+            clear_horizon_steps,
+        )
 
     def request_physical_preemption(self,urgent_task_id):
         answer=self.sim.request_physical_preemption(urgent_task_id,time.monotonic())
