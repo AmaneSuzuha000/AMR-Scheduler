@@ -7,6 +7,7 @@ import pytest
 pytest.importorskip("torch")
 
 from amr_sched.baselines.baselines_2026 import (
+    ICRA26KittingHGNNProposer,
     IJCAI26PGMPOProposer,
     ParimiMIT26TAPFPCLNSProposer,
     SowJAIR26DyMABProposer,
@@ -55,22 +56,28 @@ def _run_closed_loop_sanity(proposer) -> None:
     assert m["task_completion_rate"] > 0.0
 
 
-def test_five_2026_baselines_closed_loop_audit() -> None:
-    """Verify Wu EJOR'26, Choi IJCAI'26, Ma TII'26, Sow JAIR'26 & Parimi MIT'26 pass full trajectory audit."""
+def test_six_2026_baselines_closed_loop_audit() -> None:
+    """Verify Wu EJOR'26, Choi IJCAI'26, Ma TII'26, Sow JAIR'26, Parimi MIT'26 & Zhang ICRA'26 pass full trajectory audit."""
     for prop in (
         WuEJOR26Proposer(seed=1, sample_rollouts=2),
         IJCAI26PGMPOProposer(seed=1, c_policies=4),
         TII26E2GMoEProposer(seed=1, rollout_samples=2),
         SowJAIR26DyMABProposer(seed=1),
         ParimiMIT26TAPFPCLNSProposer(seed=1),
+        ICRA26KittingHGNNProposer(seed=1, rollout_samples=2),
     ):
         _run_closed_loop_sanity(prop)
 
 
 def test_2026_mechanisms_faithful_properties() -> None:
-    """Verify exact mathematical invariants of JAIR'26 DyMAB, TII'26 TopK HMoE, IJCAI'26 Bit-DAN & MIT'26 closure."""
+    """Verify exact mathematical invariants of JAIR'26 DyMAB, TII'26 TopK HMoE, IJCAI'26 Bit-DAN, MIT'26 closure & ICRA'26 Eq.(4)."""
     import torch
-    from amr_sched.baselines.baselines_2026 import ChoiIJCAI26PGMPONet, MaTII26E2GMoENet
+    from amr_sched.baselines.baselines_2026 import (
+        ChoiIJCAI26PGMPONet,
+        MaTII26E2GMoENet,
+        ZhangICRA26KittingHGNNNet,
+        step_dynamic_state,
+    )
     from amr_sched.cvcr.snapshot import NativeSnapshot, OperationSnapshot, RobotSnapshot, TaskSnapshot
 
     # 1. DyMAB sliding window queue evicts stale non-stationary rewards
@@ -116,3 +123,27 @@ def test_2026_mechanisms_faithful_properties() -> None:
     )
     closure = mit._transitive_closure_tasks(["T1"], {"T1", "T2", "T3"}, snap)
     assert set(closure) == {"T1", "T2", "T3"}
+
+    # 5. Zhang ICRA'26 Eq.(4) selective cost-sensitive kitting buffer edge weight + HGNN forward
+    net_kit = ZhangICRA26KittingHGNNNet()
+    sw_est = torch.tensor([[0.0, 2.0, 5.0]], dtype=torch.float32)
+    is_kit = torch.tensor([[0.0, 1.0, 1.0]], dtype=torch.float32)
+    w_ij = net_kit.buffer_edge_weight(sw_est, is_kit, alpha=0.3)
+    assert float(w_ij[0, 0].item()) == 0.0
+    assert float(w_ij[0, 2].item()) > float(w_ij[0, 1].item()) > 0.5
+    logits_k, val_k = net_kit(
+        torch.randn(1, 3, 8),
+        torch.randn(1, 2, 6),
+        torch.randn(1, 3, 2, 6),
+        torch.eye(3).unsqueeze(0).unsqueeze(-1).expand(1, 3, 3, 3),
+        torch.randn(1, 4),
+        torch.stack([is_kit, sw_est], dim=-1),
+    )
+    assert logits_k.shape == (1, 3, 2) and val_k.shape == (1,)
+
+    # 6. Sequential dynamic load update increments chosen AGV queue & decreases slack
+    r_in = torch.zeros(2, 3, 6)
+    p_in = torch.zeros(2, 4, 3, 6)
+    r_nxt, p_nxt = step_dynamic_state(r_in, p_in, torch.tensor([1, 2]))
+    assert float(r_nxt[0, 1, 4].item()) > 0.0 and float(r_nxt[0, 0, 4].item()) == 0.0
+    assert float(p_nxt[1, 0, 2, 2].item()) > 0.0 and float(p_nxt[1, 0, 2, 3].item()) < 0.0

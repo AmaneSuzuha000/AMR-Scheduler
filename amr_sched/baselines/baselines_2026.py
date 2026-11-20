@@ -1,6 +1,6 @@
 """2026 Top-Venue Baselines for Joint AGV Dispatching, Routing, Storage/Bay & Precedence Scheduling.
 
-Faithfully implements five complementary 2026 state-of-the-art methods operating inside the
+Faithfully implements six complementary 2026 state-of-the-art methods operating inside the
 unified causal snapshot (`NativeSnapshot`) & ACID transaction (`CandidateProposal`) contract:
   1. `WuEJOR26GRUAttentionNet` + `WuEJOR26Proposer` (Wu et al., *EJOR* 2026,
      `10.1016/j.ejor.2026.08.040`):
@@ -20,6 +20,10 @@ unified causal snapshot (`NativeSnapshot`) & ACID transaction (`CandidateProposa
   5. `ParimiMIT26TAPFPCLNSProposer` (Parimi & Williams, *MIT CSAIL arXiv:2603.28968*, March 2026):
      Precedence-aware (`PRECEDENCE-WAIT`, `LOW-SLACK`, `AGENT-CONFLICT`) destroy with transitive
      successor closure + cross-boundary earliest release bounds + Regret-2 reinsertion repair.
+  6. `ZhangICRA26KittingHGNNNet` + `ICRA26KittingHGNNProposer` (Zhang et al., *ICRA* 2026,
+     `10.1109/ICRA57385.2026.11695703`):
+     Heterogeneous Operation-Resource-Buffer GNN for FJSP under Limited Buffers & Material Kitting
+     (`FJSP-LB-MK`) with selective cost-sensitive propagation `w_ij = sigmoid(0.3 * SwEst)`.
 """
 
 from __future__ import annotations
@@ -51,6 +55,7 @@ DEFAULT_CKPT_DIR_2026 = _ROOT / "_scratch" / "checkpoints" / "baselines_2026"
 EJOR26_CKPT = DEFAULT_CKPT_DIR_2026 / "ejor26_wu_gru_attn.pt"
 IJCAI26_CKPT = DEFAULT_CKPT_DIR_2026 / "ijcai26_choi_pgmpo.pt"
 TII26_CKPT = DEFAULT_CKPT_DIR_2026 / "tii26_ma_e2g_moe.pt"
+ICRA26_CKPT = DEFAULT_CKPT_DIR_2026 / "icra26_zhang_kitting_hgnn.pt"
 
 _CKPT_CACHE: dict[str, Any] = {}
 
@@ -151,6 +156,8 @@ class CausalScheduleInstance:
     pair_feats: np.ndarray       # [N_t, N_a, 6]
     pred_adj: np.ndarray         # [N_t, N_t, 3] (pred, self, succ)
     disturbance_6d: np.ndarray   # [6]
+    buf_feats: np.ndarray        # [4] (ICRA'26 buffer/kitting state)
+    kitting_sw: np.ndarray       # [N_t, 2] ([is_kit_op, SwEst])
 
 
 def build_causal_instance(snapshot: NativeSnapshot, network: Network) -> CausalScheduleInstance:
@@ -277,6 +284,36 @@ def build_causal_instance(snapshot: NativeSnapshot, network: Network) -> CausalS
         dtype=np.float32,
     )
 
+    # Material-kitting / limited-buffer node & selective edge switch-cost features (Zhang et al., ICRA 2026 Eq. 4-5)
+    kitting_sw = np.zeros((max(1, n_t), 2), dtype=np.float32)
+    bay_active_ops: dict[str, int] = {}
+    for op in snapshot.operations:
+        if op.end_step is None:
+            b_sel = bays.get(op.op_id, op.bay_id)
+            bay_active_ops[b_sel] = bay_active_ops.get(b_sel, 0) + 1
+    if n_t > 0:
+        for i, tid in enumerate(rel_tids):
+            t = tmap[tid]
+            op = op_map.get(t.kit_op_id or "")
+            if op is not None:
+                b_sel = bays.get(op.op_id, op.bay_id)
+                sw_est = (
+                    0.8 * max(0, bay_active_ops.get(b_sel, 1) - 1)
+                    + 0.5 * max(0, len(op.kit_task_ids) - 1)
+                    + (1.2 if getattr(op, "resource_windows", ()) else 0.0)
+                    + (1.0 if op_predecessors(op) else 0.0)
+                )
+                kitting_sw[i] = [1.0, float(sw_est)]
+    buf_feats = np.asarray(
+        [
+            float(np.mean(kitting_sw[:, 0])) if n_t > 0 else 0.0,
+            float(np.mean(task_feats[:, 7])) if n_t > 0 else 0.0,
+            min(1.0, len(bay_active_ops) / max(1, len(snapshot.operations))),
+            min(2.0, (float(np.mean(kitting_sw[:, 1])) / 5.0) if n_t > 0 else 0.0),
+        ],
+        dtype=np.float32,
+    )
+
     return CausalScheduleInstance(
         tick=tick,
         rel_tids=rel_tids,
@@ -290,6 +327,8 @@ def build_causal_instance(snapshot: NativeSnapshot, network: Network) -> CausalS
         pair_feats=pair_feats,
         pred_adj=pred_adj,
         disturbance_6d=dist_6d,
+        buf_feats=buf_feats,
+        kitting_sw=kitting_sw,
     )
 
 
@@ -309,6 +348,86 @@ def _decode_assignment(
     return out
 
 
+def sequential_task_order(task_feats: np.ndarray | torch.Tensor) -> list[int]:
+    """Order releasable tasks by urgency & slack tightness for autoregressive MDP decoding."""
+    n_t = int(task_feats.shape[0])
+    arr = task_feats.detach().cpu().numpy() if isinstance(task_feats, torch.Tensor) else task_feats
+    return sorted(range(n_t), key=lambda i: (float(arr[i, 5]), -float(arr[i, 6]), i))
+
+
+def step_dynamic_state(
+    res_x: torch.Tensor,
+    pair_x: torch.Tensor,
+    chosen_ai: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Advance [B, N_a, 6] resource and [B, N_t, N_a, 6] pair workload features after picking `chosen_ai` [B]."""
+    B = int(res_x.shape[0])
+    batch_ar = torch.arange(B, device=res_x.device)
+    res_next = res_x.clone()
+    pair_next = pair_x.clone()
+    res_next[batch_ar, chosen_ai, 2] = 1.0
+    res_next[batch_ar, chosen_ai, 4] = torch.clamp(res_x[batch_ar, chosen_ai, 4] + (1.0 / 6.0), max=1.0)
+    res_next[batch_ar, chosen_ai, 5] = torch.clamp(res_x[batch_ar, chosen_ai, 5] + 0.18, max=1.0)
+    col = pair_x[batch_ar, :, chosen_ai, :]  # [B, N_t, 6]
+    col_next = col.clone()
+    col_next[..., 2] = torch.clamp(col[..., 2] + 0.20, max=1.0)
+    col_next[..., 3] = torch.clamp(col[..., 3] - 0.22, min=-1.0)
+    col_next[..., 4] = torch.clamp(col[..., 4] + 0.15, max=1.0)
+    col_next[..., 5] = torch.clamp(col[..., 5] - 0.18, min=0.0)
+    pair_next[batch_ar, :, chosen_ai, :] = col_next
+    return res_next, pair_next
+
+
+def sequential_neural_rollouts(
+    logits_fn: Any,
+    inst: CausalScheduleInstance,
+    *,
+    batch_rollouts: int,
+    stochastic_tail: bool,
+    rng_seed: int = 2026,
+    device: torch.device | None = None,
+    deadline_s: float | None = None,
+) -> list[list[int]]:
+    """Run autoregressive step-by-step MDP dispatching across tasks while updating dynamic AGV queues."""
+    n_t = len(inst.rel_tids)
+    n_a = len(inst.healthy_agvs)
+    B = max(1, int(batch_rollouts))
+    if n_t == 0 or n_a == 0:
+        return [[0] * n_t for _ in range(B)]
+
+    task_order = sequential_task_order(inst.task_feats)
+    op_t = torch.from_numpy(inst.task_feats).to(device).unsqueeze(0).expand(B, -1, -1)
+    res_cur = torch.from_numpy(inst.agv_feats).to(device).unsqueeze(0).expand(B, -1, -1).clone()
+    pair_cur = torch.from_numpy(inst.pair_feats).to(device).unsqueeze(0).expand(B, -1, -1, -1).clone()
+
+    choices_out = [[0] * n_t for _ in range(B)]
+    gen = torch.Generator(device="cpu").manual_seed(int(rng_seed))
+    with torch.no_grad():
+        for step_idx, ti in enumerate(task_order):
+            if deadline_s is not None and step_idx > 0 and _cvcr_now_s() >= deadline_s:
+                # Deadline fallback: greedy least-loaded + nearest deadhead for remaining tasks
+                rem_ti = task_order[step_idx:]
+                for rti in rem_ti:
+                    sc = res_cur[:, :, 4] + pair_cur[:, rti, :, 0]
+                    fallback_ai = torch.argmin(sc, dim=-1)
+                    for b in range(B):
+                        choices_out[b][rti] = int(fallback_ai[b].item())
+                    res_cur, pair_cur = step_dynamic_state(res_cur, pair_cur, fallback_ai)
+                break
+
+            logits = logits_fn(op_t, res_cur, pair_cur)  # [B, N_t, N_a]
+            step_logits = logits[:, ti, :]  # [B, N_a]
+            chosen_ai = torch.argmax(step_logits, dim=-1)
+            if stochastic_tail and B > 1:
+                probs_tail = F.softmax(step_logits[1:].detach().cpu(), dim=-1)
+                sampled_tail = torch.multinomial(probs_tail, 1, generator=gen).squeeze(-1).to(step_logits.device)
+                chosen_ai = torch.cat([chosen_ai[:1], sampled_tail], dim=0)
+            for b in range(B):
+                choices_out[b][ti] = int(chosen_ai[b].item())
+            res_cur, pair_cur = step_dynamic_state(res_cur, pair_cur, chosen_ai)
+    return choices_out
+
+
 # ---------------------------------------------------------------------------
 # 1. EJOR 2026: Wu et al., GRU-Attention + Semi-Circle Storage Policy
 # ---------------------------------------------------------------------------
@@ -316,10 +435,11 @@ def _decode_assignment(
 class WuEJOR26GRUAttentionNet(nn.Module):
     """Exact Conv1d + 1-Layer GRU Pointer-Attention Actor & 3-Layer Conv1d Critic (Wu et al., EJOR 2026)."""
 
-    def __init__(self, static_dim: int = 8, dynamic_dim: int = 8, hidden_dim: int = 128, dropout: float = 0.1) -> None:
+    def __init__(self, static_dim: int = 12, dynamic_dim: int = 8, hidden_dim: int = 128, dropout: float = 0.1) -> None:
         super().__init__()
+        self.static_dim = int(static_dim)
         self.hidden_dim = int(hidden_dim)
-        # Eq. (11-13): 1D Convolutional encoders for static, dynamic & decoder input
+        # Eq. (11-13): 1D Convolutional encoders for static (task + AGV/pair geometry), dynamic & decoder input
         self.static_enc = nn.Conv1d(static_dim, hidden_dim, kernel_size=1)
         self.dynamic_enc = nn.Conv1d(dynamic_dim, hidden_dim, kernel_size=1)
         self.dec_enc = nn.Conv1d(static_dim, hidden_dim, kernel_size=1)
@@ -329,7 +449,7 @@ class WuEJOR26GRUAttentionNet(nn.Module):
         # Eq. (19-25): Attention & glimpse over [H_s, H_d, h_t]
         self.w_attn = nn.Linear(hidden_dim * 3, hidden_dim)
         self.v_attn = nn.Linear(hidden_dim, 1, bias=False)
-        self.w_ptr = nn.Linear(hidden_dim * 2, hidden_dim)
+        self.w_ptr = nn.Linear(hidden_dim * 3, hidden_dim)
         self.v_ptr = nn.Linear(hidden_dim, 1, bias=False)
         # Eq. (27-32): 3-layer Conv1d CNN Critic (hidden -> 20 -> 20 -> 1, summed over candidates)
         self.critic_c1 = nn.Conv1d(hidden_dim * 2, 20, kernel_size=1)
@@ -369,7 +489,7 @@ class WuEJOR26GRUAttentionNet(nn.Module):
         e_masked = e.masked_fill(mask <= 0.0, -1e9)
         attns = F.softmax(e_masked, dim=-1).unsqueeze(1)  # [B, 1, L]
         context = torch.bmm(attns, hs.transpose(1, 2)).expand(B, L, H)  # [B, L, H]
-        cat_p = torch.cat([hs.transpose(1, 2), context], dim=-1)  # [B, L, 2H]
+        cat_p = torch.cat([hs.transpose(1, 2), hd.transpose(1, 2), context], dim=-1)  # [B, L, 3H]
         logits = self.v_ptr(self.drop(torch.tanh(self.w_ptr(cat_p)))).squeeze(-1)
         logits = logits.masked_fill(mask <= 0.0, -1e9)
         return logits, h_t
@@ -379,11 +499,11 @@ def _build_wu_pair_tensors(
     inst: CausalScheduleInstance,
     device: torch.device | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Build [1, 8, N_t*N_a] static and dynamic candidate matrices over all (task, AGV) candidates."""
+    """Build [1, 12, N_t*N_a] static and [1, 8, N_t*N_a] dynamic candidate matrices over all (task, AGV) candidates."""
     n_t = len(inst.rel_tids)
     n_a = len(inst.healthy_agvs)
     L = max(1, n_t * n_a)
-    static_m = np.zeros((8, L), dtype=np.float32)
+    static_m = np.zeros((12, L), dtype=np.float32)
     dyn_m = np.zeros((8, L), dtype=np.float32)
     for i in range(n_t):
         tf = inst.task_feats[i]
@@ -391,7 +511,7 @@ def _build_wu_pair_tensors(
             idx = i * n_a + j
             af = inst.agv_feats[j]
             pf = inst.pair_feats[i, j]
-            static_m[:, idx] = [tf[0], tf[1], tf[2], tf[3], tf[4], tf[5], tf[6], tf[7]]
+            static_m[:, idx] = [tf[0], tf[1], tf[2], tf[3], tf[4], tf[5], tf[6], tf[7], af[0], af[1], pf[0], pf[1]]
             dyn_m[:, idx] = [pf[0], pf[1], pf[2], pf[3], pf[4], pf[5], af[4], af[5]]
     st = torch.from_numpy(static_m).unsqueeze(0)
     dy = torch.from_numpy(dyn_m).unsqueeze(0)
@@ -463,9 +583,8 @@ class WuEJOR26Proposer:
                     if r_i > 0 and _cvcr_now_s() >= deadline:
                         break
                     h_t = torch.zeros(1, net.hidden_dim)
-                    dec_in = torch.zeros(1, 8)
+                    dec_in = torch.zeros(1, net.static_dim)
                     mask = torch.ones(1, L)
-                    agv_loads = [0.0 for _ in range(n_a)]
                     chosen = [0] * n_t
                     dyn_roll = dyn_cur.clone()
                     for step_i in range(n_t):
@@ -479,9 +598,10 @@ class WuEJOR26Proposer:
                         chosen[ti] = ai
                         # Mask all candidate AGVs for task ti so each task is dispatched once
                         mask[0, ti * n_a : (ti + 1) * n_a] = 0.0
-                        agv_loads[ai] += 1.0
-                        for tk in range(n_t):
-                            dyn_roll[0, 6, tk * n_a + ai] = min(1.0, dyn_roll[0, 6, tk * n_a + ai].item() + 0.16)
+                        dyn_roll[0, 6, ai::n_a] = torch.clamp(dyn_roll[0, 6, ai::n_a] + 0.16, max=1.0)
+                        dyn_roll[0, 2, ai::n_a] = torch.clamp(dyn_roll[0, 2, ai::n_a] + 0.20, max=1.0)
+                        dyn_roll[0, 3, ai::n_a] = torch.clamp(dyn_roll[0, 3, ai::n_a] - 0.22, min=-1.0)
+                        dyn_roll[0, 5, ai::n_a] = torch.clamp(dyn_roll[0, 5, ai::n_a] - 0.18, min=0.0)
                         dec_in = st[:, :, idx]
                     cand_assign = _decode_assignment(inst, chosen)
                     if cand_assign != best_assign:
@@ -637,14 +757,15 @@ class IJCAI26PGMPOProposer:
         if n_t > 0 and n_a >= 2:
             net = self._get_net()
             C = self.c_policies
-            op_t = torch.from_numpy(inst.task_feats).unsqueeze(0).expand(C, -1, -1)
-            res_t = torch.from_numpy(inst.agv_feats).unsqueeze(0).expand(C, -1, -1)
-            pair_t = torch.from_numpy(inst.pair_feats).unsqueeze(0).expand(C, -1, -1, -1)
             bits = net.bit_vectors(C, net.bit_dim)
-            with torch.no_grad():
-                logits_c = net(op_t, res_t, pair_t, bits)  # [C, N_t, N_a]
-                # Parallel rollout of all C conditioned policies (greedy argmax per policy)
-                choices_c = torch.argmax(logits_c, dim=-1).tolist()
+            choices_c = sequential_neural_rollouts(
+                lambda op_t, res_t, pair_t: net(op_t, res_t, pair_t, bits),
+                inst,
+                batch_rollouts=C,
+                stochastic_tail=False,
+                rng_seed=self.seed,
+                deadline_s=deadline,
+            )
             seen: set[tuple[tuple[str, str], ...]] = set()
             for ch in choices_c:
                 if _cvcr_now_s() >= deadline:
@@ -856,18 +977,17 @@ class TII26E2GMoEProposer:
         n_a = len(inst.healthy_agvs)
         if n_t > 0 and n_a >= 2:
             net = self._get_net()
-            op_t = torch.from_numpy(inst.task_feats).unsqueeze(0)
-            res_t = torch.from_numpy(inst.agv_feats).unsqueeze(0)
-            pair_t = torch.from_numpy(inst.pair_feats).unsqueeze(0)
-            adj_t = torch.from_numpy(inst.pred_adj).unsqueeze(0)
-            dist_t = torch.from_numpy(inst.disturbance_6d).unsqueeze(0)
-            with torch.no_grad():
-                logits, _, _ = net(op_t, res_t, pair_t, adj_t, dist_t)  # [1, N_t, N_a]
-                greedy_ch = torch.argmax(logits[0], dim=-1).tolist()
-                probs = F.softmax(logits[0], dim=-1)
-            cands: list[list[int]] = [greedy_ch]
-            for _ in range(self.rollout_samples - 1):
-                cands.append([int(torch.multinomial(probs[i], 1).item()) for i in range(n_t)])
+            R = self.rollout_samples
+            adj_t = torch.from_numpy(inst.pred_adj).unsqueeze(0).expand(R, -1, -1, -1)
+            dist_t = torch.from_numpy(inst.disturbance_6d).unsqueeze(0).expand(R, -1)
+            cands = sequential_neural_rollouts(
+                lambda op_t, res_t, pair_t: net(op_t, res_t, pair_t, adj_t, dist_t)[0],
+                inst,
+                batch_rollouts=R,
+                stochastic_tail=True,
+                rng_seed=int(inst.tick) + 2026,
+                deadline_s=deadline,
+            )
             seen: set[tuple[tuple[str, str], ...]] = set()
             for ch in cands:
                 if _cvcr_now_s() >= deadline:
@@ -1204,6 +1324,212 @@ class ParimiMIT26TAPFPCLNSProposer:
             best_crews=crews,
             best_eval=best_eval,
             op_prio=op_prio,
+            eval_cnt=ev.calls,
+            t0=t0,
+            budget_ms=budget_ms,
+        )
+
+
+# ---------------------------------------------------------------------------
+# 6. ICRA 2026: Zhang et al., FJSP-LB-MK Heterogeneous GNN (Kitting & Buffers)
+# ---------------------------------------------------------------------------
+
+class ZhangICRA26KittingHGNNNet(nn.Module):
+    """Heterogeneous Operation-AGV-Buffer GNN for FJSP-LB-MK (Zhang et al., ICRA 2026)."""
+
+    def __init__(
+        self,
+        op_dim: int = 8,
+        res_dim: int = 6,
+        pair_dim: int = 6,
+        buf_dim: int = 4,
+        hidden_dim: int = 64,
+        n_layers: int = 2,
+        sw_alpha: float = 0.3,
+    ) -> None:
+        super().__init__()
+        self.hidden_dim = int(hidden_dim)
+        self.n_layers = int(n_layers)
+        self.sw_alpha = float(sw_alpha)
+
+        self.op_proj = nn.Linear(op_dim, hidden_dim)
+        self.res_proj = nn.Linear(res_dim, hidden_dim)
+        self.buf_proj = nn.Linear(buf_dim, hidden_dim)
+
+        # Heterogeneous message-passing layers: Precedence Op->Op, Buffer->Op (Eq. 4-5), Op<->AGV
+        self.op_rel_lin = nn.ModuleList([nn.Linear(hidden_dim * 3, hidden_dim) for _ in range(n_layers)])
+        self.buf_to_op = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
+        self.edge_attn_mlp = nn.ModuleList(
+            [nn.Linear(hidden_dim * 2 + pair_dim, 1) for _ in range(n_layers)]
+        )
+        self.op_from_res = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
+        self.res_from_op = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
+        self.op_norms = nn.ModuleList([nn.LayerNorm(hidden_dim) for _ in range(n_layers)])
+        self.res_norms = nn.ModuleList([nn.LayerNorm(hidden_dim) for _ in range(n_layers)])
+        self.buf_norms = nn.ModuleList([nn.LayerNorm(hidden_dim) for _ in range(n_layers)])
+
+        # Actor & Critic heads trained via PPO (Algorithm 1, Table III)
+        self.actor_mlp = nn.Sequential(
+            nn.Linear(hidden_dim * 3 + pair_dim, hidden_dim),
+            nn.ELU(),
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ELU(),
+            nn.Linear(hidden_dim // 2, 1),
+        )
+        self.critic_mlp = nn.Sequential(
+            nn.Linear(hidden_dim * 3, hidden_dim),
+            nn.ELU(),
+            nn.Linear(hidden_dim, 1),
+        )
+
+    @staticmethod
+    def buffer_edge_weight(
+        sw_est: torch.Tensor,
+        is_kit: torch.Tensor,
+        alpha: float = 0.3,
+    ) -> torch.Tensor:
+        """Compute Eq. (4) selective cost-sensitive weight w_ij = sigmoid(alpha * SwEst) * mask."""
+        return torch.sigmoid(float(alpha) * sw_est) * (is_kit > 0.5).float()
+
+    def forward(
+        self,
+        op_x: torch.Tensor,      # [B, N_t, 8]
+        res_x: torch.Tensor,     # [B, N_a, 6]
+        pair_x: torch.Tensor,    # [B, N_t, N_a, 6]
+        pred_adj: torch.Tensor,  # [B, N_t, N_t, 3]
+        buf_x: torch.Tensor,     # [B, 4]
+        kit_sw: torch.Tensor,    # [B, N_t, 2] ([is_kit_op, SwEst])
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return policy logits [B, N_t, N_a] and critic state value [B]."""
+        B, N_t, _ = op_x.shape
+        N_a = res_x.shape[1]
+        h_o = F.elu(self.op_proj(op_x))
+        h_m = F.elu(self.res_proj(res_x))
+        h_b = F.elu(self.buf_proj(buf_x))
+
+        # Eq. (4): Selective buffer-to-kitting-op propagation weights
+        w_ij = self.buffer_edge_weight(kit_sw[..., 1], kit_sw[..., 0], alpha=self.sw_alpha)  # [B, N_t]
+        adj_norm = pred_adj / pred_adj.sum(dim=2, keepdim=True).clamp_min(1.0)
+
+        for l in range(self.n_layers):
+            # Precedence op-to-op relational message over {pred, self, succ}
+            m_rel = torch.cat([torch.bmm(adj_norm[..., r], h_o) for r in range(3)], dim=-1)  # [B, N_t, 3H]
+            # Eq. (5): delta_ij = w_ij * B (cost-sensitive selective buffer message)
+            delta_ij = w_ij.unsqueeze(-1) * self.buf_to_op[l](h_b).unsqueeze(1)  # [B, N_t, H]
+
+            # Heterogeneous Operation <-> AGV attention
+            ho_e = h_o.unsqueeze(2).expand(B, N_t, N_a, self.hidden_dim)
+            hm_e = h_m.unsqueeze(1).expand(B, N_t, N_a, self.hidden_dim)
+            e_sc = self.edge_attn_mlp[l](torch.cat([ho_e, hm_e, pair_x], dim=-1)).squeeze(-1)  # [B, N_t, N_a]
+            a_o2m = F.softmax(e_sc, dim=2)
+            a_m2o = F.softmax(e_sc, dim=1).transpose(1, 2)  # [B, N_a, N_t]
+
+            msg_from_m = self.op_from_res[l](torch.bmm(a_o2m, h_m))
+            msg_from_o = self.res_from_op[l](torch.bmm(a_m2o, h_o))
+            h_o = self.op_norms[l](h_o + F.elu(self.op_rel_lin[l](m_rel)) + delta_ij + msg_from_m)
+            h_m = self.res_norms[l](h_m + F.elu(msg_from_o))
+
+            w_sum = w_ij.sum(dim=1, keepdim=True).clamp_min(1.0)
+            kit_pool = (w_ij.unsqueeze(-1) * h_o).sum(dim=1) / w_sum
+            h_b = self.buf_norms[l](h_b + kit_pool)
+
+        ho_f = h_o.unsqueeze(2).expand(B, N_t, N_a, self.hidden_dim)
+        hm_f = h_m.unsqueeze(1).expand(B, N_t, N_a, self.hidden_dim)
+        hb_f = h_b.view(B, 1, 1, self.hidden_dim).expand(B, N_t, N_a, self.hidden_dim)
+        logits = self.actor_mlp(torch.cat([ho_f, hm_f, hb_f, pair_x], dim=-1)).squeeze(-1)
+        val = self.critic_mlp(torch.cat([h_o.mean(dim=1), h_m.mean(dim=1), h_b], dim=-1)).squeeze(-1)
+        return logits, val
+
+
+class ICRA26KittingHGNNProposer:
+    """Zhang et al. (ICRA 2026) FJSP-LB-MK Heterogeneous GNN Proposer for Kitting & Buffers."""
+
+    def __init__(
+        self,
+        *,
+        ckpt_path: Path | str | None = None,
+        lambda_change: float = 15.0,
+        alpha_makespan: float = 3.0,
+        use_rust: bool = True,
+        rollout_samples: int = 4,
+        seed: int = 2026,
+    ) -> None:
+        self.ckpt_path = Path(ckpt_path) if ckpt_path else ICRA26_CKPT
+        self.lambda_change = float(lambda_change)
+        self.alpha_makespan = float(alpha_makespan)
+        self.use_rust = bool(use_rust)
+        self.rollout_samples = max(1, int(rollout_samples))
+        self.seed = int(seed)
+        self._net: Optional[ZhangICRA26KittingHGNNNet] = None
+
+    def _get_net(self) -> ZhangICRA26KittingHGNNNet:
+        if self._net is not None:
+            return self._net
+        key = f"icra:{self.ckpt_path}"
+        if key not in _CKPT_CACHE:
+            net = ZhangICRA26KittingHGNNNet()
+            if self.ckpt_path.exists():
+                sd = torch.load(self.ckpt_path, map_location="cpu", weights_only=True)
+                net.load_state_dict(sd["model"] if "model" in sd else sd)
+            net.eval()
+            _CKPT_CACHE[key] = net
+        self._net = _CKPT_CACHE[key]
+        return self._net
+
+    def __call__(self, snapshot: NativeSnapshot, network: Network, budget_ms: float = 100.0) -> CandidateProposal:
+        t0 = _cvcr_now_s()
+        deadline = t0 + max(0.008, float(budget_ms) * 0.80 / 1000.0)
+        clf = classify_commitments(snapshot)
+        inst = build_causal_instance(snapshot, network)
+        ev = CVCREvaluator(
+            network, snapshot, alpha_makespan=self.alpha_makespan, lambda_change=self.lambda_change, use_rust=self.use_rust, mode="B2"
+        )
+        base_assign = dict(inst.fixed_assign)
+        for i, tid in enumerate(inst.rel_tids):
+            t = next(x for x in snapshot.tasks if x.task_id == tid)
+            base_assign[tid] = t.assigned_agv if (t.assigned_agv in inst.healthy_agvs) else inst.healthy_agvs[i % len(inst.healthy_agvs)]
+        best_eval = ev.evaluate(base_assign, op_priority=inst.op_prio, op_bay_overrides=inst.bays, op_crew_overrides=inst.crews)
+        best_assign = dict(base_assign)
+
+        n_t = len(inst.rel_tids)
+        n_a = len(inst.healthy_agvs)
+        if n_t > 0 and n_a >= 2:
+            net = self._get_net()
+            R = self.rollout_samples
+            adj_t = torch.from_numpy(inst.pred_adj).unsqueeze(0).expand(R, -1, -1, -1)
+            buf_t = torch.from_numpy(inst.buf_feats).unsqueeze(0).expand(R, -1)
+            sw_t = torch.from_numpy(inst.kitting_sw).unsqueeze(0).expand(R, -1, -1)
+            cands = sequential_neural_rollouts(
+                lambda op_t, res_t, pair_t: net(op_t, res_t, pair_t, adj_t, buf_t, sw_t)[0],
+                inst,
+                batch_rollouts=R,
+                stochastic_tail=True,
+                rng_seed=int(inst.tick) + self.seed,
+                deadline_s=deadline,
+            )
+            seen: set[tuple[tuple[str, str], ...]] = set()
+            for ch in cands:
+                if _cvcr_now_s() >= deadline:
+                    break
+                cand_assign = _decode_assignment(inst, ch)
+                sig = tuple(sorted(cand_assign.items()))
+                if sig in seen or cand_assign == best_assign:
+                    continue
+                seen.add(sig)
+                ev_c = ev.evaluate(cand_assign, op_priority=inst.op_prio, op_bay_overrides=inst.bays, op_crew_overrides=inst.crews)
+                if ev_c.valid and (not best_eval.valid or ev_c.objective < best_eval.objective):
+                    best_eval = ev_c
+                    best_assign = cand_assign
+
+        return _build_external_proposal(
+            policy_id="ICRA26_ZHANG_KITTING_HGNN",
+            snapshot=snapshot,
+            clf=clf,
+            best_assign=best_assign,
+            best_bays=inst.bays,
+            best_crews=inst.crews,
+            best_eval=best_eval,
+            op_prio=inst.op_prio,
             eval_cnt=ev.calls,
             t0=t0,
             budget_ms=budget_ms,
