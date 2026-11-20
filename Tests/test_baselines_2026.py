@@ -147,3 +147,25 @@ def test_2026_mechanisms_faithful_properties() -> None:
     r_nxt, p_nxt = step_dynamic_state(r_in, p_in, torch.tensor([1, 2]))
     assert float(r_nxt[0, 1, 4].item()) > 0.0 and float(r_nxt[0, 0, 4].item()) == 0.0
     assert float(p_nxt[1, 0, 2, 2].item()) > 0.0 and float(p_nxt[1, 0, 2, 3].item()) < 0.0
+
+    # 7. Semicircle bay allocator never mutates op.bay_id once any sibling kit task is PICKED (ACID lock)
+    from amr_sched.baselines.baselines_2026 import _assign_semicircle_priority_bays
+    from amr_sched.network import Edge, Network, Node
+    net_tiny = Network()
+    net_tiny.add_node(Node("N0", 0.0, 0.0))
+    net_tiny.add_node(Node("W1", 1.0, 0.0))
+    net_tiny.add_node(Node("W2", 5.0, 0.0))
+    net_tiny.add_edge(Edge("N0", "W1", length=1.0, speed_limit=1.0))
+    net_tiny.add_edge(Edge("N0", "W2", length=5.0, speed_limit=1.0))
+    snap_lock = NativeSnapshot(
+        schema="test", tick=5, version={}, world_fingerprint="w",
+        robots=[RobotSnapshot("R0", "N0", "idle")],
+        tasks=[
+            TaskSnapshot("KT1", "N0", "W2", 0, 50, "picked", kit_op_id="OP_LOCK", pickup_step=3),
+            TaskSnapshot("KT2", "N0", "W2", 0, 50, "assigned", assigned_agv="R0", kit_op_id="OP_LOCK"),
+        ],
+        operations=[OperationSnapshot("OP_LOCK", ("KT1", "KT2"), "W2", 0, 0, 5, 50, started=False, eligible_bays=("W1", "W2"))],
+        reservations=[], now_monotonic=0.0,
+    )
+    bays_out, _ = _assign_semicircle_priority_bays(snap_lock, net_tiny)
+    assert bays_out["OP_LOCK"] == "W2"

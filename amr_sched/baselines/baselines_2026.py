@@ -41,6 +41,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from amr_sched.baselines.top_venue_baselines import _build_external_proposal
+from amr_sched.cvcr.checkpoints import resolve_default_checkpoint
 from amr_sched.cvcr.clock import now_s as _cvcr_now_s
 from amr_sched.cvcr.commitment import classify_commitments
 from amr_sched.cvcr.evaluator import CVCREvaluator, EvalResult
@@ -49,13 +50,10 @@ from amr_sched.cvcr.snapshot import NativeSnapshot, OperationSnapshot, TaskSnaps
 from amr_sched.cvcr.v12_proactive_guard import compute_kitting_marginal_start_value
 from amr_sched.network import Network
 
-_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CKPT_DIR_2026 = _ROOT / "_scratch" / "checkpoints" / "baselines_2026"
-
-EJOR26_CKPT = DEFAULT_CKPT_DIR_2026 / "ejor26_wu_gru_attn.pt"
-IJCAI26_CKPT = DEFAULT_CKPT_DIR_2026 / "ijcai26_choi_pgmpo.pt"
-TII26_CKPT = DEFAULT_CKPT_DIR_2026 / "tii26_ma_e2g_moe.pt"
-ICRA26_CKPT = DEFAULT_CKPT_DIR_2026 / "icra26_zhang_kitting_hgnn.pt"
+EJOR26_CKPT = resolve_default_checkpoint("baselines_2026/ejor26_wu_gru_attn.pt")
+IJCAI26_CKPT = resolve_default_checkpoint("baselines_2026/ijcai26_choi_pgmpo.pt")
+TII26_CKPT = resolve_default_checkpoint("baselines_2026/tii26_ma_e2g_moe.pt")
+ICRA26_CKPT = resolve_default_checkpoint("baselines_2026/icra26_zhang_kitting_hgnn.pt")
 
 _CKPT_CACHE: dict[str, Any] = {}
 
@@ -96,10 +94,13 @@ def _safe_dist(net: Network, u: str, v: str) -> float:
 def _assign_semicircle_priority_bays(
     snapshot: NativeSnapshot,
     network: Network,
+    clf: Any | None = None,
 ) -> tuple[dict[str, str], dict[str, int]]:
     """Wu et al. (EJOR 2026) Eq. (7, 40-41): rank items by urgency/turnover priority and map
-    flexible bays cleanly using Manhattan/network semi-circle proximity.
+    flexible bays cleanly using Manhattan/network semi-circle proximity, respecting ACID picked-kit locks.
     """
+    if clf is None:
+        clf = classify_commitments(snapshot)
     tmap = {t.task_id: t for t in snapshot.tasks}
     bays: dict[str, str] = {op.op_id: op.bay_id for op in snapshot.operations}
     km = compute_kitting_marginal_start_value(snapshot)
@@ -118,7 +119,8 @@ def _assign_semicircle_priority_bays(
     for op in ops_sorted:
         k_min = min((km[kt][0] * 1000 + km[kt][4] for kt in op.kit_task_ids if kt in km), default=op.due_step)
         op_prio[op.op_id] = int(k_min)
-        if op.started or not op.eligible_bays:
+        kit_locked = any(kt in clf.frozen_tasks for kt in op.kit_task_ids)
+        if op.started or kit_locked or not op.eligible_bays:
             bay_load[op.bay_id] = bay_load.get(op.bay_id, 0) + 1
             continue
         kits = [tmap[tid] for tid in op.kit_task_ids if tid in tmap]
