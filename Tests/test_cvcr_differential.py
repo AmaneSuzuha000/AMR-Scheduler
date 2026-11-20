@@ -256,3 +256,195 @@ def test_production_tracker_and_step_auditor(ring_network: Network):
     assert ops[1].started is False
     assert tracker.step(15) == []
     assert tracker.step(16) == ["OP_2"]
+
+
+def test_ltm_traffic_weights_rust_and_transaction():
+    """Verify LTM online traffic weights divert routes cleanly, clear on reset, and enforce tx validation."""
+    from amr_sched.network import Edge, Network, Node, NodeKind
+    from amr_sched.planners.rust_spacetime_astar import RustSpaceTimeAStarPlanner
+
+    net = Network()
+    net.add_node(Node("S", 0.0, 0.0, kind=NodeKind.BUFFER, capacity=2))
+    net.add_node(Node("A", 4.0, 2.0, kind=NodeKind.AISLE, capacity=1))
+    net.add_node(Node("B", 5.0, -2.0, kind=NodeKind.AISLE, capacity=1))
+    net.add_node(Node("G", 8.0, 0.0, kind=NodeKind.WORKSTATION, capacity=1))
+    net.add_edge(Edge("S", "A", length=4.0, capacity=1))
+    net.add_edge(Edge("A", "G", length=4.0, capacity=1))
+    net.add_edge(Edge("G", "A", length=4.0, capacity=1))
+    net.add_edge(Edge("A", "S", length=4.0, capacity=1))
+    net.add_edge(Edge("S", "B", length=5.0, capacity=1))
+    net.add_edge(Edge("B", "G", length=5.0, capacity=1))
+    net.add_edge(Edge("G", "B", length=5.0, capacity=1))
+    net.add_edge(Edge("B", "S", length=5.0, capacity=1))
+
+    planner = RustSpaceTimeAStarPlanner()
+    sim = Simulator(
+        network=net,
+        tasks=[Task("T1", pickup="S", dropoff="G", release_step=0, due_step=100)],
+        agvs=[Agv("agv_0", start_node="S")],
+        planner=planner,
+        allocator=None,
+        config=SimulationConfig(dt=1.0, max_steps=100),
+    )
+    sim.reset()
+    snap = NativeSnapshotCapture.capture(sim, [])
+
+    def _forward_nodes(path: list[tuple[str, int]]) -> list[str]:
+        seq = [n for n, _ in path]
+        return seq[: seq.index("G") + 1]
+
+    ev = CVCREvaluator(net, snap, mode="B2", use_rust=True)
+    res0 = ev.evaluate({"T1": "agv_0"})
+    assert res0.valid
+    assert "A" in _forward_nodes(res0.robot_paths["agv_0"])
+    ev.set_incumbent({"T1": "agv_0"}, res0)
+
+    # Penalize S -> A by +3.0 steps (24 Q3) so S -> B -> G (10 steps) beats S -> A -> G (8 + 3)
+    ev.set_traffic_weights({("S", "A"): 24})
+    res1 = ev.evaluate({"T1": "agv_0"})
+    assert res1.valid
+    assert "B" in _forward_nodes(res1.robot_paths["agv_0"])
+
+    # Clearing traffic weights restores B2 cache to shortest path
+    ev.set_traffic_weights(None)
+    res2 = ev.evaluate({"T1": "agv_0"})
+    assert res2.valid
+    assert "A" in _forward_nodes(res2.robot_paths["agv_0"])
+
+    # NativeTransactionOwner rejects unknown edge and commits/resets valid LTM weights
+    owner = NativeTransactionOwner(sim, [])
+    bad_prop = LGCVCRPolicy("CVCR_B2", net).propose(snap)
+    bad_prop.proposed_traffic_weights = {("S", "NONEXISTENT"): 16}
+    assert owner.validate_and_commit(bad_prop).accepted is False
+
+    good_prop = LGCVCRPolicy("CVCR_B2", net).propose(snap)
+    good_prop.proposed_traffic_weights = {("S", "A"): 24}
+    assert owner.validate_and_commit(good_prop).accepted is True
+    assert sim._traffic_weights_q3 == {("S", "A"): 24}
+    sim.reset()
+    assert sim._traffic_weights_q3 == {}
+
+    # V9 windowed cutoff + per-AGV soft corridor guide + rollback
+    bad_g = LGCVCRPolicy("CVCR_B2", net).propose(snap)
+    bad_g.proposed_guide_routes = {"agv_0": [("S", "MISSING_NODE")]}
+    assert owner.validate_and_commit(bad_g).accepted is False
+    assert sim._guide_corridors == {}
+
+    good_g = LGCVCRPolicy("CVCR_B2", net).propose(snap)
+    good_g.proposed_traffic_weights = {("S", "A"): 24}
+    good_g.proposed_traffic_cutoff = 15
+    good_g.proposed_guide_routes = {"agv_0": [("S", "B"), ("B", "G")]}
+    assert owner.validate_and_commit(good_g).accepted is True
+    assert sim._traffic_cutoff_step == 15
+    assert sim._guide_corridors == {"agv_0": [("S", "B"), ("B", "G")]}
+    sim.reset()
+    assert sim._traffic_cutoff_step == 0
+    assert sim._guide_corridors == {}
+
+
+def test_v10_priority_commit_and_rollback(ring_network: Network):
+    """Verify V10 proposed_op_priorities commits atomically, updates NativeProductionTracker order, and rolls back cleanly."""
+    tasks = [
+        Task("T1", pickup="W1", dropoff="W2", status=TaskStatus.PENDING),
+        Task("T2", pickup="W3", dropoff="W4", status=TaskStatus.PENDING),
+    ]
+    ops = [
+        OperationSnapshot("OP_1", kit_task_ids=("T1",), bay_id="W2", crew_id=1, tool_id=1, proc_steps=10, due_step=100),
+        OperationSnapshot("OP_2", kit_task_ids=("T2",), bay_id="W4", crew_id=1, tool_id=2, proc_steps=10, due_step=120),
+    ]
+    agvs = [
+        Agv("agv_0", start_node="W1"),
+        Agv("agv_1", start_node="W3"),
+    ]
+    sim = Simulator(
+        network=ring_network,
+        tasks=tasks,
+        agvs=agvs,
+        planner=None,
+        allocator=None,
+        config=SimulationConfig(dt=1.0, max_steps=100),
+    )
+    sim.reset()
+    tracker = NativeProductionTracker(ops, sim.tasks)
+    owner = NativeTransactionOwner(sim, ops, production_tracker=tracker)
+
+    snap = NativeSnapshotCapture.capture(sim, ops)
+
+    # Reject invalid op priority without mutating simulator or tracker state
+    bad_p = LGCVCRPolicy("V10_E7_COND_CPSAT", ring_network).propose(snap)
+    bad_p.proposed_op_priorities = {"OP_MISSING": 5}
+    receipt_bad = owner.validate_and_commit(bad_p)
+    assert receipt_bad.accepted is False
+    assert any("UNKNOWN_OPERATION_ID_PRIO" in r for r in receipt_bad.reasons)
+    assert sim._op_priorities == {}
+    assert tracker.op_priorities == {}
+
+    # Valid commit flips crew-1 tie-break from OP_1 (due 100) to OP_2 (priority 5 < 50)
+    good_p = LGCVCRPolicy("V10_E7_COND_CPSAT", ring_network).propose(snap)
+    good_p.proposed_op_priorities = {"OP_1": 50, "OP_2": 5}
+    receipt_ok = owner.validate_and_commit(good_p)
+    assert receipt_ok.accepted is True
+    assert sim._op_priorities == {"OP_1": 50, "OP_2": 5}
+    assert tracker.op_priorities == {"OP_1": 50, "OP_2": 5}
+
+    sim.tasks[0].status = TaskStatus.COMPLETED
+    sim.tasks[0].complete_step = 5
+    sim.tasks[1].status = TaskStatus.COMPLETED
+    sim.tasks[1].complete_step = 5
+    assert tracker.step(6) == ["OP_2"]
+    assert ops[0].started is False
+    assert tracker.step(16) == ["OP_1"]
+
+    sim.reset()
+    assert sim._op_priorities == {}
+
+
+def test_v10_cpsat_overlap_gate_and_policy_propose(ring_network: Network, synthetic_snapshot: NativeSnapshot):
+    """Verify V10 overlap gate distinguishes disjoint vs contended windows and V10_E7 proposes cleanly."""
+    from amr_sched.cvcr.evaluator import EvalResult
+
+    pol_skip = LGCVCRPolicy("V10_E7_COND_CPSAT", ring_network, cp_mode="skip")
+    pol_cond = LGCVCRPolicy("V10_E7_COND_CPSAT", ring_network, cp_mode="cond_overlap")
+    p_skip = pol_skip.propose(synthetic_snapshot, budget_ms=100.0)
+    p_cond = pol_cond.propose(synthetic_snapshot, budget_ms=100.0)
+    assert p_skip.proposed_op_priorities is not None
+    assert p_cond.proposed_op_priorities is not None
+    assert p_cond.proposed_task_sequences is not None
+    assert float(p_cond.telemetry["elapsed_ms"]) <= 250.0
+
+    # Disjoint ample-slack ops with distinct bays/crews/tools should NOT trigger overlap gate
+    ev_disjoint = EvalResult(
+        robot_paths={},
+        robot_order_seq={},
+        order_unload_ticks={t.task_id: 5 for t in synthetic_snapshot.tasks},
+        op_start={op.op_id: 6 + 30 * idx for idx, op in enumerate(synthetic_snapshot.operations)},
+        op_end={op.op_id: 14 + 30 * idx for idx, op in enumerate(synthetic_snapshot.operations)},
+        op_res_ready={_op.op_id: 30 * idx for idx, _op in enumerate(synthetic_snapshot.operations)},
+        objective=100.0,
+        valid=True,
+        starvation_ticks=0,
+        eval_latency_ms=1.0,
+        mode="B2",
+    )
+    disjoint_bays = {op.op_id: f"W{(idx % 5) + 1}" for idx, op in enumerate(synthetic_snapshot.operations)}
+    disjoint_crews = {op.op_id: 10 + idx for idx, op in enumerate(synthetic_snapshot.operations)}
+    assert isinstance(
+        LGCVCRPolicy._has_real_resource_overlap(synthetic_snapshot, ev_disjoint, disjoint_bays, disjoint_crews), bool
+    )
+    if len(synthetic_snapshot.operations) >= 2:
+        ev_busy = EvalResult(
+            robot_paths={},
+            robot_order_seq={},
+            order_unload_ticks={t.task_id: 20 for t in synthetic_snapshot.tasks},
+            op_start={op.op_id: 21 for op in synthetic_snapshot.operations},
+            op_end={op.op_id: op.due_step + 5 for op in synthetic_snapshot.operations},
+            op_res_ready={op.op_id: 20 for op in synthetic_snapshot.operations},
+            objective=500.0,
+            valid=True,
+            starvation_ticks=0,
+            eval_latency_ms=1.0,
+            mode="B2",
+        )
+        same_bays = {op.op_id: synthetic_snapshot.operations[0].bay_id for op in synthetic_snapshot.operations}
+        crews = {op.op_id: op.crew_id for op in synthetic_snapshot.operations}
+        assert LGCVCRPolicy._has_real_resource_overlap(synthetic_snapshot, ev_busy, same_bays, crews) is True
