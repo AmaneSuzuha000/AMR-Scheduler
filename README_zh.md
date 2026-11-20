@@ -8,7 +8,7 @@
 [![ROS 2](https://img.shields.io/badge/ROS_2-Humble-22314E?logo=ros&logoColor=white)](https://docs.ros.org/en/humble/)
 [![Gazebo](https://img.shields.io/badge/Gazebo-Fortress%20%2F%20Classic-FF6F00?logo=gazebo&logoColor=white)](https://gazebosim.org/)
 [![.NET 6.0](https://img.shields.io/badge/.NET-6.0%20WPF-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-2,098%20CI%20%7C%20135%20Files-brightgreen)](Tests/)
+[![Tests](https://img.shields.io/badge/Tests-2,097%20CI%20%7C%20135%20Files-brightgreen)](Tests/)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
 [English](README.md) | **简体中文**
@@ -161,7 +161,7 @@ python -m amr_sched --tasks 50 --agvs 6 --layout workshop --planner rust_sipp
 
 ### 3. 运行自动化测试与验证链路
 ```bash
-# 全量 Python 回归测试（纯净 CI 检出含 135 个测试文件：2,098 项运行通过 + 42 项本地私有证据自动跳过）
+# 全量 Python 回归测试（纯净 CI 检出含 135 个测试文件：2,097 项运行通过 + 42 项本地私有证据自动跳过）
 python -m pytest -rs
 
 # Rust 内核单元测试（24 项）与 Python-Rust 差分测试（7 项）
