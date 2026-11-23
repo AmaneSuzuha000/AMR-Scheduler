@@ -2,6 +2,14 @@
 
 All notable changes to the **AMR-Scheduler** platform are documented in this file.
 
+## [1.1.0] - 2026-11-24
+
+### Added
+- **Direct Production–AMR Baselines & Offline Exact Reference Solver (`amr_sched/baselines/`, `experiments/`, `Tests/`)**:
+  - `IJPR25_DFJSPT_HMARL` (`dfjspt_hmarl_ijpr25.py`, `train_dfjspt_hmarl_ijpr25.py`, `ijpr25_dfjspt_hmarl.{pt,npz}`): Paper-faithful 3-level hierarchical MARL reproduction (Wang et al., *IJPR* 2025) trained under exact quarantined split and 288-episode PPO+IL parity with pure-NumPy inference (`7.63e-6` parity).
+  - `COR26_LBBD_CP` (`lbbd_cp_cor26.py`, `run_lbbd_exact_reference.py`): Offline exact Logic-Based Benders Decomposition reference solver (van Os & Basten, *COR* 2026) coupling OR-Tools `CP-SAT` with Rust conflict-free spacetime verification across 54 static/known instances (`6/24` proven global optima on window bottlenecks).
+  - Unified 120-episode baseline closure & pure-efficiency $H_1$ audit runner (`run_baseline_closure_suite.py`), unit test suite (`Tests/test_baseline_closure.py`), updated `fig3_main_benchmark.png`, and new `fig6_pure_h1_and_lbbd.png`.
+
 ## [1.0.0] - 2026-11-23
 
 ### Added

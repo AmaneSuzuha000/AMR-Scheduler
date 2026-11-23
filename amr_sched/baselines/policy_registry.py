@@ -49,6 +49,7 @@ _EJOR26_CKPT = resolve_default_checkpoint("baselines_2026/ejor26_wu_gru_attn.pt"
 _IJCAI26_CKPT = resolve_default_checkpoint("baselines_2026/ijcai26_choi_pgmpo.pt")
 _TII26_CKPT = resolve_default_checkpoint("baselines_2026/tii26_ma_e2g_moe.pt")
 _ICRA26_CKPT = resolve_default_checkpoint("baselines_2026/icra26_zhang_kitting_hgnn.pt")
+_IJPR25_DFJSPT_CKPT = resolve_default_checkpoint("baselines_2026/ijpr25_dfjspt_hmarl.pt")
 
 _COST_COLUMNS: tuple[str, ...] = (
     "cmax",
@@ -149,8 +150,15 @@ POLICY_SPECS: dict[str, PolicySpec] = {
     "SPGA_AMR": PolicySpec(
         name="SPGA_AMR",
         family="literature_2026",
-        description="Jia Li et al. (COR 2026) Self-Learning Population Genetic Algorithm",
+        description="Jia Li et al. (COR 2026) Similarity-based Parallel Genetic Algorithm [Paper-faithful reproduction]",
         uses_external_proposer=True,
+    ),
+    "IJPR25_DFJSPT_HMARL": PolicySpec(
+        name="IJPR25_DFJSPT_HMARL",
+        family="literature_2025",
+        description="Wang et al. (IJPR 2025) 3-Level Hierarchical Multi-Agent DRL for DFJSP-T [Paper-faithful reproduction]",
+        uses_external_proposer=True,
+        checkpoint_path=_IJPR25_DFJSPT_CKPT,
     ),
     "BALANS_IJCAI25": PolicySpec(
         name="BALANS_IJCAI25",
@@ -205,7 +213,7 @@ POLICY_SPECS: dict[str, PolicySpec] = {
 SUPPORTED_POLICIES: tuple[str, ...] = tuple(POLICY_SPECS.keys())
 
 DEFAULT_12_POLICIES: tuple[str, ...] = tuple(
-    p for p in SUPPORTED_POLICIES if p != "BALANS_IJCAI25" and not p.startswith("V19_")
+    p for p in SUPPORTED_POLICIES if p not in ("BALANS_IJCAI25", "IJPR25_DFJSPT_HMARL") and not p.startswith("V19_")
 )
 
 _POLICY_ALIASES: dict[str, str] = {
@@ -237,6 +245,10 @@ _POLICY_ALIASES: dict[str, str] = {
     "spga_amr": "SPGA_AMR",
     "spga": "SPGA_AMR",
     "spga_cor2026": "SPGA_AMR",
+    "ijpr25_dfjspt_hmarl": "IJPR25_DFJSPT_HMARL",
+    "ijpr25_dfjspt": "IJPR25_DFJSPT_HMARL",
+    "dfjspt_hmarl": "IJPR25_DFJSPT_HMARL",
+    "dfjspt": "IJPR25_DFJSPT_HMARL",
     "balans_ijcai25": "BALANS_IJCAI25",
     "ijcai25_balans_plain": "BALANS_IJCAI25",
     "balans": "BALANS_IJCAI25",
@@ -354,7 +366,7 @@ def build_external_proposer(
     spec = POLICY_SPECS[canon]
     if spec.checkpoint_path is not None and not allow_untrained:
         allow_np_alias = (
-            (canon in ("IJCAI26_PGMPO", "EJOR26_Wu_GRU_Attn") or canon.startswith("V19_"))
+            (canon in ("IJCAI26_PGMPO", "EJOR26_Wu_GRU_Attn", "IJPR25_DFJSPT_HMARL") or canon.startswith("V19_"))
             and backend in ("auto", "numpy")
         )
         chk = (
@@ -373,6 +385,19 @@ def build_external_proposer(
     if canon == "BALANS_IJCAI25":
         from amr_sched.baselines.top_venue_baselines import BalansIJCAI25PlainProposer
         return BalansIJCAI25PlainProposer(seed=seed, use_rust=use_rust)
+    if canon == "IJPR25_DFJSPT_HMARL":
+        from amr_sched.baselines.dfjspt_hmarl_ijpr25 import DFJSPTHMARLProposer
+
+        proposer = DFJSPTHMARLProposer(
+            ckpt_path=_IJPR25_DFJSPT_CKPT,
+            policy_id=canon,
+            backend=backend,
+            allow_untrained=allow_untrained,
+            use_rust=use_rust,
+            seed=seed,
+        )
+        proposer._get_net()
+        return proposer
     if canon == "SPGA_AMR":
         from amr_sched.baselines.spga_cor2026 import SPGAConfig, run_spga_policy_proposal
 
@@ -380,7 +405,7 @@ def build_external_proposer(
             snapshot: NativeSnapshot,
             network: Network,
             *,
-            budget_ms: float = 50.0,
+            budget_ms: float = 35.0,
         ) -> CandidateProposal:
             cfg = SPGAConfig(
                 pop_size=40,

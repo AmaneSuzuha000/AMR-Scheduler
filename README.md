@@ -33,7 +33,7 @@
   - **Sequence-Differenced Incremental Reservation Cache (`CVCR-IR (Seq-Diff)`)**: Computes exact per-AMR effective task sequences, reuses unchanged AMRs' routes and Rust half-open interval reservations in-place (`median |ΔJ| = 0.00` relative to full rebuild), and re-routes only the modified fleet subset $\Delta\mathcal{R}$ via native Rust `SpaceTime A* / SIPP` (`41 us` single-agent search).
 - **Execution Layer (*Atomic Transaction Commit*) & Dual-Layer Digital Twin** (`amr_sched/cvcr/`, `tools/`, `RAWSimO.Live/`):
   - Enforces epoch freshness, irrevocable `LOCKED` commitment protection, and atomic fallback-to-`KEEP` across discrete simulation (`AMRReschedulingEnv`), ROS 2 / Nav2 / Gazebo physical closed-loop execution (`PhysicalCVCRCoordinator`), and the C# WPF digital twin.
-  - **Unified Policy Registry** (`amr_sched/baselines/policy_registry.py`): Supports `core_sched` / `CoRe-Sched` (`V19_ADAPTIVE_RL`), `AHG-RL` ablations, internal CVCR optimizers (`V18_EA_JOINT`, `rule_v10`), and 2025–2026 top-venue baselines (`IJCAI26_PGMPO`, `EJOR26_Wu_GRU_Attn`, `TII26_E2G_MoE`, `ICRA26_Kitting_HGNN`, `RAL26_DetourDelta`, `JAIR26_DyMAB`, `MIT26_TAPFPC_LNS`, `SPGA_AMR`, `BALANS_IJCAI25`).
+  - **Unified Policy Registry** (`amr_sched/baselines/policy_registry.py`): Supports `core_sched` / `CoRe-Sched` (`V19_ADAPTIVE_RL`), `AHG-RL` ablations, internal CVCR optimizers (`V18_EA_JOINT`, `rule_v10`), direct joint production–AGV baselines (`IJPR25_DFJSPT_HMARL`, `SPGA_AMR`, offline exact `COR26_LBBD_CP`), and 2025–2026 top-venue baselines (`IJCAI26_PGMPO`, `EJOR26_Wu_GRU_Attn`, `TII26_E2G_MoE`, `ICRA26_Kitting_HGNN`, `RAL26_DetourDelta`, `JAIR26_DyMAB`, `MIT26_TAPFPC_LNS`, `BALANS_IJCAI25`).
 
 ---
 
@@ -41,24 +41,31 @@
 
 ### 1. 120-Episode Unseen Blind Holdout (Identical Real Wall-Clock Execution, 100% Audit Pass)
 
-| Method | 100%-Comp. (`/120`) | Mean $J_A$ ↓ | Mean $C_{\max}$ ↓ | Tardiness ($2T$) ↓ | Unfinished ($H_2$) | `Track 1` (62-Node) ↓ | `Track 2` (50-Node) ↓ | Wall P95 (ms) ↓ |
+| Method | 100%-Comp. (`/120`) | Mean $J_A$ ↓ | Pure $H_1$ ↓ | Mean $C_{\max}$ ↓ | Unfinished ($H_2$) | `Track 1` (62-Node) ↓ | `Track 2` (50-Node) ↓ | Wall P95 (ms) ↓ |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`CoRe-Sched` (`core_sched`)** | **120/120** | **5,425.53 (#1)** | **476.8 (#1)** | **4,568.8 (#1)** | **0.0 (#1)** | **4,622.9 (#1)** | **17,533.8 (#1)** | **12.51 (#1)** |
-| `AHG-RL (Staged)` | 118/120 | 5,974.11 | 499.4 | 4,962.0 | 108.3 | 5,507.2 | 18,454.0 | 30.29 |
-| `AHG-RL (Full)` | 118/120 | 6,001.36 | 479.4 | 4,842.3 | 275.0 | 5,085.6 | 18,834.0 | 32.17 |
-| `Rule-V10 + CVCR-IR` | 117/120 | 6,034.34 | 497.9 | 5,033.1 | 250.0 | 6,805.2 | 21,009.8 | 57.36 |
-| `V18-EA + CVCR-IR` | 114/120 | 6,221.95 | 484.9 | 5,001.6 | 550.0 | 6,292.4 | 23,039.6 | 26.15 |
-| `IJCAI26-PGMPO` | 115/120 | 6,484.58 | 493.3 | 5,043.3 | 708.3 | 6,910.2 | 22,584.9 | 27.22 |
-| `HG-BC (Pretrain)` | 115/120 | 7,407.27 | 506.2 | 5,220.3 | 1,266.7 | 6,039.0 | 24,934.2 | 32.20 |
-| `EJOR26-Wu-GRU` | 116/120 | 7,988.12 | 506.2 | 5,977.0 | 1,158.3 | 7,420.1 | 29,387.8 | 34.71 |
-| `RAL26-DetourDelta` | 115/120 | 8,048.61 | 561.5 | 6,515.6 | 750.0 | 7,462.8 | 24,755.9 | 32.66 |
+| **`CoRe-Sched` (`core_sched`)** | **120/120** | **5,425.53 (#1)** | **5,045.5 (#1)** | **476.8 (#1)** | **0.0 (#1)** | **4,622.9 (#1)** | **17,533.8 (#1)** | **12.51 (#1)** |
+| `AHG-RL (Staged)` | 118/120 | 5,974.11 | 5,461.4 | 499.4 | 108.3 | 5,507.2 | 18,454.0 | 30.29 |
+| `AHG-RL (Full)` | 118/120 | 6,001.36 | 5,321.7 | 479.4 | 275.0 | 5,085.6 | 18,834.0 | 32.17 |
+| `Rule-V10 + CVCR-IR` | 117/120 | 6,034.34 | 5,531.0 | 497.9 | 250.0 | 6,805.2 | 21,009.8 | 57.36 |
+| `V18-EA + CVCR-IR` | 114/120 | 6,221.95 | 5,486.5 | 484.9 | 550.0 | 6,292.4 | 23,039.6 | 26.15 |
+| `IJCAI26-PGMPO` | 115/120 | 6,484.58 | 5,536.6 | 493.3 | 708.3 | 6,910.2 | 22,584.9 | 27.22 |
+| `HG-BC (Pretrain)` | 115/120 | 7,407.27 | 5,726.5 | 506.2 | 1,266.7 | 6,039.0 | 24,934.2 | 32.20 |
+| `EJOR26-Wu-GRU` | 116/120 | 7,988.12 | 6,483.2 | 506.2 | 1,158.3 | 7,420.1 | 29,387.8 | 34.71 |
+| `RAL26-DetourDelta` | 115/120 | 8,048.61 | 7,077.2 | 561.5 | 750.0 | 7,462.8 | 24,755.9 | 32.66 |
+| `COR26-SPGA` | 115/120 | 8,279.30 | 5,684.9 | 480.6 | 1,641.7 | 7,288.4 | 17,905.1 | 61.02 |
+| `IJPR25-DFJSP-T` | 112/120 | 9,315.35 | 7,222.9 | 559.1 | 1,658.3 | 8,691.5 | 25,217.1 | 13.41 |
 
-- **Paired Wilcoxon Attribution (120 Episodes)**: `CoRe-Sched` beats fixed `AHG-RL (Full)` by **`-9.59%`** ($p = 0.0085$, `84W/36L`, **`2.57×`** faster wall-clock P95), fixed `AHG-RL (Staged)` by **`-9.18%`** ($p = 0.0200$, `81W/39L`), `HG-BC` by **`-26.75%`** ($p = 1.25 \times 10^{-4}$), and `IJCAI26-PGMPO` by **`-16.33%`** (95% Bootstrap CI `[-2,363.57, -0.02]`).
+- **Paired Wilcoxon Attribution (120 Episodes)**: `CoRe-Sched` beats fixed `AHG-RL (Full)` by **`-9.59%`** ($p = 0.0085$, `84W/36L`, **`2.57×`** faster wall-clock P95), fixed `AHG-RL (Staged)` by **`-9.18%`** ($p = 0.0200$), `HG-BC` by **`-26.75%`** ($p = 1.25 \times 10^{-4}$), `COR26-SPGA` by **`-34.47%`** ($p = 7.22 \times 10^{-4}$, **`4.88×`** faster P95), `IJPR25-DFJSP-T` by **`-41.76%`** ($p = 4.81 \times 10^{-5}$), and `IJCAI26-PGMPO` by **`-16.33%`** (95% Bootstrap CI `[-2,363.57, -0.02]`). Even on strictly mutually 100%-completed workshops ($H_2 = 0$), `CoRe-Sched` cuts pure $H_1$ by **`-1,356.7`** vs. `V18-EA`, **`-1,736.5`** vs. `PGMPO`, **`-2,821.7`** vs. `DFJSP-T`, and **`-3,363.6`** vs. `Wu-GRU`.
+- **Offline Exact Reference Bound (`COR26-LBBD/CP`, 54 Instances)**: Implemented via OR-Tools `CP-SAT` + Rust conflict-free routing + Logic-Based Benders cuts (`1.45–1.89 s`/solve, `6/24` proven global optima on window bottlenecks); `CoRe-Sched` runs **`116×–154×` faster** per solve and ranks #1 among causal online schedulers on 62-node `Track 1` workshops (`H1 = 1,384.0` vs. `1,604.7` for `V18-EA`).
 - **`CVCR-IR (Seq-Diff)` Cache Synergy**: Restores isolated neural candidate cache hit rate from **`0.00%`** (`CVCR-IR Base`) to **`73.68%`** (`1.48×` candidate speedup, `median |ΔJ| = 0.00`) and sustains **`86.8%–94.7%`** runtime-measured hit rates in closed-loop execution.
 - **Physical Reconciliation & 62-Node Scaling**: 5-seed unified discrete–physical reconciliation achieves Track 1 Spearman $\rho = 0.7857$ (Makespan $\rho = 1.0000$, `CoRe-Sched` physical P95 = **`7.18 ms`**) and Track 2 Rank #2 (`4,220.0`, P95 = **`11.44 ms < 35 ms`**). At 10 AMRs on the 62-node workshop, `CoRe-Sched` sustains **`23.57 ms < 35 ms`** P95 latency (**`2.21×` faster** than full-rebuild `52.06 ms`).
 
 <p align="center">
   <img src="results/figures/fig3_main_benchmark.png" alt="CoRe-Sched 120-Episode Main Benchmark and Latency-Quality Pareto Frontier" width="96%" />
+</p>
+
+<p align="center">
+  <img src="results/figures/fig6_pure_h1_and_lbbd.png" alt="Pure Physical Efficiency H1 Attribution and Offline COR 2026 LBBD/CP Exact Reference Bounds" width="96%" />
 </p>
 
 <p align="center">
