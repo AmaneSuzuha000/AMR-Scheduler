@@ -1,11 +1,15 @@
-"""CVCR Incremental Evaluator (A1 / B1 / B2) for AMR-Scheduler.
+"""CVCR-IR Commitment-Preserving Incremental Reservation Evaluator (A1 / B1 / B2).
 
-Implements the exact factorial decomposition from RAIL-CVCR with optional native
-Rust acceleration (`RustSpaceTimeAStarPlanner` + `RustReservationTable`):
+Implements the exact factorial evaluation hierarchy from CoRe-Sched / RAIL-CVCR with
+optional native Rust acceleration (`RustSpaceTimeAStarPlanner` + `RustReservationTable`):
 - `A1`: Full replanning of ALL robots + Full reservation build (pre-CVCR baseline)
-- `B1`: Preserve unchanged robots' incumbent paths + Full reservation rebuild from paths
-- `B2`: Preserve unchanged robots' incumbent paths + Persistent Incremental Reservation Cache (E2)
-       (releases and re-routes ONLY changed_rids in-place, then restores/promotes)
+- `B1` (`Full-Rebuild Evaluator`): Preserve unchanged robots' incumbent paths + Full
+  reservation rebuild from paths
+- `B2` (`CVCR-IR`): Preserve unchanged robots' incumbent paths + Persistent Incremental
+  Reservation Cache (releases and re-routes ONLY changed AMRs in-place, then restores/promotes):
+    - `seq_diff_b2=False`: `CVCR-IR (Base)` (raw context-equality cache guard)
+    - `seq_diff_b2=True`:  `CVCR-IR (Seq-Diff)` (exact per-AMR effective task-sequence
+      differencing enabling high cache reuse under full joint neural construction)
 
 Supports:
 - Production kitting, predecessor, bay/crew/tool mutex propagation
@@ -67,6 +71,54 @@ class CVCREvaluator:
 
     # Bounded static graph/planner cache per (network_id, max_speed, dt) to avoid rebuilding Rust graphs across ticks.
     _STATIC_NET_CACHE: dict[tuple[int, float, float], dict[str, Any]] = {}
+    _GLOBAL_TELEMETRY: dict[str, Any] = {
+        "calls": 0,
+        "a1_calls": 0,
+        "b1_calls": 0,
+        "b2_cand_evals": 0,
+        "b2_inc_hits": 0,
+        "b2_zero_route_hits": 0,
+        "b2_fallbacks": 0,
+        "b2_changed_amr_ratio_sum": 0.0,
+        "b2_changed_amr_ratio_cnt": 0,
+        "eval_lat_ms_sum": 0.0,
+        "eval_lat_ms_cnt": 0,
+    }
+
+    @classmethod
+    def reset_global_telemetry(cls) -> None:
+        """Reset process-wide evaluator telemetry counters for clean per-episode auditing."""
+        cls._GLOBAL_TELEMETRY = {
+            "calls": 0,
+            "a1_calls": 0,
+            "b1_calls": 0,
+            "b2_cand_evals": 0,
+            "b2_inc_hits": 0,
+            "b2_zero_route_hits": 0,
+            "b2_fallbacks": 0,
+            "b2_changed_amr_ratio_sum": 0.0,
+            "b2_changed_amr_ratio_cnt": 0,
+            "eval_lat_ms_sum": 0.0,
+            "eval_lat_ms_cnt": 0,
+        }
+
+    @classmethod
+    def get_global_telemetry(cls) -> dict[str, Any]:
+        """Return a snapshot of process-wide evaluator telemetry counters."""
+        gt = cls._GLOBAL_TELEMETRY
+        rcnt = max(1, int(gt["b2_changed_amr_ratio_cnt"]))
+        lcnt = max(1, int(gt["eval_lat_ms_cnt"]))
+        return {
+            "calls": int(gt["calls"]),
+            "a1_calls": int(gt["a1_calls"]),
+            "b1_calls": int(gt["b1_calls"]),
+            "b2_cand_evals": int(gt["b2_cand_evals"]),
+            "b2_inc_hits": int(gt["b2_inc_hits"]),
+            "b2_zero_route_hits": int(gt["b2_zero_route_hits"]),
+            "b2_fallbacks": int(gt["b2_fallbacks"]),
+            "mean_changed_amr_ratio": float(gt["b2_changed_amr_ratio_sum"]) / float(rcnt) if int(gt["b2_changed_amr_ratio_cnt"]) > 0 else None,
+            "mean_eval_lat_ms": float(gt["eval_lat_ms_sum"]) / float(lcnt) if int(gt["eval_lat_ms_cnt"]) > 0 else None,
+        }
 
     @classmethod
     def _get_static_cache(
@@ -124,10 +176,12 @@ class CVCREvaluator:
         lambda_change: float = 15.0,
         alpha_makespan: float = 3.0,
         use_rust: bool = True,
+        seq_diff_b2: bool = False,
     ) -> None:
         self.network = network
         self.snapshot = snapshot
         self.mode = mode
+        self.seq_diff_b2 = bool(seq_diff_b2)
         self.max_speed = max_speed
         self.dt = dt
 
@@ -951,6 +1005,10 @@ class CVCREvaluator:
         lat = (_cvcr_now_s() - t0) * 1000.0
         res.eval_latency_ms = lat
         self.eval_lats_ms.append(lat)
+        gt = self.__class__._GLOBAL_TELEMETRY
+        gt["calls"] = int(gt["calls"]) + 1
+        gt["eval_lat_ms_sum"] = float(gt["eval_lat_ms_sum"]) + float(lat)
+        gt["eval_lat_ms_cnt"] = int(gt["eval_lat_ms_cnt"]) + 1
         return res
 
     def _robot_plan_sort_key(
@@ -982,6 +1040,7 @@ class CVCREvaluator:
     ) -> EvalResult:
         """A1: Full replan of ALL robots from scratch + full reservation build."""
         self.a1_calls += 1
+        self.__class__._GLOBAL_TELEMETRY["a1_calls"] = int(self.__class__._GLOBAL_TELEMETRY["a1_calls"]) + 1
         res_table = self._new_res_table()
         by_robot: dict[str, list[TaskSnapshot]] = {r.robot_id: [] for r in self.snapshot.robots}
         for tid, t in self.tasks_by_id.items():
@@ -1042,6 +1101,7 @@ class CVCREvaluator:
     ) -> EvalResult:
         """B1: Preserve unchanged robots' paths, reconstruct full reservation table from scratch."""
         self.b1_calls += 1
+        self.__class__._GLOBAL_TELEMETRY["b1_calls"] = int(self.__class__._GLOBAL_TELEMETRY["b1_calls"]) + 1
         res_table = self._new_res_table()
 
         prio_key = tuple(sorted(op_priority.items()))
@@ -1189,13 +1249,21 @@ class CVCREvaluator:
             else None
         )
 
-        if (
+        ctx_invalid = (
             self.base_ctx_key is None
-            or self.base_ctx_key[:2] != (prio_key, hint_key)
+            or (self.base_ctx_key[1] != hint_key if self.seq_diff_b2 else self.base_ctx_key[:2] != (prio_key, hint_key))
             or self.base_traffic_sig != self._traffic_sig
             or not self.robot_cache
             or self._inc_res_table is None
-        ):
+        )
+        if ctx_invalid:
+            if self.base_ctx_key is not None:
+                self.b2_fallbacks += 1
+                gt = self.__class__._GLOBAL_TELEMETRY
+                gt["b2_cand_evals"] = int(gt["b2_cand_evals"]) + 1
+                gt["b2_fallbacks"] = int(gt["b2_fallbacks"]) + 1
+                gt["b2_changed_amr_ratio_sum"] = float(gt["b2_changed_amr_ratio_sum"]) + 1.0
+                gt["b2_changed_amr_ratio_cnt"] = int(gt["b2_changed_amr_ratio_cnt"]) + 1
             return self._eval_b1(
                 assignment,
                 op_priority,
@@ -1227,7 +1295,45 @@ class CVCREvaluator:
             }
             changed_set |= bay_rids
         base_order_key = self.base_ctx_key[3] if len(self.base_ctx_key) > 3 else None
-        if order_key != base_order_key:
+        if self.seq_diff_b2:
+            # Per-AMR effective task execution sequence diffing under (op_priority, task_order_override)
+            for r in self.snapshot.robots:
+                rid = r.robot_id
+                if rid in changed_set:
+                    continue
+                rc_seq = self.robot_cache.get(rid, {}).get("seq", [])
+                if len(rc_seq) <= 1:
+                    continue
+                r_tasks = [self.tasks_by_id[tid] for tid in rc_seq if tid in self.tasks_by_id]
+                order_rank = (
+                    {tid: idx for idx, tid in enumerate(task_order_override[rid])}
+                    if task_order_override and rid in task_order_override
+                    else None
+                )
+                if order_rank is not None:
+                    r_sorted = sorted(
+                        r_tasks,
+                        key=lambda t: (
+                            0 if t.status.lower() in ("picked", "loading", "to_dropoff", "unloading") else 1,
+                            order_rank.get(t.task_id, 100_000),
+                            op_priority.get(t.kit_op_id or "", 0),
+                            t.release_step,
+                            t.task_id,
+                        ),
+                    )
+                else:
+                    r_sorted = sorted(
+                        r_tasks,
+                        key=lambda t: (
+                            0 if t.status.lower() in ("picked", "loading", "to_dropoff", "unloading") else 1,
+                            op_priority.get(t.kit_op_id or "", 0),
+                            t.release_step,
+                            t.task_id,
+                        ),
+                    )
+                if [t.task_id for t in r_sorted] != rc_seq:
+                    changed_set.add(rid)
+        elif order_key != base_order_key:
             new_orders = task_order_override or {}
             order_rids = {
                 rid
@@ -1237,6 +1343,11 @@ class CVCREvaluator:
             changed_set |= order_rids
 
         changed_rids = sorted(changed_set)
+        n_rob_tot = max(1, len(self.snapshot.robots))
+        gt = self.__class__._GLOBAL_TELEMETRY
+        gt["b2_cand_evals"] = int(gt["b2_cand_evals"]) + 1
+        gt["b2_changed_amr_ratio_sum"] = float(gt["b2_changed_amr_ratio_sum"]) + float(len(changed_rids)) / float(n_rob_tot)
+        gt["b2_changed_amr_ratio_cnt"] = int(gt["b2_changed_amr_ratio_cnt"]) + 1
 
         if not changed_rids:
             # Pure production-resource (crew) or already-picked bay change: robot routes unchanged
@@ -1251,6 +1362,8 @@ class CVCREvaluator:
                     robot_order_seq[rid] = rc["seq"]
                     order_unload_ticks.update(rc["unloads"])
             self.b2_inc_hits += 1
+            gt["b2_inc_hits"] = int(gt["b2_inc_hits"]) + 1
+            gt["b2_zero_route_hits"] = int(gt["b2_zero_route_hits"]) + 1
             op_s, op_e, op_rr, obj, starv = self._compute_objective(
                 assignment, order_unload_ticks, op_priority, True, op_bay_overrides, op_crew_overrides
             )
@@ -1270,6 +1383,7 @@ class CVCREvaluator:
 
         if len(changed_rids) >= len(self.snapshot.robots):
             self.b2_fallbacks += 1
+            self.__class__._GLOBAL_TELEMETRY["b2_fallbacks"] = int(self.__class__._GLOBAL_TELEMETRY["b2_fallbacks"]) + 1
             return self._eval_b1(
                 assignment,
                 op_priority,
@@ -1329,8 +1443,10 @@ class CVCREvaluator:
 
         if not all_ok:
             self.b2_fallbacks += 1
+            gt["b2_fallbacks"] = int(gt["b2_fallbacks"]) + 1
         else:
             self.b2_inc_hits += 1
+            gt["b2_inc_hits"] = int(gt["b2_inc_hits"]) + 1
 
         op_s, op_e, op_rr, obj, starv = self._compute_objective(
             assignment, order_unload_ticks, op_priority, all_ok, op_bay_overrides, op_crew_overrides

@@ -231,22 +231,42 @@ def _agg(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def run_4axis_scaling(out_dir: Path = OUT_SCALE_DIR) -> dict[str, Any]:
-    """Execute the 62-node 4-axis scaling benchmark (`--clock wall --workers 1`)."""
+def run_4axis_scaling(
+    out_dir: Path = OUT_SCALE_DIR,
+    append_policy: str | None = None,
+) -> dict[str, Any]:
+    """Execute the 62-node 4-axis scaling benchmark (`--clock wall --workers 1`).
+
+    When `append_policy` is provided and `scale_4axis_report.json` already exists,
+    frozen results for previously benchmarked policies are preserved verbatim and
+    only `append_policy` is evaluated across all 4 axes and merged cleanly.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
-    axes_results: dict[str, dict[str, dict[str, Any]]] = {
-        "axis1_fleet_size": {},
-        "axis2_task_load": {},
-        "axis3_disruption_regime": {},
-        "axis4_decision_budget_ms": {},
-    }
+    json_path = out_dir / "scale_4axis_report.json"
+
+    if append_policy and json_path.is_file():
+        existing = json.loads(json_path.read_text(encoding="utf-8"))
+        axes_results: dict[str, dict[str, dict[str, Any]]] = existing["axes"]
+        policies_to_run: tuple[str, ...] = (append_policy,)
+        all_policies: list[str] = list(existing.get("policies", list(EVAL_6_POLICIES)))
+        if append_policy not in all_policies:
+            all_policies.append(append_policy)
+    else:
+        axes_results = {
+            "axis1_fleet_size": {},
+            "axis2_task_load": {},
+            "axis3_disruption_regime": {},
+            "axis4_decision_budget_ms": {},
+        }
+        policies_to_run = tuple(EVAL_6_POLICIES)
+        all_policies = list(EVAL_6_POLICIES)
     t0 = time.perf_counter()
 
     # Axis 1: Fleet size |A| in {4, 6, 8, 10}
     for n_a in (4, 6, 8, 10):
         lvl_key = f"agvs_{n_a}"
-        axes_results["axis1_fleet_size"][lvl_key] = {}
-        for pol in EVAL_6_POLICIES:
+        axes_results["axis1_fleet_size"].setdefault(lvl_key, {})
+        for pol in policies_to_run:
             rows = []
             for s in SCALE_SEEDS:
                 sc_base, p2_cfg, ms = build_track1_scenario(s, "kitting_windows")
@@ -265,8 +285,8 @@ def run_4axis_scaling(out_dir: Path = OUT_SCALE_DIR) -> dict[str, Any]:
     # Axis 2: Task/Op load multiplier in {1.0, 1.5, 2.0}
     for mult in (1.0, 1.5, 2.0):
         lvl_key = f"load_{mult:.1f}x"
-        axes_results["axis2_task_load"][lvl_key] = {}
-        for pol in EVAL_6_POLICIES:
+        axes_results["axis2_task_load"].setdefault(lvl_key, {})
+        for pol in policies_to_run:
             rows = []
             for s in SCALE_SEEDS:
                 sc_base, p2_cfg, ms = build_track1_scenario(s, "nominal")
@@ -284,8 +304,8 @@ def run_4axis_scaling(out_dir: Path = OUT_SCALE_DIR) -> dict[str, Any]:
 
     # Axis 3: Disruption & blockage severity across all 4 workshop regimes
     for reg in ("nominal", "kitting_windows", "execution_blockage", "multi_wave_surge"):
-        axes_results["axis3_disruption_regime"][reg] = {}
-        for pol in EVAL_6_POLICIES:
+        axes_results["axis3_disruption_regime"].setdefault(reg, {})
+        for pol in policies_to_run:
             rows = []
             for s in SCALE_SEEDS:
                 sc_base, p2_cfg, ms = build_track1_scenario(s, reg)
@@ -303,8 +323,8 @@ def run_4axis_scaling(out_dir: Path = OUT_SCALE_DIR) -> dict[str, Any]:
     # Axis 4: Real-time decision budget in {20, 35, 50, 100} ms
     for b_ms in (20.0, 35.0, 50.0, 100.0):
         lvl_key = f"budget_{int(b_ms)}ms"
-        axes_results["axis4_decision_budget_ms"][lvl_key] = {}
-        for pol in EVAL_6_POLICIES:
+        axes_results["axis4_decision_budget_ms"].setdefault(lvl_key, {})
+        for pol in policies_to_run:
             rows = []
             for s in SCALE_SEEDS:
                 sc_base, p2_cfg, ms = build_track1_scenario(s, "execution_blockage")
@@ -323,10 +343,9 @@ def run_4axis_scaling(out_dir: Path = OUT_SCALE_DIR) -> dict[str, Any]:
         "clock_mode": "wall",
         "workers": 1,
         "seeds": list(SCALE_SEEDS),
-        "policies": list(EVAL_6_POLICIES),
+        "policies": all_policies,
         "axes": axes_results,
     }
-    json_path = out_dir / "scale_4axis_report.json"
     json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     md_lines = [
@@ -341,7 +360,9 @@ def run_4axis_scaling(out_dir: Path = OUT_SCALE_DIR) -> dict[str, Any]:
         md_lines.append("| Level | Policy | Audit | Task Comp | Prod Comp | Mean `net_obj` | Mean `cmax` | Mean Decision (ms) | P95 (ms) | Overrun Rate |")
         md_lines.append("| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
         for lvl, pmap in levels.items():
-            for pol in EVAL_6_POLICIES:
+            for pol in all_policies:
+                if pol not in pmap:
+                    continue
                 s = pmap[pol]
                 md_lines.append(
                     f"| `{lvl}` | **{pol}** | {s['audit_pass_rate']*100:.0f}% | {s['mean_task_comp']*100:.1f}% | "
@@ -358,8 +379,14 @@ def run_4axis_scaling(out_dir: Path = OUT_SCALE_DIR) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run 62-node 4-axis scaling benchmark.")
     parser.add_argument("--out-dir", type=Path, default=OUT_SCALE_DIR)
+    parser.add_argument(
+        "--append-policy",
+        type=str,
+        default=None,
+        help="Optionally evaluate only this single policy and merge into existing scale_4axis_report.json.",
+    )
     args = parser.parse_args()
-    run_4axis_scaling(args.out_dir)
+    run_4axis_scaling(args.out_dir, append_policy=args.append_policy)
 
 
 if __name__ == "__main__":

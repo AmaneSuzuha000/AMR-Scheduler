@@ -62,6 +62,7 @@ from tools.live_bridge.fleet_config import point_execution_network
 from tools.wheelset_scene.workshop_v2_layout import build_improved_scene, build_v2_nav_graph
 
 EVAL_POLICIES: tuple[str, ...] = (
+    "V19_ADAPTIVE_RL",
     "V19_HETERO_RL",
     "V18_EA_JOINT",
     "IJCAI26_PGMPO",
@@ -761,7 +762,7 @@ def main() -> int:
         "# Dual-Layer Discrete (Layer A) vs Physical ROS 2 / Nav2 / Gazebo (Layer B) Reconciliation",
         "",
         "- **Clock & Backend**: Single-process wall-clock (`--clock wall`), torch-free NumPy inference (`backend='numpy'`), `budget_ms=35.0`.",
-        "- **Evaluated Policies (6)**: `V19_HETERO_RL`, `V18_EA_JOINT`, `IJCAI26_PGMPO`, `rule_v10`, `EJOR26_Wu_GRU_Attn`, `RAL26_DetourDelta`.",
+        "- **Evaluated Policies (7)**: `V19_ADAPTIVE_RL`, `V19_HETERO_RL`, `V18_EA_JOINT`, `IJCAI26_PGMPO`, `rule_v10`, `EJOR26_Wu_GRU_Attn`, `RAL26_DetourDelta`.",
         "",
     ]
 

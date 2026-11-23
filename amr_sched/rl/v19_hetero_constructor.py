@@ -1129,6 +1129,7 @@ def decode_v19_candidate(
     greedy: bool,
     np_rng: np.random.Generator,
     tau: float = 0.65,
+    focus_sample_frac: float = 1.0,
 ) -> DecodedJointCandidate:
     """Run autoregressive `(A1 -> A2 -> A3 [-> A4])` construction cleanly on Torch or NumPy."""
     N_op = len(graph.op_ids)
@@ -1162,8 +1163,8 @@ def decode_v19_candidate(
         bay_logits_np = h12["bay_logits"][0].cpu().numpy()
         crew_logits_np = h12["crew_logits"][0].cpu().numpy()
 
-    def _pick(logits_1d: np.ndarray) -> int:
-        if greedy:
+    def _pick(logits_1d: np.ndarray, *, force_greedy: bool = False) -> int:
+        if greedy or force_greedy:
             return int(np.argmax(logits_1d))
         scaled = np.asarray(logits_1d, dtype=np.float64) / max(0.05, float(tau))
         probs = _np_softmax(scaled, axis=-1).astype(np.float64)
@@ -1195,12 +1196,17 @@ def decode_v19_candidate(
     agv_indices = np.zeros((N_t,), dtype=np.int64)
     if N_t > 0:
         order = sorted(range(N_t), key=lambda i: (-float(task_focus_np[i]), i))
+        focus_limit = (
+            N_t
+            if focus_sample_frac >= 0.999
+            else max(2, int(np.ceil(float(focus_sample_frac) * float(N_t))))
+        )
         added_load = np.zeros((N_a,), dtype=np.float32)
         added_dur = np.zeros((N_a,), dtype=np.float32)
         if not is_np and tensors is not None:
             added_load_t = torch.zeros((1, N_a), dtype=torch.float32)
             added_dur_t = torch.zeros((1, N_a), dtype=torch.float32)
-        for ti in order:
+        for rank_i, ti in enumerate(order):
             oi = int(graph.task_to_op[ti])
             sel_bi = int(bay_indices[oi]) if oi >= 0 else int(graph.task_incumbent_bay_idx[ti])
             b_tr = float(graph.bay_xy_travel_from_pickup[ti, sel_bi])
@@ -1220,7 +1226,7 @@ def decode_v19_candidate(
                         added_dur_t,
                     )
                 lg = lg_t[0].cpu().numpy()
-            ai = _pick(lg)
+            ai = _pick(lg, force_greedy=(rank_i >= focus_limit))
             agv_indices[ti] = ai
             assign_dict[graph.rel_tids[ti]] = graph.agv_ids[ai]
             added_load[ai] += 1.0
@@ -1493,9 +1499,9 @@ class V19HeteroConstructorProposer:
         network: Network,
         budget_ms: float = 35.0,
     ) -> CandidateProposal:
-        t0 = _cvcr_now_s()
-        deadline = t0 + max(0.008, float(budget_ms) * 0.78 / 1000.0)
         net_model = self._get_net()
+        t0 = _cvcr_now_s()
+        deadline = t0 + max(0.0, float(budget_ms) * 0.78 / 1000.0)
         eff_ablation = str(self._cfg.get("ablation_mode", "full"))
         eff_stage = str(self._cfg.get("action_stage", "A123"))
 
@@ -1512,6 +1518,7 @@ class V19HeteroConstructorProposer:
             lambda_change=self.lambda_change,
             use_rust=self.use_rust,
             mode=raw_ev_mode,
+            seq_diff_b2=seed_b2,
         )
         base_op_prio = {
             op.op_id: max(int(snapshot.tick), int(op.due_step) - int(op.proc_steps))
@@ -1598,10 +1605,10 @@ class V19HeteroConstructorProposer:
 
                 ev_c = ev.evaluate(
                     cand.assign,
-                    op_priority=base_op_prio if seed_b2 else cand.op_prio,
+                    op_priority=cand.op_prio,
                     op_bay_overrides=cand.bays,
                     op_crew_overrides=cand.crews,
-                    task_order_override=fp["diff_task_order"] if seed_b2 else cand.task_sequences,
+                    task_order_override=cand.task_sequences,
                 )
                 neural_cands_eval += 1
                 changed_ops = sum(
@@ -1684,11 +1691,14 @@ class V19HeteroConstructorProposer:
 
 
 class V19AdaptiveCouplingProposer:
-    """Adaptive Heterogeneous-Graph Reinforcement Learning (`AHG-RL` / `V19_ADAPTIVE_RL`) proposer.
+    """CoRe-Sched (`AHG-RL` + `CVCR-IR (Seq-Diff)` + Atomic Transaction Commit) proposer.
 
-    Combines Engine A (Hetero-GNN + BC->SMDP-PPO + Contextual LinUCB over 6-D coupling vector
-    `phi(s_t)`) with Engine B (`CVCR-B2` commitment-preserving incremental evaluation) and
-    Engine C (atomic transaction proposal).
+    Registered under canonical key `V19_ADAPTIVE_RL` with CLI/API aliases `core_sched`,
+    `core-sched`, `coresched`, and `ahg_rl`. Combines the learning engine (`AHG-RL`:
+    Heterogeneous Graph Attention Encoder + four-stage autoregressive constructor trained via
+    BC -> SMDP-PPO + Contextual LinUCB over dynamic coupling state `phi(s_t)`) with the
+    incremental optimization engine (`CVCR-IR (Seq-Diff)`: commitment-preserving sequence-
+    differenced incremental reservation evaluator) and Atomic Transaction Commit (`KEEP` fallback).
     """
 
     def __init__(
@@ -1706,7 +1716,10 @@ class V19AdaptiveCouplingProposer:
         alpha_makespan: float = 3.0,
         lambda_change: float = 15.0,
         hysteresis_margin: float = 10.0,
-        evaluator_mode: str = "B2",
+        evaluator_mode: str = "B2_SEEDED",
+        focus_sample_frac: float = 1.0,
+        enable_delayed_feedback: bool = False,
+        enable_cascade_crosscheck: bool = False,
     ) -> None:
         if mode not in ("rule", "bandit", "b2_guard"):
             raise ValueError(f"Unsupported adaptive mode {mode!r}; expected 'rule', 'bandit', or 'b2_guard'.")
@@ -1723,6 +1736,9 @@ class V19AdaptiveCouplingProposer:
         self.lambda_change = float(lambda_change)
         self.hysteresis_margin = float(hysteresis_margin)
         self.evaluator_mode = str(evaluator_mode)
+        self.focus_sample_frac = float(focus_sample_frac)
+        self.enable_delayed_feedback = bool(enable_delayed_feedback)
+        self.enable_cascade_crosscheck = bool(enable_cascade_crosscheck)
 
         self._full_net: Any = None
         self._staged_net: Any = None
@@ -1734,8 +1750,13 @@ class V19AdaptiveCouplingProposer:
         self._A = [np.eye(7, dtype=np.float64) * 1.5 for _ in range(2)]
         self._b = [np.zeros((7,), dtype=np.float64) for _ in range(2)]
         self._b[1][0] = 0.15
+        self._prev_tick: Optional[int] = None
+        self._prev_x: Optional[np.ndarray] = None
+        self._prev_arm: Optional[int] = None
+        self._prev_pred_obj: Optional[float] = None
         self.full_selected_calls = 0
         self.staged_selected_calls = 0
+        self.crosscheck_rescues = 0
         self.total_cands_evaluated: int = 0
         self.total_b2_inc_hits: int = 0
         self.total_b2_fallbacks: int = 0
@@ -1781,7 +1802,7 @@ class V19AdaptiveCouplingProposer:
     ) -> CandidateProposal:
         full_net, staged_net = self._ensure_nets()
         t0 = _cvcr_now_s()
-        deadline = t0 + max(0.008, float(budget_ms) * 0.78 / 1000.0)
+        deadline = t0 + max(0.0, float(budget_ms) * 0.78 / 1000.0)
 
         clf = classify_commitments(snapshot)
         graph = extract_v19_hetero_graph(snapshot, network, clf=clf)
@@ -1797,6 +1818,7 @@ class V19AdaptiveCouplingProposer:
             lambda_change=self.lambda_change,
             use_rust=self.use_rust,
             mode=raw_ev_mode,
+            seq_diff_b2=seed_b2,
         )
         base_op_prio = {
             op.op_id: max(int(snapshot.tick), int(op.due_step) - int(op.proc_steps))
@@ -1815,6 +1837,27 @@ class V19AdaptiveCouplingProposer:
                 op_priority=base_op_prio,
                 op_bay_overrides=graph.base_bays,
             )
+
+        # Delayed closed-loop realized-execution feedback for previous epoch's LinUCB decision
+        if self.mode == "bandit" and self.enable_delayed_feedback:
+            if (
+                self._prev_tick is not None
+                and int(snapshot.tick) > int(self._prev_tick)
+                and self._prev_x is not None
+                and self._prev_arm is not None
+                and self._prev_pred_obj is not None
+                and keep_eval.valid
+            ):
+                realized_surprise = max(
+                    -1.0,
+                    min(1.0, (float(self._prev_pred_obj) - float(keep_eval.objective)) / 250.0),
+                )
+                self._b[self._prev_arm] += 0.35 * realized_surprise * self._prev_x
+            elif self._prev_tick is not None and int(snapshot.tick) <= int(self._prev_tick):
+                self._prev_tick = None
+                self._prev_x = None
+                self._prev_arm = None
+                self._prev_pred_obj = None
 
         best_eval: EvalResult = keep_eval
         best_score = float(keep_eval.objective)
@@ -1874,10 +1917,63 @@ class V19AdaptiveCouplingProposer:
 
             net_m = full_net if arm_pick == 1 else staged_net
             selected_mode = "full" if arm_pick == 1 else "staged"
+            seen_sigs: set[tuple[Any, ...]] = {
+                (
+                    tuple(sorted(graph.base_assign.items())),
+                    tuple(sorted(graph.base_bays.items())),
+                    tuple(sorted(graph.base_crews.items())),
+                    None,
+                )
+            }
+            keep_max_op = max(keep_eval.op_end.values(), default=snapshot.tick)
+            full_cascade_risk = False
             for k in range(self.sample_candidates):
                 if k > 0 and _cvcr_now_s() >= deadline:
                     break
-                cand = decode_v19_candidate(net_m, graph, snapshot, greedy=(k == 0), np_rng=np_rng, tau=0.45)
+                use_net = net_m
+                use_arm_name = selected_mode
+                use_is_full = arm_pick == 1
+                use_greedy = k == 0
+                use_focus_frac = 1.0 if use_greedy else self.focus_sample_frac
+
+                if (
+                    self.enable_cascade_crosscheck
+                    and k == self.sample_candidates - 1
+                    and self.sample_candidates >= 2
+                ):
+                    if arm_pick == 1 and (not best_eval.valid or full_cascade_risk):
+                        use_net = staged_net
+                        use_arm_name = "staged"
+                        use_is_full = False
+                        use_greedy = True
+                        use_focus_frac = 1.0
+                    elif arm_pick == 0 and coupling_score >= 0.35 and best_eval is keep_eval:
+                        use_net = full_net
+                        use_arm_name = "full"
+                        use_is_full = True
+                        use_greedy = True
+                        use_focus_frac = 1.0
+
+                cand = decode_v19_candidate(
+                    use_net,
+                    graph,
+                    snapshot,
+                    greedy=use_greedy,
+                    np_rng=np_rng,
+                    tau=0.45,
+                    focus_sample_frac=use_focus_frac,
+                )
+                sig = (
+                    tuple(sorted(cand.assign.items())),
+                    tuple(sorted(cand.bays.items())),
+                    tuple(sorted(cand.crews.items())),
+                    tuple(sorted((aid, tuple(sq)) for aid, sq in cand.task_sequences.items()))
+                    if cand.task_sequences
+                    else None,
+                )
+                if sig in seen_sigs:
+                    continue
+                seen_sigs.add(sig)
                 fp = compute_candidate_amr_footprint(
                     snapshot,
                     graph.base_assign,
@@ -1895,26 +1991,47 @@ class V19AdaptiveCouplingProposer:
 
                 ev_c = ev.evaluate(
                     cand.assign,
-                    op_priority=base_op_prio if seed_b2 else cand.op_prio,
+                    op_priority=cand.op_prio,
                     op_bay_overrides=cand.bays,
                     op_crew_overrides=cand.crews,
-                    task_order_override=fp["diff_task_order"] if seed_b2 else cand.task_sequences,
+                    task_order_override=cand.task_sequences,
                 )
                 neural_cands_eval += 1
-                cs = _score_cand(cand, ev_c, arm_pick == 1)
+                if use_is_full:
+                    cand_max_op = max(ev_c.op_end.values(), default=snapshot.tick)
+                    c_ops_chg = sum(
+                        1
+                        for oid in graph.op_ids
+                        if cand.bays.get(oid) != graph.base_bays.get(oid)
+                    )
+                    if (
+                        not ev_c.valid
+                        or (c_ops_chg > 0 and cand_max_op > keep_max_op + 6)
+                        or float(fp["changed_amr_ratio"]) >= 0.85
+                    ):
+                        full_cascade_risk = True
+
+                cs = _score_cand(cand, ev_c, use_is_full)
                 margin = self.hysteresis_margin if best_eval is keep_eval else 1e-4
                 if ev_c.valid and (not best_eval.valid or cs + margin < best_score):
+                    if use_arm_name != selected_mode:
+                        self.crosscheck_rescues += 1
                     best_eval, best_score = ev_c, cs
                     best_assign, best_bays, best_crews = cand.assign, cand.bays, cand.crews
                     best_op_prio, best_seq = cand.op_prio, cand.task_sequences
-                    chosen_arm = selected_mode
+                    chosen_arm = use_arm_name
                     fallback_keep = False
 
             if self.mode == "bandit":
                 impr = max(-1.0, min(1.0, (float(keep_eval.objective) - best_score) / 200.0))
-                self._A[arm_pick] += np.outer(x, x)
-                self._b[arm_pick] += impr * x
-            if arm_pick == 1:
+                eff_arm = 1 if chosen_arm == "full" else (0 if chosen_arm == "staged" else arm_pick)
+                self._A[eff_arm] += np.outer(x, x)
+                self._b[eff_arm] += (0.65 * impr if self.enable_delayed_feedback else impr) * x
+                self._prev_tick = int(snapshot.tick)
+                self._prev_x = x
+                self._prev_arm = eff_arm
+                self._prev_pred_obj = float(best_eval.objective)
+            if chosen_arm == "full" or (chosen_arm == "keep" and arm_pick == 1):
                 self.full_selected_calls += 1
             else:
                 self.staged_selected_calls += 1

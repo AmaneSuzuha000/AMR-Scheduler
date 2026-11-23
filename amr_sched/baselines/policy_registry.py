@@ -196,7 +196,7 @@ POLICY_SPECS: dict[str, PolicySpec] = {
     "V19_ADAPTIVE_RL": PolicySpec(
         name="V19_ADAPTIVE_RL",
         family="v19_neural_joint",
-        description="AHG-RL: Adaptive Heterogeneous-Graph Reinforcement Learning (Hetero-GNN + SMDP-PPO + Contextual LinUCB + CVCR-B2)",
+        description="CoRe-Sched: Commitment-aware Rescheduling (AHG-RL + CVCR-IR Seq-Diff + Atomic Transaction Commit)",
         uses_external_proposer=True,
         checkpoint_path=_V19_RL_CKPT,
     ),
@@ -257,6 +257,9 @@ _POLICY_ALIASES: dict[str, str] = {
     "ahg_rl": "V19_ADAPTIVE_RL",
     "ahg-rl": "V19_ADAPTIVE_RL",
     "hg_acdrl": "V19_ADAPTIVE_RL",
+    "core_sched": "V19_ADAPTIVE_RL",
+    "core-sched": "V19_ADAPTIVE_RL",
+    "coresched": "V19_ADAPTIVE_RL",
 }
 
 
@@ -463,6 +466,7 @@ def build_external_proposer(
             allow_untrained=allow_untrained,
             use_rust=use_rust,
             seed=seed,
+            evaluator_mode="B2_SEEDED",
         )
         proposer._ensure_nets()
         return proposer
