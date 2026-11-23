@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_unknown_runway">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_unknown_runway/meshes/unknown_runway.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>-27 -7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <pose>-27 7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <pose>-18 -7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_3">
+        <pose>-18 7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_4">
+        <pose>-9 -7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_5">
+        <pose>-9 7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_6">
+        <pose>0 -7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_7">
+        <pose>0 7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_8">
+        <pose>9 -7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_9">
+        <pose>9 7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_10">
+        <pose>18 -7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_11">
+        <pose>18 7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_12">
+        <pose>27 -7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_13">
+        <pose>27 7.25 1.06 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.24 2.12</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_14">
+        <pose>0 -7.25 2.23 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>58 0.3 0.3</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_15">
+        <pose>0 7.25 2.23 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>58 0.3 0.3</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

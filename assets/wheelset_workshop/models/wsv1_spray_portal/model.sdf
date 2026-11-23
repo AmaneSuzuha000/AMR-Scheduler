@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_spray_portal">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_spray_portal/meshes/spray_portal.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 -1.9 0.65 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.19 0.22 1.24</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <pose>0 1.9 0.65 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.19 0.22 1.24</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <pose>0 0 1.38 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.22 4.1 0.18</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_3">
+        <pose>1.15 -1.52 1 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>3.15 0.025 2</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_4">
+        <pose>1.15 1.52 1 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>3.15 0.025 2</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

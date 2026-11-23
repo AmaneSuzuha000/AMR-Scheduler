@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Configurations>Debug;Release;XPlat;XPlatRelease</Configurations>
+    <Platforms>AnyCPU</Platforms>
+    <LangVersion>default</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>RAWSimO.Live</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- One implementation of the edge-interpolation rule, compiled by both consumers. -->
+    <!-- interop/csharp cannot reference this net6.0 library (it is built with the .NET -->
+    <!-- Framework 4.0 csc.exe on purpose), so the source is linked instead of copied. -->
+    <Compile Include="..\interop\csharp\PoseMath.cs" Link="Tracking\PoseMath.cs" />
+  </ItemGroup>
+
+</Project>

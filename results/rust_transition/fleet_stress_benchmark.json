@@ -1,0 +1,247 @@
+{
+  "experiment": "RUST-05 Fleet Scaling & Latency Stress Test",
+  "fleet_sizes": [
+    6,
+    12,
+    16,
+    24,
+    32,
+    48,
+    64
+  ],
+  "tasks_per_run": 50,
+  "layout": "workshop",
+  "results": [
+    {
+      "engine": "Python SpacetimeA*",
+      "n_agvs": 6,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1571,
+      "runtime_s": 0.0803,
+      "ms_per_step": 0.051,
+      "meets_latency_budget": true,
+      "speedup": 1.0
+    },
+    {
+      "engine": "Rust SpacetimeA*",
+      "n_agvs": 6,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1571,
+      "runtime_s": 0.0513,
+      "ms_per_step": 0.033,
+      "meets_latency_budget": true,
+      "speedup": 1.57
+    },
+    {
+      "engine": "Rust SIPP",
+      "n_agvs": 6,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1557,
+      "runtime_s": 0.0621,
+      "ms_per_step": 0.04,
+      "meets_latency_budget": true,
+      "speedup": 1.29
+    },
+    {
+      "engine": "Python SpacetimeA*",
+      "n_agvs": 12,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1155,
+      "runtime_s": 0.123,
+      "ms_per_step": 0.106,
+      "meets_latency_budget": true,
+      "speedup": 1.0
+    },
+    {
+      "engine": "Rust SpacetimeA*",
+      "n_agvs": 12,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1155,
+      "runtime_s": 0.091,
+      "ms_per_step": 0.079,
+      "meets_latency_budget": true,
+      "speedup": 1.35
+    },
+    {
+      "engine": "Rust SIPP",
+      "n_agvs": 12,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1026,
+      "runtime_s": 0.0975,
+      "ms_per_step": 0.095,
+      "meets_latency_budget": true,
+      "speedup": 1.26
+    },
+    {
+      "engine": "Python SpacetimeA*",
+      "n_agvs": 16,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 982,
+      "runtime_s": 0.1699,
+      "ms_per_step": 0.173,
+      "meets_latency_budget": true,
+      "speedup": 1.0
+    },
+    {
+      "engine": "Rust SpacetimeA*",
+      "n_agvs": 16,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 982,
+      "runtime_s": 0.1242,
+      "ms_per_step": 0.127,
+      "meets_latency_budget": true,
+      "speedup": 1.37
+    },
+    {
+      "engine": "Rust SIPP",
+      "n_agvs": 16,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1068,
+      "runtime_s": 0.1422,
+      "ms_per_step": 0.133,
+      "meets_latency_budget": true,
+      "speedup": 1.19
+    },
+    {
+      "engine": "Python SpacetimeA*",
+      "n_agvs": 24,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 957,
+      "runtime_s": 0.2705,
+      "ms_per_step": 0.283,
+      "meets_latency_budget": true,
+      "speedup": 1.0
+    },
+    {
+      "engine": "Rust SpacetimeA*",
+      "n_agvs": 24,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 957,
+      "runtime_s": 0.2011,
+      "ms_per_step": 0.21,
+      "meets_latency_budget": true,
+      "speedup": 1.35
+    },
+    {
+      "engine": "Rust SIPP",
+      "n_agvs": 24,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1022,
+      "runtime_s": 0.2373,
+      "ms_per_step": 0.232,
+      "meets_latency_budget": true,
+      "speedup": 1.14
+    },
+    {
+      "engine": "Python SpacetimeA*",
+      "n_agvs": 32,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1129,
+      "runtime_s": 0.5274,
+      "ms_per_step": 0.467,
+      "meets_latency_budget": true,
+      "speedup": 1.0
+    },
+    {
+      "engine": "Rust SpacetimeA*",
+      "n_agvs": 32,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 1129,
+      "runtime_s": 0.412,
+      "ms_per_step": 0.365,
+      "meets_latency_budget": true,
+      "speedup": 1.28
+    },
+    {
+      "engine": "Rust SIPP",
+      "n_agvs": 32,
+      "n_tasks": 50,
+      "tasks_completed": 46,
+      "finished_step": 3500,
+      "runtime_s": 2.9377,
+      "ms_per_step": 0.839,
+      "meets_latency_budget": true,
+      "speedup": 0.18
+    },
+    {
+      "engine": "Python SpacetimeA*",
+      "n_agvs": 48,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 3189,
+      "runtime_s": 2.8756,
+      "ms_per_step": 0.902,
+      "meets_latency_budget": true,
+      "speedup": 1.0
+    },
+    {
+      "engine": "Rust SpacetimeA*",
+      "n_agvs": 48,
+      "n_tasks": 50,
+      "tasks_completed": 50,
+      "finished_step": 2671,
+      "runtime_s": 2.353,
+      "ms_per_step": 0.881,
+      "meets_latency_budget": true,
+      "speedup": 1.22
+    },
+    {
+      "engine": "Rust SIPP",
+      "n_agvs": 48,
+      "n_tasks": 50,
+      "tasks_completed": 43,
+      "finished_step": 3500,
+      "runtime_s": 5.7073,
+      "ms_per_step": 1.631,
+      "meets_latency_budget": true,
+      "speedup": 0.5
+    },
+    {
+      "engine": "Python SpacetimeA*",
+      "n_agvs": 64,
+      "n_tasks": 50,
+      "tasks_completed": 28,
+      "finished_step": 3500,
+      "runtime_s": 6.2741,
+      "ms_per_step": 1.793,
+      "meets_latency_budget": true,
+      "speedup": 1.0
+    },
+    {
+      "engine": "Rust SpacetimeA*",
+      "n_agvs": 64,
+      "n_tasks": 50,
+      "tasks_completed": 21,
+      "finished_step": 3500,
+      "runtime_s": 5.1574,
+      "ms_per_step": 1.474,
+      "meets_latency_budget": true,
+      "speedup": 1.22
+    },
+    {
+      "engine": "Rust SIPP",
+      "n_agvs": 64,
+      "n_tasks": 50,
+      "tasks_completed": 40,
+      "finished_step": 3500,
+      "runtime_s": 10.8183,
+      "ms_per_step": 3.091,
+      "meets_latency_budget": true,
+      "speedup": 0.58
+    }
+  ]
+}

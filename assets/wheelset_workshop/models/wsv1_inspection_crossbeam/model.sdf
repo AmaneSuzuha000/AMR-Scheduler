@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_inspection_crossbeam">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_inspection_crossbeam/meshes/inspection_crossbeam.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>-0.32 -8.3 1.3 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.13 0.16 2.6</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <pose>-0.32 8.3 1.3 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.13 0.16 2.6</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <pose>0.32 -8.3 1.3 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.13 0.16 2.6</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_3">
+        <pose>0.32 8.3 1.3 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.13 0.16 2.6</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_4">
+        <pose>-0.32 0 2.65 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.13 17 0.22</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_5">
+        <pose>0.32 0 2.65 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.13 17 0.22</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

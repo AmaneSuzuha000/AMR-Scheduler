@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_parts_tray">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_parts_tray/meshes/parts_tray.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 0 0.299 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>2 1.085 0.598</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

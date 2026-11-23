@@ -1,0 +1,14 @@
+std_msgs/Header header
+string guard_id
+string run_id
+string route_id
+uint64 revision
+string state
+string reason
+bool stopped
+float64 actual_speed
+float64 actual_wz
+float64 command_age
+float64 lease_age
+float64 output_vx
+float64 output_wz

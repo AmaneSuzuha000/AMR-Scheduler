@@ -1,0 +1,832 @@
+<sdf version="1.6">
+  <world name="rail_workshop_scout_demo">
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://sun</uri></include>
+    <gravity>0 0 -9.8</gravity>
+    <physics type="ode"><max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate></physics>
+    <scene><ambient>0.4 0.4 0.4 1</ambient><background>0.7 0.7 0.7 1</background>
+      <shadows>false</shadows></scene>
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros><namespace>/</namespace></ros>
+      <update_rate>30.0</update_rate>
+    </plugin>
+    <model name="l_j_s_8__j_s_25_0">
+      <static>true</static>
+      <pose>0.6600 1.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_25__j_s_45_0">
+      <static>true</static>
+      <pose>1.4000 1.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_45__j_s_65_0">
+      <static>true</static>
+      <pose>2.2000 1.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_65__j_s_85_0">
+      <static>true</static>
+      <pose>3.0000 1.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_85__j_s_105_0">
+      <static>true</static>
+      <pose>3.8000 1.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_105__j_s_125_0">
+      <static>true</static>
+      <pose>4.6000 1.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_125__j_s_136_0">
+      <static>true</static>
+      <pose>5.2200 1.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.4400 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_25__j_n_45_0">
+      <static>true</static>
+      <pose>1.4000 2.4000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_45__j_n_65_0">
+      <static>true</static>
+      <pose>2.2000 2.4000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_65__j_n_85_0">
+      <static>true</static>
+      <pose>3.0000 2.4000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_85__j_n_105_0">
+      <static>true</static>
+      <pose>3.8000 2.4000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_105__j_n_125_0">
+      <static>true</static>
+      <pose>4.6000 2.4000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.8000 0.1200 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_25__j_n_25_0">
+      <static>true</static>
+      <pose>1.0000 1.8000 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>1.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_45__j_n_45_0">
+      <static>true</static>
+      <pose>1.8000 1.8000 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>1.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_65__j_n_65_0">
+      <static>true</static>
+      <pose>2.6000 1.8000 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>1.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_85__j_n_85_0">
+      <static>true</static>
+      <pose>3.4000 1.8000 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>1.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_105__j_n_105_0">
+      <static>true</static>
+      <pose>4.2000 1.8000 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>1.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_125__j_n_125_0">
+      <static>true</static>
+      <pose>5.0000 1.8000 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>1.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_25__r_body_0">
+      <static>true</static>
+      <pose>1.0000 2.4600 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_body__q_body_0">
+      <static>true</static>
+      <pose>1.0000 2.6200 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_body__d_body_0">
+      <static>true</static>
+      <pose>1.0000 2.8400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_body__w_body_0">
+      <static>true</static>
+      <pose>1.0000 3.0800 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_45__r_bogie_0">
+      <static>true</static>
+      <pose>1.8000 2.4600 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_bogie__q_bogie_0">
+      <static>true</static>
+      <pose>1.8000 2.6200 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_bogie__d_bogie_0">
+      <static>true</static>
+      <pose>1.8000 2.8400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_bogie__w_bogie_0">
+      <static>true</static>
+      <pose>1.8000 3.0800 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_65__r_wheelset_0">
+      <static>true</static>
+      <pose>2.6000 2.4600 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_wheelset__q_wheelset_0">
+      <static>true</static>
+      <pose>2.6000 2.6200 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_wheelset__d_wheelset_0">
+      <static>true</static>
+      <pose>2.6000 2.8400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_wheelset__w_wheelset_0">
+      <static>true</static>
+      <pose>2.6000 3.0800 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_85__r_brake_0">
+      <static>true</static>
+      <pose>3.4000 2.4600 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_brake__q_brake_0">
+      <static>true</static>
+      <pose>3.4000 2.6200 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_brake__d_brake_0">
+      <static>true</static>
+      <pose>3.4000 2.8400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_brake__w_brake_0">
+      <static>true</static>
+      <pose>3.4000 3.0800 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_105__r_coupler_0">
+      <static>true</static>
+      <pose>4.2000 2.4600 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_coupler__q_coupler_0">
+      <static>true</static>
+      <pose>4.2000 2.6200 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_coupler__d_coupler_0">
+      <static>true</static>
+      <pose>4.2000 2.8400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_coupler__w_coupler_0">
+      <static>true</static>
+      <pose>4.2000 3.0800 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_n_125__r_door_0">
+      <static>true</static>
+      <pose>5.0000 2.4600 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_door__q_door_0">
+      <static>true</static>
+      <pose>5.0000 2.6200 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_door__d_door_0">
+      <static>true</static>
+      <pose>5.0000 2.8400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_door__w_door_0">
+      <static>true</static>
+      <pose>5.0000 3.0800 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_8__r_disassembly_0">
+      <static>true</static>
+      <pose>0.3200 1.1400 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_disassembly__q_disassembly_0">
+      <static>true</static>
+      <pose>0.3200 0.9800 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_disassembly__d_disassembly_0">
+      <static>true</static>
+      <pose>0.3200 0.7600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_disassembly__w_disassembly_0">
+      <static>true</static>
+      <pose>0.3200 0.5200 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_45__r_store_0">
+      <static>true</static>
+      <pose>1.8000 1.1400 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_store__q_store_0">
+      <static>true</static>
+      <pose>1.8000 0.9800 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_store__d_store_0">
+      <static>true</static>
+      <pose>1.8000 0.7600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_store__w_store_0">
+      <static>true</static>
+      <pose>1.8000 0.5200 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_65__r_buffer_in_0">
+      <static>true</static>
+      <pose>2.6000 1.1400 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_buffer_in__q_buffer_in_0">
+      <static>true</static>
+      <pose>2.6000 0.9800 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_buffer_in__d_buffer_in_0">
+      <static>true</static>
+      <pose>2.6000 0.7600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_buffer_in__w_buffer_in_0">
+      <static>true</static>
+      <pose>2.6000 0.5200 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_85__r_buffer_out_0">
+      <static>true</static>
+      <pose>3.4000 1.1400 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_buffer_out__q_buffer_out_0">
+      <static>true</static>
+      <pose>3.4000 0.9800 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_buffer_out__d_buffer_out_0">
+      <static>true</static>
+      <pose>3.4000 0.7600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_buffer_out__w_buffer_out_0">
+      <static>true</static>
+      <pose>3.4000 0.5200 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_125__r_park_0">
+      <static>true</static>
+      <pose>5.0000 1.1400 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_park__q_park_0">
+      <static>true</static>
+      <pose>5.0000 0.9800 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_park__d_park_0">
+      <static>true</static>
+      <pose>5.0000 0.7600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_park__w_park_0">
+      <static>true</static>
+      <pose>5.0000 0.5200 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_j_s_136__r_assembly_0">
+      <static>true</static>
+      <pose>5.4400 1.1400 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.1200 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_r_assembly__q_assembly_0">
+      <static>true</static>
+      <pose>5.4400 0.9800 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2000 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_q_assembly__d_assembly_0">
+      <static>true</static>
+      <pose>5.4400 0.7600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_d_assembly__w_assembly_0">
+      <static>true</static>
+      <pose>5.4400 0.5200 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.2400 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_body__r_body_0">
+      <static>true</static>
+      <pose>1.0320 3.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_body__r_body_1">
+      <static>true</static>
+      <pose>1.0640 2.8600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_body__r_body_2">
+      <static>true</static>
+      <pose>1.0320 2.5200 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_bogie__r_bogie_0">
+      <static>true</static>
+      <pose>1.8320 3.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_bogie__r_bogie_1">
+      <static>true</static>
+      <pose>1.8640 2.8600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_bogie__r_bogie_2">
+      <static>true</static>
+      <pose>1.8320 2.5200 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_wheelset__r_wheelset_0">
+      <static>true</static>
+      <pose>2.6320 3.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_wheelset__r_wheelset_1">
+      <static>true</static>
+      <pose>2.6640 2.8600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_wheelset__r_wheelset_2">
+      <static>true</static>
+      <pose>2.6320 2.5200 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_brake__r_brake_0">
+      <static>true</static>
+      <pose>3.4320 3.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_brake__r_brake_1">
+      <static>true</static>
+      <pose>3.4640 2.8600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_brake__r_brake_2">
+      <static>true</static>
+      <pose>3.4320 2.5200 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_coupler__r_coupler_0">
+      <static>true</static>
+      <pose>4.2320 3.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_coupler__r_coupler_1">
+      <static>true</static>
+      <pose>4.2640 2.8600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_coupler__r_coupler_2">
+      <static>true</static>
+      <pose>4.2320 2.5200 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_door__r_door_0">
+      <static>true</static>
+      <pose>5.0320 3.2000 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_door__r_door_1">
+      <static>true</static>
+      <pose>5.0640 2.8600 0.005 0 0 -1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_door__r_door_2">
+      <static>true</static>
+      <pose>5.0320 2.5200 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_disassembly__r_disassembly_0">
+      <static>true</static>
+      <pose>0.2880 0.4000 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_disassembly__r_disassembly_1">
+      <static>true</static>
+      <pose>0.2560 0.7400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_disassembly__r_disassembly_2">
+      <static>true</static>
+      <pose>0.2880 1.0800 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_store__r_store_0">
+      <static>true</static>
+      <pose>1.7680 0.4000 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_store__r_store_1">
+      <static>true</static>
+      <pose>1.7360 0.7400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_store__r_store_2">
+      <static>true</static>
+      <pose>1.7680 1.0800 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_buffer_in__r_buffer_in_0">
+      <static>true</static>
+      <pose>2.5680 0.4000 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_buffer_in__r_buffer_in_1">
+      <static>true</static>
+      <pose>2.5360 0.7400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_buffer_in__r_buffer_in_2">
+      <static>true</static>
+      <pose>2.5680 1.0800 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_buffer_out__r_buffer_out_0">
+      <static>true</static>
+      <pose>3.3680 0.4000 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_buffer_out__r_buffer_out_1">
+      <static>true</static>
+      <pose>3.3360 0.7400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_buffer_out__r_buffer_out_2">
+      <static>true</static>
+      <pose>3.3680 1.0800 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_park__r_park_0">
+      <static>true</static>
+      <pose>4.9680 0.4000 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_park__r_park_1">
+      <static>true</static>
+      <pose>4.9360 0.7400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_park__r_park_2">
+      <static>true</static>
+      <pose>4.9680 1.0800 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_assembly__r_assembly_0">
+      <static>true</static>
+      <pose>5.4080 0.4000 0.005 0 0 3.141593</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_assembly__r_assembly_1">
+      <static>true</static>
+      <pose>5.3760 0.7400 0.005 0 0 1.570796</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.6800 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="l_w_assembly__r_assembly_2">
+      <static>true</static>
+      <pose>5.4080 1.0800 0.005 0 0 0.000000</pose>
+      <link name="link">
+        <visual name="v"><geometry><box><size>0.0640 0.0880 0.01</size></box></geometry>
+        <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.45 0.47 0.5 1</diffuse></material></visual>
+      </link>
+    </model>
+  </world>
+</sdf>

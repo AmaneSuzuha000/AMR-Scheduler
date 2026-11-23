@@ -1,0 +1,12 @@
+# 可选依赖：只有做硬件相关实验时才需要
+#
+#   pip install -r requirements-optional.txt
+#
+# 注意：这些功能依赖真实的 Ubuntu 主机 / 底盘 / 遥控器，
+# 公开仓库里没有对应的测试数据，装不装都不影响测试通过。
+
+# SCOUT Mini 遥控器 USB HID 采集
+hidapi>=0.14
+
+# SSH 自动化（Ubuntu 侧联调）
+paramiko>=3.4

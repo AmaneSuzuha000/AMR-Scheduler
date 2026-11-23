@@ -1,0 +1,5 @@
+route,waypoints,reached,mean_err_m,max_err_m,completed,wall_clock_s
+D->W3,5,5,0.168,0.416,1,151.56
+D->S,5,5,0.163,0.411,1,151.56
+W1->W5,6,6,0.122,0.433,1,151.56
+R0->B1,4,4,0.151,0.409,1,151.56

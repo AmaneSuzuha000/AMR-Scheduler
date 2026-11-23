@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_opening_portal">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_opening_portal/meshes/opening_portal.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 -1.64695 0.8234187 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.58 0.55 1.646837</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <pose>0 1.64695 0.8234187 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.58 0.55 1.646837</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <pose>0 0 1.746837 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.7453973 3.913899 0.32</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

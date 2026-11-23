@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_sorting_robot">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_sorting_robot/meshes/sorting_robot.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>1.298978 -0.4081004 0.7519728 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>3.477956 1.536201 1.673532</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

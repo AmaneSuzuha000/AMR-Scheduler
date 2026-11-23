@@ -1,0 +1,2299 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <world name="amr_metric">
+    <gravity>0 0 -9.81</gravity>
+    <physics name="ode" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>50</iters>
+        </solver>
+      </ode>
+    </physics>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <plugin name="state" filename="libgazebo_ros_state.so" />
+    <model name="ZONE_BODY_west">
+      <static>true</static>
+      <pose>22.95 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BODY_east">
+      <static>true</static>
+      <pose>27.85 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BOGIE_west">
+      <static>true</static>
+      <pose>42.95 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BOGIE_east">
+      <static>true</static>
+      <pose>47.85 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_WHEELSET_west">
+      <static>true</static>
+      <pose>62.95 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_WHEELSET_east">
+      <static>true</static>
+      <pose>67.85 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BRAKE_west">
+      <static>true</static>
+      <pose>82.95 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BRAKE_east">
+      <static>true</static>
+      <pose>87.85 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_COUPLER_west">
+      <static>true</static>
+      <pose>102.95 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_COUPLER_east">
+      <static>true</static>
+      <pose>107.85 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_DOOR_west">
+      <static>true</static>
+      <pose>122.95 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_DOOR_east">
+      <static>true</static>
+      <pose>127.85 76.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 11 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_DISASSEMBLY_west">
+      <static>true</static>
+      <pose>5.15 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.3000000000000007 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.3000000000000007 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_DISASSEMBLY_east">
+      <static>true</static>
+      <pose>10.05 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000004 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000004 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_STORE_west">
+      <static>true</static>
+      <pose>42.15 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_STORE_east">
+      <static>true</static>
+      <pose>47.05 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.8999999999999986 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BUFFER_IN_west">
+      <static>true</static>
+      <pose>62.15 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.29999999999999716 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BUFFER_IN_east">
+      <static>true</static>
+      <pose>67.05 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BUFFER_OUT_west">
+      <static>true</static>
+      <pose>82.15 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_BUFFER_OUT_east">
+      <static>true</static>
+      <pose>87.05 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_PARK_west">
+      <static>true</static>
+      <pose>122.15 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_PARK_east">
+      <static>true</static>
+      <pose>127.05 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_ASSEMBLY_west">
+      <static>true</static>
+      <pose>133.15 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.30000000000001137 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="ZONE_ASSEMBLY_east">
+      <static>true</static>
+      <pose>138.05 12.5 0.6 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.9000000000000057 1 1.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="boundary_w">
+      <static>true</static>
+      <pose>-0.1 45.0 1 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.2 90 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.2 90 2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="boundary_e">
+      <static>true</static>
+      <pose>140.1 45.0 1 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>0.2 90 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.2 90 2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="boundary_s">
+      <static>true</static>
+      <pose>70.0 -0.1 1 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>140 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>140 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="boundary_n">
+      <static>true</static>
+      <pose>70.0 90.1 1 0 0 0.0</pose>
+      <link name="body">
+        <collision name="solid">
+          <geometry>
+            <box>
+              <size>140 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>140 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_8__J_S_25_0">
+      <static>true</static>
+      <pose>16.5 30.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_25__J_S_45_0">
+      <static>true</static>
+      <pose>35.0 30.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_45__J_S_65_0">
+      <static>true</static>
+      <pose>55.0 30.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_65__J_S_85_0">
+      <static>true</static>
+      <pose>75.0 30.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_85__J_S_105_0">
+      <static>true</static>
+      <pose>95.0 30.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_105__J_S_125_0">
+      <static>true</static>
+      <pose>115.0 30.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_125__J_S_136_0">
+      <static>true</static>
+      <pose>130.5 30.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>11.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_25__J_N_45_0">
+      <static>true</static>
+      <pose>35.0 60.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_45__J_N_65_0">
+      <static>true</static>
+      <pose>55.0 60.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_65__J_N_85_0">
+      <static>true</static>
+      <pose>75.0 60.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_85__J_N_105_0">
+      <static>true</static>
+      <pose>95.0 60.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_105__J_N_125_0">
+      <static>true</static>
+      <pose>115.0 60.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20.0 3 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_25__J_N_25_0">
+      <static>true</static>
+      <pose>25.0 45.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>30.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_45__J_N_45_0">
+      <static>true</static>
+      <pose>45.0 45.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>30.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_65__J_N_65_0">
+      <static>true</static>
+      <pose>65.0 45.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>30.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_85__J_N_85_0">
+      <static>true</static>
+      <pose>85.0 45.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>30.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_105__J_N_105_0">
+      <static>true</static>
+      <pose>105.0 45.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>30.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_125__J_N_125_0">
+      <static>true</static>
+      <pose>125.0 45.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>30.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_25__R_BODY_0">
+      <static>true</static>
+      <pose>25.0 61.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_BODY__Q_BODY_0">
+      <static>true</static>
+      <pose>25.0 65.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_BODY__D_BODY_0">
+      <static>true</static>
+      <pose>25.0 71.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_BODY__W_BODY_0">
+      <static>true</static>
+      <pose>25.0 77.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_45__R_BOGIE_0">
+      <static>true</static>
+      <pose>45.0 61.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_BOGIE__Q_BOGIE_0">
+      <static>true</static>
+      <pose>45.0 65.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_BOGIE__D_BOGIE_0">
+      <static>true</static>
+      <pose>45.0 71.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_BOGIE__W_BOGIE_0">
+      <static>true</static>
+      <pose>45.0 77.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_65__R_WHEELSET_0">
+      <static>true</static>
+      <pose>65.0 61.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_WHEELSET__Q_WHEELSET_0">
+      <static>true</static>
+      <pose>65.0 65.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_WHEELSET__D_WHEELSET_0">
+      <static>true</static>
+      <pose>65.0 71.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_WHEELSET__W_WHEELSET_0">
+      <static>true</static>
+      <pose>65.0 77.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_85__R_BRAKE_0">
+      <static>true</static>
+      <pose>85.0 61.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_BRAKE__Q_BRAKE_0">
+      <static>true</static>
+      <pose>85.0 65.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_BRAKE__D_BRAKE_0">
+      <static>true</static>
+      <pose>85.0 71.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_BRAKE__W_BRAKE_0">
+      <static>true</static>
+      <pose>85.0 77.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_105__R_COUPLER_0">
+      <static>true</static>
+      <pose>105.0 61.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_COUPLER__Q_COUPLER_0">
+      <static>true</static>
+      <pose>105.0 65.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_COUPLER__D_COUPLER_0">
+      <static>true</static>
+      <pose>105.0 71.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_COUPLER__W_COUPLER_0">
+      <static>true</static>
+      <pose>105.0 77.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_N_125__R_DOOR_0">
+      <static>true</static>
+      <pose>125.0 61.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_DOOR__Q_DOOR_0">
+      <static>true</static>
+      <pose>125.0 65.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_DOOR__D_DOOR_0">
+      <static>true</static>
+      <pose>125.0 71.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_DOOR__W_DOOR_0">
+      <static>true</static>
+      <pose>125.0 77.0 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_8__R_DISASSEMBLY_0">
+      <static>true</static>
+      <pose>8.0 28.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_DISASSEMBLY__Q_DISASSEMBLY_0">
+      <static>true</static>
+      <pose>8.0 24.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_DISASSEMBLY__D_DISASSEMBLY_0">
+      <static>true</static>
+      <pose>8.0 19.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_DISASSEMBLY__W_DISASSEMBLY_0">
+      <static>true</static>
+      <pose>8.0 13.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_45__R_STORE_0">
+      <static>true</static>
+      <pose>45.0 28.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_STORE__Q_STORE_0">
+      <static>true</static>
+      <pose>45.0 24.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_STORE__D_STORE_0">
+      <static>true</static>
+      <pose>45.0 19.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_STORE__W_STORE_0">
+      <static>true</static>
+      <pose>45.0 13.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_65__R_BUFFER_IN_0">
+      <static>true</static>
+      <pose>65.0 28.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_BUFFER_IN__Q_BUFFER_IN_0">
+      <static>true</static>
+      <pose>65.0 24.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_BUFFER_IN__D_BUFFER_IN_0">
+      <static>true</static>
+      <pose>65.0 19.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_BUFFER_IN__W_BUFFER_IN_0">
+      <static>true</static>
+      <pose>65.0 13.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_85__R_BUFFER_OUT_0">
+      <static>true</static>
+      <pose>85.0 28.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_BUFFER_OUT__Q_BUFFER_OUT_0">
+      <static>true</static>
+      <pose>85.0 24.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_BUFFER_OUT__D_BUFFER_OUT_0">
+      <static>true</static>
+      <pose>85.0 19.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_BUFFER_OUT__W_BUFFER_OUT_0">
+      <static>true</static>
+      <pose>85.0 13.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_125__R_PARK_0">
+      <static>true</static>
+      <pose>125.0 28.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_PARK__Q_PARK_0">
+      <static>true</static>
+      <pose>125.0 24.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_PARK__D_PARK_0">
+      <static>true</static>
+      <pose>125.0 19.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_PARK__W_PARK_0">
+      <static>true</static>
+      <pose>125.0 13.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_J_S_136__R_ASSEMBLY_0">
+      <static>true</static>
+      <pose>136.0 28.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_R_ASSEMBLY__Q_ASSEMBLY_0">
+      <static>true</static>
+      <pose>136.0 24.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_Q_ASSEMBLY__D_ASSEMBLY_0">
+      <static>true</static>
+      <pose>136.0 19.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_D_ASSEMBLY__W_ASSEMBLY_0">
+      <static>true</static>
+      <pose>136.0 13.0 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>6.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BODY__R_BODY_0">
+      <static>true</static>
+      <pose>25.8 80.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BODY__R_BODY_1">
+      <static>true</static>
+      <pose>26.6 71.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BODY__R_BODY_2">
+      <static>true</static>
+      <pose>25.8 63.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BOGIE__R_BOGIE_0">
+      <static>true</static>
+      <pose>45.8 80.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BOGIE__R_BOGIE_1">
+      <static>true</static>
+      <pose>46.6 71.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BOGIE__R_BOGIE_2">
+      <static>true</static>
+      <pose>45.8 63.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_WHEELSET__R_WHEELSET_0">
+      <static>true</static>
+      <pose>65.8 80.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_WHEELSET__R_WHEELSET_1">
+      <static>true</static>
+      <pose>66.6 71.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_WHEELSET__R_WHEELSET_2">
+      <static>true</static>
+      <pose>65.8 63.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BRAKE__R_BRAKE_0">
+      <static>true</static>
+      <pose>85.8 80.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BRAKE__R_BRAKE_1">
+      <static>true</static>
+      <pose>86.6 71.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BRAKE__R_BRAKE_2">
+      <static>true</static>
+      <pose>85.8 63.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_COUPLER__R_COUPLER_0">
+      <static>true</static>
+      <pose>105.8 80.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_COUPLER__R_COUPLER_1">
+      <static>true</static>
+      <pose>106.6 71.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_COUPLER__R_COUPLER_2">
+      <static>true</static>
+      <pose>105.8 63.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_DOOR__R_DOOR_0">
+      <static>true</static>
+      <pose>125.8 80.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_DOOR__R_DOOR_1">
+      <static>true</static>
+      <pose>126.6 71.5 0.001 0 0 -1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_DOOR__R_DOOR_2">
+      <static>true</static>
+      <pose>125.8 63.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_DISASSEMBLY__R_DISASSEMBLY_0">
+      <static>true</static>
+      <pose>7.2 10.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999996 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_DISASSEMBLY__R_DISASSEMBLY_1">
+      <static>true</static>
+      <pose>6.4 18.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_DISASSEMBLY__R_DISASSEMBLY_2">
+      <static>true</static>
+      <pose>7.2 27.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999996 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_STORE__R_STORE_0">
+      <static>true</static>
+      <pose>44.2 10.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_STORE__R_STORE_1">
+      <static>true</static>
+      <pose>43.4 18.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_STORE__R_STORE_2">
+      <static>true</static>
+      <pose>44.2 27.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BUFFER_IN__R_BUFFER_IN_0">
+      <static>true</static>
+      <pose>64.2 10.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BUFFER_IN__R_BUFFER_IN_1">
+      <static>true</static>
+      <pose>63.4 18.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BUFFER_IN__R_BUFFER_IN_2">
+      <static>true</static>
+      <pose>64.2 27.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.6000000000000014 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BUFFER_OUT__R_BUFFER_OUT_0">
+      <static>true</static>
+      <pose>84.2 10.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BUFFER_OUT__R_BUFFER_OUT_1">
+      <static>true</static>
+      <pose>83.4 18.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_BUFFER_OUT__R_BUFFER_OUT_2">
+      <static>true</static>
+      <pose>84.2 27.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_PARK__R_PARK_0">
+      <static>true</static>
+      <pose>124.2 10.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_PARK__R_PARK_1">
+      <static>true</static>
+      <pose>123.4 18.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_PARK__R_PARK_2">
+      <static>true</static>
+      <pose>124.2 27.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_ASSEMBLY__R_ASSEMBLY_0">
+      <static>true</static>
+      <pose>135.2 10.0 0.001 0 0 3.141592653589793</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_ASSEMBLY__R_ASSEMBLY_1">
+      <static>true</static>
+      <pose>134.4 18.5 0.001 0 0 1.5707963267948966</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>17.0 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="paint_L_W_ASSEMBLY__R_ASSEMBLY_2">
+      <static>true</static>
+      <pose>135.2 27.0 0.001 0 0 0.0</pose>
+      <link name="body">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.5999999999999943 2.2 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>.18 .22 .24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

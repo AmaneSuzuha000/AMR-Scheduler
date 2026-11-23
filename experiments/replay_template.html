@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AGV 调度过程回放 · 预约与抢占</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Microsoft YaHei",sans-serif;background:#0b1420;color:#dbe4ee}
+header{padding:10px 18px;background:#131f2d;border-bottom:1px solid #22344a}
+h1{margin:0;font-size:16px;font-weight:600}
+.meta{font-size:12px;color:#7f95ad;margin-top:4px;line-height:1.7}
+.wrap{display:flex;gap:12px;padding:12px;align-items:flex-start}
+.main{flex:1;min-width:0}
+#stage{background:#0f1a26;border:1px solid #22344a;border-radius:6px}
+canvas{display:block;width:100%}
+aside{width:262px;flex:none;display:flex;flex-direction:column;gap:10px}
+.card{background:#131f2d;border:1px solid #22344a;border-radius:6px;padding:10px;font-size:12px}
+.card h2{margin:0 0 8px;font-size:11px;color:#8fb4d9;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;padding:2px 0}
+.row b{font-weight:600;font-variant-numeric:tabular-nums}
+.agv{display:flex;align-items:center;gap:6px;padding:3px 0}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.agv .nm{width:48px;font-variant-numeric:tabular-nums;font-size:11px}
+.agv .stt{flex:1;color:#93a7bd;font-size:11px}
+.ctl{display:flex;gap:6px;align-items:center;padding:10px 12px;background:#131f2d;border-top:1px solid #22344a;flex-wrap:wrap}
+button{background:#1a2a3d;color:#dbe4ee;border:1px solid #2a4058;border-radius:4px;padding:5px 12px;cursor:pointer;font-size:12px}
+button:hover{background:#22364c}
+button.on{background:#2563eb;border-color:#3b82f6}
+input[type=range]{flex:1;min-width:150px;accent-color:#3b82f6}
+.tick{font-variant-numeric:tabular-nums;color:#8fb4d9;font-size:12px;min-width:112px}
+.lg{display:flex;flex-wrap:wrap;gap:7px;font-size:11px;color:#93a7bd}
+.lg span{display:flex;align-items:center;gap:4px}
+.sq{width:9px;height:9px;border-radius:2px}
+.hold{display:flex;justify-content:space-between;padding:1px 0;font-size:11px}
+.hold .nd{color:#8fb4d9;font-variant-numeric:tabular-nums}
+.evt{border-left:2px solid #f43f5e;padding-left:7px;margin:5px 0;font-size:11px;color:#cbd5e1;line-height:1.5}
+.none{color:#64748b;font-size:11px}
+.tag{display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600}
+.tag.u{background:#7c2d12;color:#fdba74}
+.tag.v{background:#1e3a5f;color:#93c5fd}
+</style>
+</head>
+<body>
+<header>
+<h1>多 AGV 调度 · 预约占用与抢占过程</h1>
+<div class="meta" id="meta"></div>
+</header>
+<div class="wrap">
+<div class="main">
+<div id="stage"><canvas id="cv"></canvas></div>
+<div class="ctl">
+<button id="play">播放</button>
+<button id="step">单步</button>
+<input type="range" id="seek" min="0" value="0">
+<span class="tick" id="tick">t = 0 s</span>
+<button data-sp="1" class="sp on">1x</button>
+<button data-sp="4" class="sp">4x</button>
+<button data-sp="16" class="sp">16x</button>
+<button id="th">预约层 开</button>
+</div>
+</div>
+<aside>
+<div class="card">
+<h2>任务进度</h2>
+<div class="row"><span>未下达</span><b id="c_pending">0</b></div>
+<div class="row"><span>已分配</span><b id="c_assigned">0</b></div>
+<div class="row"><span>已取货</span><b id="c_picked">0</b></div>
+<div class="row"><span>已完成</span><b id="c_completed">0</b></div>
+<div class="row" style="margin-top:6px;border-top:1px solid #22344a;padding-top:6px"><span>阻塞车辆</span><b id="c_blocked">0</b></div>
+</div>
+<div class="card">
+<h2>车辆状态</h2>
+<div id="agvs"></div>
+</div>
+<div class="card">
+<h2>预约占用（本步）</h2>
+<div id="holds"></div>
+</div>
+<div class="card">
+<h2>抢占事件</h2>
+<div id="evts"></div>
+</div>
+<div class="card">
+<h2>图例</h2>
+<div class="lg" id="legend"></div>
+</div>
+</aside>
+</div>
+<script>
+const DATA = __DATA__;
+const KIND_COLOR = {workstation:"#3b82f6",assembly:"#8b5cf6",disassembly:"#f59e0b",buffer:"#14b8a6",dock:"#ef4444",aisle:"#4b5f75"};
+const KIND_NAME = {workstation:"检修工位",assembly:"组装区",disassembly:"拆解区",buffer:"缓存区",dock:"装卸点",aisle:"通道"};
+const AGV_COLOR = ["#22d3ee","#f472b6","#a3e635","#fb923c","#c084fc","#facc15"];
+const STATE_NAME = {idle:"空闲",to_pickup:"取货中",loading:"装载中",to_dropoff:"送货中",unloading:"卸载中",blocked:"阻塞",parking:"让位"};
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+const N={}; const EDGES=DATA.edges; const STEPS=DATA.steps;
+DATA.nodes.forEach(function(n){N[n.id]=n;});
+var xmin=1e9,xmax=-1e9,ymin=1e9,ymax=-1e9;
+DATA.nodes.forEach(function(n){xmin=Math.min(xmin,n.x);xmax=Math.max(xmax,n.x);ymin=Math.min(ymin,n.y);ymax=Math.max(ymax,n.y);});
+var PAD=52,SC=1,OX=0,OY=0,cur=0,timer=null,speed=1,showHold=true;
+var seenEvts=[];
+function px(x){return OX+x*SC}
+function py(y){return OY+y*SC}
+function resize(){
+  var w=cv.parentElement.clientWidth;
+  var h=Math.max(380,Math.min(640,Math.round(w*0.60)));
+  cv.width=w*devicePixelRatio; cv.height=h*devicePixelRatio; cv.style.height=h+"px";
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  var sx=(w-PAD*2)/Math.max(1e-6,xmax-xmin);
+  var sy=(h-PAD*2)/Math.max(1e-6,ymax-ymin);
+  SC=Math.min(sx,sy);
+  OX=(w-(xmax-xmin)*SC)/2-xmin*SC;
+  OY=(h-(ymax-ymin)*SC)/2-ymin*SC;
+  draw(cur);
+}
+function draw(i){
+  var w=cv.width/devicePixelRatio,h=cv.height/devicePixelRatio;
+  ctx.clearRect(0,0,w,h);
+  var s=STEPS[i]; if(!s) return;
+  ctx.strokeStyle="#1b2a3a"; ctx.lineWidth=3; ctx.lineCap="round";
+  EDGES.forEach(function(e){
+    var a=N[e.a],b=N[e.b]; if(!a||!b) return;
+    ctx.beginPath(); ctx.moveTo(px(a.x),py(a.y)); ctx.lineTo(px(b.x),py(b.y)); ctx.stroke();
+  });
+  // 预约占用层：节点外圈发光 = 已被预约
+  DATA.nodes.forEach(function(n){
+    var X=px(n.x),Y=py(n.y),col=KIND_COLOR[n.kind]||"#4b5f75";
+    var isA=(n.kind==="aisle"), r=isA?6:12;
+    var hold=s.hold&&s.hold[n.id]?s.hold[n.id]:[];
+    if(showHold&&hold.length>0){
+      var g=ctx.createRadialGradient(X,Y,r,X,Y,r+13);
+      g.addColorStop(0,"rgba(244,63,94,0.42)");
+      g.addColorStop(1,"rgba(244,63,94,0)");
+      ctx.beginPath(); ctx.arc(X,Y,r+13,0,7); ctx.fillStyle=g; ctx.fill();
+    }
+    ctx.beginPath();
+    if(isA){ctx.arc(X,Y,r,0,7);} else {ctx.roundRect(X-r,Y-r,r*2,r*2,4);}
+    ctx.fillStyle=col+(isA?"99":"33"); ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=1.6; ctx.stroke();
+    if(showHold&&hold.length>0){
+      ctx.strokeStyle="#f43f5e"; ctx.lineWidth=2; ctx.stroke();
+    }
+    ctx.fillStyle=isA?"#7f95ad":"#dbe4ee";
+    ctx.font=(isA?"10px":"11px")+" ui-monospace,monospace";
+    ctx.textAlign="center"; ctx.fillText(n.id,X,Y-r-5);
+  });
+  // 抢占脉冲
+  (s.pre||[]).forEach(function(e){
+    var a=N[e[1]]; if(!a) return;
+    for(var k=0;k<3;k++){
+      ctx.beginPath(); ctx.arc(px(a.x),py(a.y),16+k*9,0,7);
+      ctx.strokeStyle="rgba(244,63,94,"+(0.75-k*0.22)+")";
+      ctx.lineWidth=2.4-k*0.6; ctx.stroke();
+    }
+  });
+  // 规划路径：画出这台车**接下来还要走的**节点序列。
+  // 注意 agv_paths 是「剩余未经过的节点」，车在边上时通常只剩 1 个节点，
+  // 所以必须从**当前位置**起画，否则单个节点连不成线、什么都看不到。
+  if(s.path){
+    DATA.agv_ids.forEach(function(id,k){
+      var seq=s.path[id]||[];
+      if(seq.length===0) return;
+      var col=AGV_COLOR[k%AGV_COLOR.length];
+      // 起点：当前位置（可能在某条边上，取边的两个端点中靠后的那个）
+      var cur=s.pos[id]||"";
+      var parts=cur.split("->");
+      var fromN=N[parts[parts.length-1]];
+      ctx.beginPath();
+      if(fromN){ ctx.moveTo(px(fromN.x),py(fromN.y)); }
+      else { var f0=N[seq[0]]; if(f0) ctx.moveTo(px(f0.x),py(f0.y)); }
+      for(var q=0;q<seq.length;q++){
+        var nd=N[seq[q]]; if(!nd) continue;
+        ctx.lineTo(px(nd.x),py(nd.y));
+      }
+      ctx.strokeStyle=col; ctx.globalAlpha=0.6;
+      ctx.lineWidth=2.6; ctx.setLineDash([6,5]); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha=1;
+      // 终点画一个空心圈，标出这趟的目标位置
+      var last=N[seq[seq.length-1]];
+      if(last){
+        ctx.beginPath(); ctx.arc(px(last.x),py(last.y),5,0,7);
+        ctx.strokeStyle=col; ctx.lineWidth=2.2; ctx.stroke();
+      }
+    });
+  }
+  if(typeof drawAB==="function") drawAB();
+  // AGV
+  DATA.agv_ids.forEach(function(id,k){
+    var p=s.pos[id]||""; if(!p) return;
+    var parts=p.split("->"),X,Y;
+    if(parts.length===2){var a=N[parts[0]],b=N[parts[1]]; if(!a||!b)return;
+      X=px((a.x+b.x)/2);Y=py((a.y+b.y)/2)-12;}
+    else{var a2=N[parts[0]]; if(!a2)return; X=px(a2.x);Y=py(a2.y);}
+    // 同一节点上可能停多台车（如 t=0 时 2 台都在 B1）。
+    // 只做水平微偏移会让圆点被节点方框盖住，改为按序号绕节点外圈分布。
+    var sameNode=0, myIdx=0;
+    DATA.agv_ids.forEach(function(oid,kk){
+      var op=s.pos[oid]||"";
+      if(op===p){ if(kk<k) myIdx++; sameNode++; }
+    });
+    var ang=(myIdx/Math.max(1,sameNode))*Math.PI*2 - Math.PI/2;
+    var rad=(sameNode>1)?17:15;
+    X+=Math.cos(ang)*rad; Y+=Math.sin(ang)*rad;
+    var col=AGV_COLOR[k%AGV_COLOR.length],blk=(s.st[id]==="blocked");
+    ctx.beginPath(); ctx.arc(X,Y,blk?8.5:7,0,7);
+    ctx.fillStyle=col; ctx.globalAlpha=blk?0.55:1; ctx.fill(); ctx.globalAlpha=1;
+    if(blk){ctx.strokeStyle="#ef4444";ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(X,Y,11,0,7); ctx.stroke();}
+    ctx.fillStyle="#06121c"; ctx.font="bold 9px ui-monospace";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(String(k),X,Y); ctx.textBaseline="alphabetic";
+  });
+  // 侧栏
+  var c=s.cnt;
+  document.getElementById("c_pending").textContent=c.pending;
+  document.getElementById("c_assigned").textContent=c.assigned;
+  document.getElementById("c_picked").textContent=c.picked;
+  document.getElementById("c_completed").textContent=c.completed;
+  document.getElementById("c_blocked").textContent=s.nb;
+  document.getElementById("tick").textContent="t = "+s.t+" s";
+  var p2=[];
+  DATA.agv_ids.forEach(function(id,k){
+    var col=AGV_COLOR[k%AGV_COLOR.length];
+    var stt=STATE_NAME[s.st[id]]||s.st[id]||"-";
+    var job=s.job[id]?(" · "+s.job[id]):"";
+    p2.push('<div class="agv"><i class="dot" style="background:'+col+'"></i><span class="nm">'+id+'</span><span class="stt">'+stt+job+'</span></div>');
+  });
+  document.getElementById("agvs").innerHTML=p2.join("");
+  var hh=[];
+  if(s.hold){
+    Object.keys(s.hold).sort().forEach(function(nd){
+      hh.push('<div class="hold"><span class="nd">'+nd+'</span><span>'+s.hold[nd].join(",")+'</span></div>');
+    });
+  }
+  document.getElementById("holds").innerHTML = hh.length?hh.join("")
+    : '<div class="none">本步无节点预约</div>';
+  // 抢占事件累计到当前步
+  seenEvts=[];
+  for(var q=0;q<=i;q++){
+    var ev=(STEPS[q].pre||[]);
+    for(var z=0;z<ev.length;z++){ seenEvts.push({t:STEPS[q].t,e:ev[z]}); }
+  }
+  var ee=[];
+  if(seenEvts.length===0){
+    var noPre = (DATA.meta.policy==="none")
+      ? '<div class="none">抢占策略为 none，本就不会抢占</div>'
+      : '<div class="none">该时段无抢占</div>';
+    document.getElementById("evts").innerHTML=noPre;
+  } else {
+    seenEvts.slice(-8).reverse().forEach(function(o){
+      var e=o.e;
+      var picked=(e[3]===true)?'<span class="tag u">已装货</span>':'<span class="tag v">未取货</span>';
+      ee.push('<div class="evt"><b>t='+o.t+'</b> 加急 <b>'+e[0]+'</b> 抢占 <b>'+e[1]+'</b>' +
+              ' 的任务 '+e[2]+' '+picked+'</div>');
+    });
+    document.getElementById("evts").innerHTML=ee.join("");
+  }
+}
+function setStep(i){cur=Math.max(0,Math.min(STEPS.length-1,i));
+  document.getElementById("seek").value=cur; draw(cur);}
+function stop(){if(timer){clearInterval(timer);timer=null;
+  document.getElementById("play").textContent="播放";}}
+function play(){
+  if(timer){stop();return;}
+  document.getElementById("play").textContent="暂停";
+  timer=setInterval(function(){if(cur>=STEPS.length-1){stop();return;}setStep(cur+1);},Math.max(8,60/speed));
+}
+document.getElementById("play").onclick=play;
+document.getElementById("step").onclick=function(){stop();setStep(cur+1);};
+document.getElementById("seek").oninput=function(e){stop();setStep(+e.target.value);};
+document.getElementById("th").onclick=function(){
+  showHold=!showHold;
+  this.textContent="预约层 "+(showHold?"开":"关");
+  this.classList.toggle("on",showHold); draw(cur);
+};
+var sps=document.querySelectorAll(".sp");
+Array.prototype.forEach.call(sps,function(b){
+  b.onclick=function(){
+    Array.prototype.forEach.call(sps,function(x){x.classList.remove("on");});
+    b.classList.add("on"); speed=+b.dataset.sp; if(timer){stop();play();}
+  };
+});
+document.addEventListener("keydown",function(e){
+  if(e.code==="Space"){e.preventDefault();play();}
+  if(e.code==="ArrowRight"){stop();setStep(cur+1);}
+  if(e.code==="ArrowLeft"){stop();setStep(cur-1);}
+});
+document.getElementById("seek").max=STEPS.length-1;
+var m=DATA.meta;
+document.getElementById("meta").textContent=
+  m.n_tasks+" 任务 / "+m.n_agvs+" 车 / seed "+m.seed+" / "+m.planner+" / 抢占策略 "+m.policy+
+  "　完成 "+m.completed+" 项　完成时间 "+m.makespan+" s　准时率 "+m.on_time+
+  "　利用率 "+m.util+"　冲突 "+m.conflict_events+" 次　抢占 "+m.preemptions+" 次";
+var lg=[];
+Object.keys(KIND_NAME).forEach(function(k){
+  if(!DATA.nodes.some(function(n){return n.kind===k;})) return;
+  lg.push('<span><i class="sq" style="background:'+KIND_COLOR[k]+'"></i>'+KIND_NAME[k]+'</span>');
+});
+lg.push('<span><i class="sq" style="background:#f43f5e"></i>预约占用</span>');
+document.getElementById("legend").innerHTML=lg.join("");
+// A→B 点选：先点起点节点、再点终点节点，用静态最短路演示「算法怎么接进来」。
+// 支持在画布上交互指定任意起终点并即时计算最短路径。
+var abFrom=null, abTo=null, abPath=null;
+function nodeAt(mx,my){
+  var best=null,bd=1e9;
+  DATA.nodes.forEach(function(n){
+    var dx=px(n.x)-mx, dy=py(n.y)-my, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<18 && d<bd){bd=d;best=n;}
+  });
+  return best;
+}
+function shortestPath(a,b){
+  // Dijkstra，边权用坐标欧氏距离（与回放一致，仅用于演示选点）
+  var dist={},prev={},seen={};
+  Object.keys(N).forEach(function(k){dist[k]=1e18;});
+  dist[a]=0;
+  for(;;){
+    var u=null,best=1e18;
+    Object.keys(dist).forEach(function(k){
+      if(!seen[k]&&dist[k]<best){best=dist[k];u=k;}
+    });
+    if(u===null||u===b) break;
+    seen[u]=true;
+    EDGES.forEach(function(e){
+      var v=null;
+      if(e.a===u) v=e.b; else if(e.b===u) v=e.a;
+      if(v===null||seen[v]) return;
+      var w=Math.hypot(N[u].x-N[v].x, N[u].y-N[v].y);
+      if(dist[u]+w<dist[v]){dist[v]=dist[u]+w;prev[v]=u;}
+    });
+  }
+  if(dist[b]>1e17) return null;
+  var path=[b],cur=b;
+  while(cur!==a && prev[cur]!==undefined){cur=prev[cur];path.unshift(cur);}
+  return path;
+}
+cv.addEventListener("click",function(ev){
+  var rect=cv.getBoundingClientRect();
+  var mx=(ev.clientX-rect.left), my=(ev.clientY-rect.top);
+  var n=nodeAt(mx,my);
+  if(!n) return;
+  if(abFrom===null){ abFrom=n.id; abTo=null; abPath=null; }
+  else if(abTo===null){
+    abTo=n.id;
+    abPath=shortestPath(abFrom,abTo);
+    var info=document.getElementById("tick");
+    if(abPath){ info.textContent="A→B: "+abFrom+" → "+abTo+"，"+abPath.length+" 个节点"; }
+    else { info.textContent="A→B: 不可达"; }
+  } else { abFrom=n.id; abTo=null; abPath=null; }
+  draw(cur);
+});
+function drawAB(){
+  if(!abPath) return;
+  ctx.beginPath();
+  for(var q=0;q<abPath.length;q++){
+    var nd=N[abPath[q]];
+    if(q===0) ctx.moveTo(px(nd.x),py(nd.y)); else ctx.lineTo(px(nd.x),py(nd.y));
+  }
+  ctx.strokeStyle="#fbbf24"; ctx.lineWidth=4; ctx.globalAlpha=0.9;
+  ctx.setLineDash([]); ctx.stroke(); ctx.globalAlpha=1;
+  [abFrom,abTo].forEach(function(id){
+    var nd=N[id]; if(!nd) return;
+    ctx.beginPath(); ctx.arc(px(nd.x),py(nd.y),8,0,7);
+    ctx.strokeStyle="#fbbf24"; ctx.lineWidth=2.5; ctx.stroke();
+  });
+}
+window.addEventListener("resize",resize);
+resize();
+</script>
+</body>
+</html>

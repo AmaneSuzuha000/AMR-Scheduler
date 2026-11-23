@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_opening_robot">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_opening_robot/meshes/opening_robot.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0.395 0 0.889692 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.57 0.66 1.779384</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

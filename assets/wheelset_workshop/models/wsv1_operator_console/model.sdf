@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_operator_console">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_operator_console/meshes/operator_console.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 -0.01325 0.595 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.54 0.4565 1.19</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

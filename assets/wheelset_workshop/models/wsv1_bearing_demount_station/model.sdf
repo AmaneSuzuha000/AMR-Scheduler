@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_bearing_demount_station">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_bearing_demount_station/meshes/bearing_demount_station.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 -1.75 0.49 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.1 0.9 0.92</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <pose>0 1.75 0.49 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.1 0.9 0.92</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <pose>0 0 0.045 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.65 3.2 0.09</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

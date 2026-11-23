@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_track_drive_unit">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_track_drive_unit/meshes/track_drive_unit.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0.1075 0.061 0.26 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.115 0.642 0.52</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

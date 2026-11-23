@@ -1,0 +1,5 @@
+<library path="amr_continuous_goal">
+  <class type="amr_execution::ContinuousGoalDistCritic" base_class_type="dwb_core::TrajectoryCritic">
+    <description>Continuous metric goal-distance score in addition to upstream DWB critics.</description>
+  </class>
+</library>

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>wheelset_axis_servo</name><version>0.1.0</version>
+  <description>Native effort servo for the assumed constrained workshop rig.</description>
+  <maintainer email="local@example.invalid">Local workshop project</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>gazebo_ros</depend><depend>rclcpp</depend>
+  <depend>sensor_msgs</depend><depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

@@ -1,0 +1,21 @@
+[package]
+name = "reservation_core"
+version = "0.1.0"
+edition = "2021"
+authors = ["AMR-Scheduler Contributors"]
+description = "High-performance spatiotemporal reservation table and interval interlocking core"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "reservation_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[features]
+default = []
+serde = ["dep:serde"]

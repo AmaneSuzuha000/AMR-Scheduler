@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_back_ring_short_table">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_back_ring_short_table/meshes/back_ring_short_table.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>0 0 0.535 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.82 0.71 1.07</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

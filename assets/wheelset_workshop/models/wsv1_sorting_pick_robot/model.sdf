@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.6">
+  <model name="wsv1_sorting_pick_robot">
+    <static>true</static>
+    <link name="asset">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://wsv1_sorting_pick_robot/meshes/sorting_pick_robot.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <pose>1.627 1.2215 0.91 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>4.134 3.203 1.86</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
