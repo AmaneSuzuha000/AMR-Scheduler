@@ -732,5 +732,5 @@ class DFJSPTHMARLProposer:
             budget_ms=budget_ms,
         )
         prop.telemetry["neural_candidates_evaluated"] = cands_eval
-        prop.telemetry["reproduction_tier"] = "paper_faithful_reproduction"
+        prop.telemetry["reproduction_tier"] = "architecture_faithful_domain_adapted_reimplementation"
         return prop

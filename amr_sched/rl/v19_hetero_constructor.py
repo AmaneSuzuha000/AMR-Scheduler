@@ -1501,7 +1501,7 @@ class V19HeteroConstructorProposer:
     ) -> CandidateProposal:
         net_model = self._get_net()
         t0 = _cvcr_now_s()
-        deadline = t0 + max(0.0, float(budget_ms) * 0.78 / 1000.0)
+        deadline = t0 + max(0.0, float(budget_ms) * 0.62 / 1000.0)
         eff_ablation = str(self._cfg.get("ablation_mode", "full"))
         eff_stage = str(self._cfg.get("action_stage", "A123"))
 
@@ -1524,12 +1524,14 @@ class V19HeteroConstructorProposer:
             op.op_id: max(int(snapshot.tick), int(op.due_step) - int(op.proc_steps))
             for op in snapshot.operations
         }
+        t_keep0 = _cvcr_now_s()
         keep_eval = ev.evaluate(
             graph.base_assign,
             op_priority=base_op_prio,
             op_bay_overrides=graph.base_bays,
             op_crew_overrides=graph.base_crews,
         )
+        keep_eval_s = max(0.002, _cvcr_now_s() - t_keep0)
         if seed_b2 and keep_eval.valid:
             ev.set_incumbent(
                 graph.base_assign,
@@ -1712,14 +1714,17 @@ class V19AdaptiveCouplingProposer:
         allow_untrained: bool = False,
         use_rust: bool = True,
         seed: int = 0,
-        sample_candidates: int = 3,
+        sample_candidates: int = 6,
         alpha_makespan: float = 3.0,
         lambda_change: float = 15.0,
-        hysteresis_margin: float = 10.0,
+        hysteresis_margin: float = 20.0,
         evaluator_mode: str = "B2_SEEDED",
         focus_sample_frac: float = 1.0,
         enable_delayed_feedback: bool = False,
         enable_cascade_crosscheck: bool = False,
+        use_ja_aligned_scorer: bool = True,
+        enable_dual_arm_probe: bool = True,
+        dual_arm_min_amrs: int = 4,
     ) -> None:
         if mode not in ("rule", "bandit", "b2_guard"):
             raise ValueError(f"Unsupported adaptive mode {mode!r}; expected 'rule', 'bandit', or 'b2_guard'.")
@@ -1739,6 +1744,9 @@ class V19AdaptiveCouplingProposer:
         self.focus_sample_frac = float(focus_sample_frac)
         self.enable_delayed_feedback = bool(enable_delayed_feedback)
         self.enable_cascade_crosscheck = bool(enable_cascade_crosscheck)
+        self.use_ja_aligned_scorer = bool(use_ja_aligned_scorer)
+        self.enable_dual_arm_probe = bool(enable_dual_arm_probe)
+        self.dual_arm_min_amrs = int(dual_arm_min_amrs)
 
         self._full_net: Any = None
         self._staged_net: Any = None
@@ -1802,7 +1810,10 @@ class V19AdaptiveCouplingProposer:
     ) -> CandidateProposal:
         full_net, staged_net = self._ensure_nets()
         t0 = _cvcr_now_s()
-        deadline = t0 + max(0.0, float(budget_ms) * 0.78 / 1000.0)
+        # Enforce strict <= 35 ms real-time SLA even when RuleV10 outer epochs request 50-100 ms
+        eff_budget_ms = min(float(budget_ms), 35.0)
+        hard_budget_s = t0 + max(0.0, eff_budget_ms * 0.86 / 1000.0)
+        deadline = t0 + max(0.0, eff_budget_ms * 0.72 / 1000.0)
 
         clf = classify_commitments(snapshot)
         graph = extract_v19_hetero_graph(snapshot, network, clf=clf)
@@ -1824,12 +1835,14 @@ class V19AdaptiveCouplingProposer:
             op.op_id: max(int(snapshot.tick), int(op.due_step) - int(op.proc_steps))
             for op in snapshot.operations
         }
+        t_keep0 = _cvcr_now_s()
         keep_eval = ev.evaluate(
             graph.base_assign,
             op_priority=base_op_prio,
             op_bay_overrides=graph.base_bays,
             op_crew_overrides=graph.base_crews,
         )
+        keep_eval_s = max(0.002, _cvcr_now_s() - t_keep0)
         if seed_b2 and keep_eval.valid:
             ev.set_incumbent(
                 graph.base_assign,
@@ -1880,25 +1893,68 @@ class V19AdaptiveCouplingProposer:
             if r.cur_task and r.robot_id not in clf.disturbed_robots
         }
 
+        if self.use_ja_aligned_scorer:
+            from amr_sched.rl.causal_repair_cone import score_candidate_ja_aligned
+
+        def _score_keep() -> float:
+            if self.use_ja_aligned_scorer:
+                return score_candidate_ja_aligned(
+                    snapshot,
+                    graph,
+                    keep_eval,
+                    graph.base_assign,
+                    graph.base_bays,
+                    graph.base_crews,
+                    None,
+                    rob_cur_healthy,
+                    lambda_change=self.lambda_change,
+                    sim_horizon=ev.sim_horizon,
+                )
+            return float(keep_eval.objective)
+
+        keep_score_val = _score_keep()
+        best_score = keep_score_val
+
         def _score_cand(cand: Any, ev_c: EvalResult, is_full: bool) -> float:
-            changed_ops = sum(
-                1
-                for oid in graph.op_ids
-                if cand.bays.get(oid) != graph.base_bays.get(oid)
-                or cand.crews.get(oid) != graph.base_crews.get(oid)
-            )
-            qh_preempts = 0
-            if cand.task_sequences:
-                for aid_r, cur_tid in rob_cur_healthy.items():
-                    seq_r = cand.task_sequences.get(aid_r)
-                    if seq_r and seq_r[0] != cur_tid and cur_tid in graph.clf.releasable_tasks:
-                        qh_preempts += 1
-            raw_s = float(ev_c.objective) + self.lambda_change * float(changed_ops + qh_preempts)
-            if self.mode == "b2_guard" and is_full and changed_ops > 0:
-                keep_max_op = max(keep_eval.op_end.values(), default=snapshot.tick)
-                cand_max_op = max(ev_c.op_end.values(), default=snapshot.tick)
-                if coupling_score < 0.22 or cand_max_op > keep_max_op + 12:
-                    raw_s += 25.0 * float(changed_ops)
+            if self.use_ja_aligned_scorer:
+                raw_s = score_candidate_ja_aligned(
+                    snapshot,
+                    graph,
+                    ev_c,
+                    cand.assign,
+                    cand.bays,
+                    cand.crews,
+                    cand.task_sequences,
+                    rob_cur_healthy,
+                    lambda_change=self.lambda_change,
+                    sim_horizon=ev.sim_horizon,
+                )
+            else:
+                changed_ops = sum(
+                    1
+                    for oid in graph.op_ids
+                    if cand.bays.get(oid) != graph.base_bays.get(oid)
+                    or cand.crews.get(oid) != graph.base_crews.get(oid)
+                )
+                qh_preempts = 0
+                if cand.task_sequences:
+                    for aid_r, cur_tid in rob_cur_healthy.items():
+                        seq_r = cand.task_sequences.get(aid_r)
+                        if seq_r and seq_r[0] != cur_tid and cur_tid in graph.clf.releasable_tasks:
+                            qh_preempts += 1
+                raw_s = float(ev_c.objective) + self.lambda_change * float(changed_ops + qh_preempts)
+            if self.mode == "b2_guard" and is_full:
+                changed_ops = sum(
+                    1
+                    for oid in graph.op_ids
+                    if cand.bays.get(oid) != graph.base_bays.get(oid)
+                    or cand.crews.get(oid) != graph.base_crews.get(oid)
+                )
+                if changed_ops > 0:
+                    keep_max_op = max(keep_eval.op_end.values(), default=snapshot.tick)
+                    cand_max_op = max(ev_c.op_end.values(), default=snapshot.tick)
+                    if coupling_score < 0.22 or cand_max_op > keep_max_op + 12:
+                        raw_s += 25.0 * float(changed_ops)
             return raw_s
 
         if len(graph.rel_tids) > 0 and len(graph.agv_ids) >= 1:
@@ -1916,7 +1972,9 @@ class V19AdaptiveCouplingProposer:
                 arm_pick = 1 if coupling_score >= 0.24 else 0
 
             net_m = full_net if arm_pick == 1 else staged_net
+            other_net = staged_net if arm_pick == 1 else full_net
             selected_mode = "full" if arm_pick == 1 else "staged"
+            other_mode = "staged" if arm_pick == 1 else "full"
             seen_sigs: set[tuple[Any, ...]] = {
                 (
                     tuple(sorted(graph.base_assign.items())),
@@ -1927,13 +1985,22 @@ class V19AdaptiveCouplingProposer:
             }
             keep_max_op = max(keep_eval.op_end.values(), default=snapshot.tick)
             full_cascade_risk = False
+            max_full_eval_s = keep_eval_s
+            max_inc_eval_s = max(0.002, 0.55 * keep_eval_s)
             for k in range(self.sample_candidates):
-                if k > 0 and _cvcr_now_s() >= deadline:
+                if k > 0 and (_cvcr_now_s() >= deadline or (_cvcr_now_s() + max_inc_eval_s) >= hard_budget_s):
                     break
-                use_net = net_m
-                use_arm_name = selected_mode
-                use_is_full = arm_pick == 1
-                use_greedy = k == 0
+                # Guarded counterfactual dual-arm probe (I04): probe the complementary arm greedy at k=1
+                # when fleet size >= dual_arm_min_amrs, eliminating single-arm regret without serial-line cascades.
+                use_dual_other = (
+                    self.enable_dual_arm_probe
+                    and k == 1
+                    and len(graph.agv_ids) >= self.dual_arm_min_amrs
+                )
+                use_net = other_net if use_dual_other else net_m
+                use_arm_name = other_mode if use_dual_other else selected_mode
+                use_is_full = (arm_pick == 0) if use_dual_other else (arm_pick == 1)
+                use_greedy = (k == 0) or use_dual_other
                 use_focus_frac = 1.0 if use_greedy else self.focus_sample_frac
 
                 if (
@@ -1983,12 +2050,19 @@ class V19AdaptiveCouplingProposer:
                     cand.bays,
                     cand.task_sequences,
                 )
+                # CVCR-IR footprint-aware anytime SLA guard: skip expensive full-fleet evaluations
+                # that would breach the 35 ms real-time SLA, while still permitting fast B2 incremental hits.
+                est_ev_s = max_inc_eval_s if fp["is_b2_incremental_hit"] else max(max_full_eval_s, 1.15 * keep_eval_s)
+                if k > 0 and (_cvcr_now_s() + est_ev_s) >= hard_budget_s:
+                    continue
+
                 changed_ratios.append(float(fp["changed_amr_ratio"]))
                 if fp["is_b2_incremental_hit"]:
                     b2_struct_hits += 1
                 else:
                     b2_struct_fallbacks += 1
 
+                t_ev0 = _cvcr_now_s()
                 ev_c = ev.evaluate(
                     cand.assign,
                     op_priority=cand.op_prio,
@@ -1996,6 +2070,11 @@ class V19AdaptiveCouplingProposer:
                     op_crew_overrides=cand.crews,
                     task_order_override=cand.task_sequences,
                 )
+                dt_ev_s = max(0.001, _cvcr_now_s() - t_ev0)
+                if fp["is_b2_incremental_hit"]:
+                    max_inc_eval_s = max(max_inc_eval_s, dt_ev_s)
+                else:
+                    max_full_eval_s = max(max_full_eval_s, dt_ev_s)
                 neural_cands_eval += 1
                 if use_is_full:
                     cand_max_op = max(ev_c.op_end.values(), default=snapshot.tick)
@@ -2023,14 +2102,14 @@ class V19AdaptiveCouplingProposer:
                     fallback_keep = False
 
             if self.mode == "bandit":
-                impr = max(-1.0, min(1.0, (float(keep_eval.objective) - best_score) / 200.0))
+                impr = max(-1.0, min(1.0, (keep_score_val - best_score) / 200.0))
                 eff_arm = 1 if chosen_arm == "full" else (0 if chosen_arm == "staged" else arm_pick)
                 self._A[eff_arm] += np.outer(x, x)
                 self._b[eff_arm] += (0.65 * impr if self.enable_delayed_feedback else impr) * x
                 self._prev_tick = int(snapshot.tick)
                 self._prev_x = x
                 self._prev_arm = eff_arm
-                self._prev_pred_obj = float(best_eval.objective)
+                self._prev_pred_obj = float(best_score)
             if chosen_arm == "full" or (chosen_arm == "keep" and arm_pick == 1):
                 self.full_selected_calls += 1
             else:

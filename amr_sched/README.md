@@ -1,6 +1,6 @@
 # `amr_sched` — Multi-AMR Execution-Aware Scheduling & Learning Core
 
-The core Python package for **AMR-Scheduler** (`v1.0.0`), unifying discrete-event workshop simulation, Rust zero-copy spatiotemporal planning, heterogeneous-graph critical-chain joint construction, execution-aware CVCR rescheduling, Gymnasium SMDP RL environments, and causal literature baselines.
+The core Python package for **AMR-Scheduler** (`v1.2.0`), unifying discrete-event workshop simulation, Rust zero-copy spatiotemporal planning, heterogeneous-graph critical-chain joint construction, execution-aware CVCR rescheduling, Gymnasium SMDP RL environments, and causal literature baselines.
 
 ## Quick Start
 

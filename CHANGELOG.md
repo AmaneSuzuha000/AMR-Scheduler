@@ -2,6 +2,21 @@
 
 All notable changes to the **AMR-Scheduler** platform are documented in this file.
 
+## [1.2.0] - 2026-11-24
+
+### Added & Verified (Three-Gate Scientific Closure)
+- **CoRe-Sched In-Place Upgrades (`amr_sched/rl/v19_hetero_constructor.py`, `causal_repair_cone.py`)**:
+  - `J_A`-aligned candidate scoring fixing legacy task-tardiness omission (`13.92%` DEV/VAL misselection eliminated).
+  - Fleet-guarded counterfactual dual-arm probe (`|R| >= 4`) addressing `31.37%` single-arm LinUCB regret.
+  - `CVCR-IR` footprint-aware anytime SLA guard enforcing strict `<= 35 ms` worst-tail real-time bounds (`32.43 ms` pooled P95, `34.91 ms` pooled P99 across 120 fresh blind episodes).
+- **Gate G1 — Pure Zero-Fault Static Common-Subproblem Reference (`lbbd_cp_cor26.py`, `erdogan_ejor26.py`, `results/g1_static_reference_subproblem.csv`)**:
+  - Aligned `COR26-Ref` Phase-1 CP-SAT physical relaxation master to exact `Simulator` dwell/travel physics (`0 / 270` lower-bound violations across 54 pure-static instances × 5 solvers) and downgraded post-Phase-1 nogood cuts explicitly to heuristic search diversification.
+  - Added `EJOR26-Erdogan` (`erdogan_ejor26.py`, Erdogan et al., *EJOR* 2026) ILS + exact timing matheuristic verified end-to-end inside the identical `Simulator`.
+- **Gate G2 — 2026 Dynamic FJSP–AGV Neural Competitors (`ma_trans_asc26.py`, `fgcs26_ren_gnn.py`, `train_2026_rl_competitors.py`)**:
+  - Added architecture-faithful, domain-adapted reimplementations of `ASC26_MA_TRANS` (Shen, Zhang & Jin, *ASC* 193, 2026; `pt-npz` diff `7.63e-6`) and `FGCS26_REN_GNN` (Ren et al., *FGCS* 182, 2026; `pt-npz` diff `2.86e-6`), trained under exact quarantined 264-IL + 288-PPO parity (`22` registered policies total).
+- **Gate G3 — Single-Session Fresh 120-Episode Frozen Blind Holdout (`run_g3_fresh_frozen_holdout.py`, `results/g3_fresh_blind_holdout.csv`, `Tests/test_three_gates_audit.py`)**:
+  - Uncontended single-session 12-method × 120-episode (`1,440` audited runs) fresh blind evaluation reporting both **Pooled Wall-Clock P95/P99** and **Mean Episode P95**, updated `fig1`/`fig3`/`fig6`, and SHA-256 verified public CSV ledgers.
+
 ## [1.1.0] - 2026-11-24
 
 ### Added

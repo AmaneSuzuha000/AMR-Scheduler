@@ -69,7 +69,7 @@ def test_dfjspt_hmarl_pt_npz_parity_and_lock_safety(tmp_path: Path) -> None:
 
     prop = DFJSPTHMARLProposer(pt_path, backend="numpy", use_rust=True, seed=0)(snap, net_map, budget_ms=35.0)
     assert prop.policy_id == "IJPR25_DFJSPT_HMARL"
-    assert prop.telemetry["reproduction_tier"] == "paper_faithful_reproduction"
+    assert prop.telemetry["reproduction_tier"] == "architecture_faithful_domain_adapted_reimplementation"
     for ftid in clf.frozen_tasks:
         orig = next((t.assigned_agv for t in snap.tasks if t.task_id == ftid), None)
         if orig is not None and ftid in prop.proposed_assignment:

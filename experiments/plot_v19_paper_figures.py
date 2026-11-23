@@ -287,8 +287,8 @@ def plot_fig1_system_overview() -> Path:
     _rbox(ax, 0.474, 0.064, 0.478, 0.060, fc="#FEF3C7", ec="#D97706", lw=0.95, rad=0.008, zorder=3)
     ax.text(
         0.713, 0.094,
-        r"Exact Parity ($\mathrm{med}\,|\Delta J|=0.00$) · Cache Hit: 86.8% (120-ep) · P95: 12.5 ms ($2.57\times$ faster)",
-        ha="center", va="center", fontsize=7.0, fontweight="bold", color="#78350F", zorder=4,
+        r"Exact Parity ($\mathrm{med}\,|\Delta J|=0.00$) · Cache Hit: 86.8% · Pooled P95/P99: 32.4 / 34.9 ms (< 35 ms SLA)",
+        ha="center", va="center", fontsize=6.8, fontweight="bold", color="#78350F", zorder=4,
     )
 
     # Vertical arrows between AHG-RL and CVCR-IR
@@ -436,43 +436,49 @@ def plot_fig2_architecture_and_cvcr_ir() -> Path:
 
 
 def plot_fig3_main_benchmark() -> Path:
-    """Figure 3: 120-Episode Wall-Clock Holdout Decomposition, Wilcoxon CI, and Latency-Cost Pareto (11 Methods)."""
-    e9 = _load_json(AUDIT_DIR / "exp09_baseline_closure.json")
-    summaries = e9["summaries"]
-    paired = e9["paired_vs_core_sched"]
+    """Figure 3: Gate G3 Single-Session Fresh 120-Episode Frozen Holdout (12 Methods, Pooled P95/P99)."""
+    g3 = _load_json(AUDIT_DIR / "exp11_g3_fresh_frozen_holdout.json")
+    summaries = g3["summaries"]
+    paired = g3["paired_vs_core_sched"]
+    rows_by = g3["rows_by_policy"]
 
-    def _from_sum(s: dict) -> dict[str, float]:
+    def _from_pol(pk: str) -> dict[str, float]:
+        s = summaries[pk]
+        rs = rows_by[pk]
         return {
-            "mean": float(s["mean_net_obj"]),
-            "cmax": float(s["mean_cmax"]),
-            "tard": float(s["mean_tardiness_cost"]),
-            "unf": float(s["mean_unfinished_penalty"]),
-            "ctrl": float(s["mean_churn_cost"]) + float(s["mean_compute_cost"]),
-            "p95": float(s["mean_p95_ms"]),
-            "n100": int(s["num_100pct_completed"]),
+            "mean": float(s["mean_ja"]),
+            "cmax": float(np.mean([r["cmax"] for r in rs])),
+            "tard": float(np.mean([r["task_tardiness_cost"] + r["op_tardiness_cost"] for r in rs])),
+            "unf": float(np.mean([r["unfinished_task_penalty"] + r["unfinished_op_penalty"] for r in rs])),
+            "ctrl": float(np.mean([r["churn_cost"] + r["compute_cost"] for r in rs])),
+            "p95": float(s["pooled_wall_p95_ms"]),
+            "p99": float(s["pooled_wall_p99_ms"]),
+            "ep_p95": float(s["mean_episode_p95_ms"]),
+            "n100": int(s["comp100_n"]),
         }
 
-    stats_map = {k: _from_sum(v) for k, v in summaries.items()}
+    stats_map = {pk: _from_pol(pk) for pk in summaries}
 
     order_a = [
-        ("CoRe-Sched", "CoRe-Sched\n(Ours)"),
-        ("V19_STAGED_RL", "AHG-RL\n(Staged)"),
-        ("V19_HETERO_RL", "AHG-RL\n(Full)"),
-        ("rule_v10", "Rule-V10\n+CVCR-IR"),
-        ("V18_EA_JOINT", "V18-EA\n+CVCR-IR"),
+        ("V19_ADAPTIVE_RL", "CoRe-Sched\n(Ours)"),
+        ("V18_EA_JOINT", "V18-EA*"),
+        ("SPGA_AMR", "COR26\nSPGA*"),
+        ("FGCS26_REN_GNN", "FGCS26\nRen-GNN"),
         ("IJCAI26_PGMPO", "IJCAI26\nPGMPO"),
-        ("V19_HETERO_BC", "HG-BC\n(Pretrain)"),
-        ("EJOR26_Wu_GRU_Attn", "EJOR26\nWu-GRU"),
+        ("V19_HETERO_RL", "AHG-RL\n(Full)"),
+        ("rule_v10", "Rule-V10*"),
+        ("V19_STAGED_RL", "AHG-RL\n(Staged)"),
+        ("ASC26_MA_TRANS", "ASC26\nMA-Trans"),
         ("RAL26_DetourDelta", "RAL26\nDetour"),
-        ("SPGA_AMR", "COR26\nSPGA"),
+        ("EJOR26_Wu_GRU_Attn", "EJOR26\nWu-GRU"),
         ("IJPR25_DFJSPT_HMARL", "IJPR25\nDFJSP-T"),
     ]
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18.2, 5.45), gridspec_kw={"width_ratios": [1.46, 1.15, 1.08]})
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(19.0, 5.65), gridspec_kw={"width_ratios": [1.56, 1.15, 1.12]})
 
-    # ── Panel (a): Stacked Cost Decomposition (11 methods) ──
+    # ── Panel (a): Stacked Cost Decomposition (12 frozen methods) ──
     x = np.arange(len(order_a))
-    w = 0.60
+    w = 0.62
     cmaxs = np.array([stats_map[k]["cmax"] for k, _ in order_a])
     tards = np.array([stats_map[k]["tard"] for k, _ in order_a])
     ctrls = np.array([stats_map[k]["ctrl"] for k, _ in order_a])
@@ -484,7 +490,7 @@ def plot_fig3_main_benchmark() -> Path:
     ax1.bar(x, ctrls, w, bottom=cmaxs + tards, label=r"Churn & Compute", color="#EDC948")
     ax1.bar(x, unfs, w, bottom=cmaxs + tards + ctrls, label=r"Unfinished Penalty", color="#E15759")
 
-    ax1.scatter([0], [tots[0] + 1250], marker="*", s=165, color="#F59E0B", edgecolor="#92400E", linewidth=0.6, zorder=6)
+    ax1.scatter([0], [tots[0] + 1350], marker="*", s=165, color="#F59E0B", edgecolor="#92400E", linewidth=0.6, zorder=6)
     for i, ((k, _), tot) in enumerate(zip(order_a, tots)):
         n100 = stats_map[k]["n100"]
         lbl = f"{tot:.0f}\n({n100}/120)" if i == 0 else f"{tot:.0f}"
@@ -494,110 +500,108 @@ def plot_fig3_main_benchmark() -> Path:
             lbl,
             ha="center",
             va="bottom",
-            fontsize=6.9 if i > 0 else 7.3,
+            fontsize=6.6 if i > 0 else 7.2,
             fontweight="bold",
             color="#0B4F8A" if i == 0 else "#1F2937",
         )
     ax1.set_xticks(x)
-    ax1.set_xticklabels([lbl for _, lbl in order_a], fontsize=6.9)
+    ax1.set_xticklabels([lbl for _, lbl in order_a], fontsize=6.6)
     ax1.get_xticklabels()[0].set_fontweight("bold")
     ax1.get_xticklabels()[0].set_color("#0B4F8A")
     ax1.set_ylabel(r"Mean Net Objective ($J_A$, lower is better)")
-    ax1.set_ylim(0, max(tots) * 1.22)
-    ax1.set_title("(a) 120-Episode Unseen Blind Holdout Decomposition")
-    ax1.legend(loc="upper left", frameon=True, ncol=2, fontsize=7.2)
+    ax1.set_ylim(0, max(tots) * 1.24)
+    ax1.set_title("(a) Fresh 120-Ep Frozen Blind Holdout (*Pool P95 > 35 ms)")
+    ax1.legend(loc="upper left", frameon=True, ncol=2, fontsize=7.0)
 
-    # ── Panel (b): Paired 95% Bootstrap CI & Wilcoxon Forest Plot (10 comparators) ──
+    # ── Panel (b): Paired % Improvement & 95% Bootstrap CI Forest Plot (11 comparators) ──
     comp_keys = [
-        ("V19_HETERO_RL", "vs. AHG-RL (Full)"),
-        ("V19_STAGED_RL", "vs. AHG-RL (Staged)"),
-        ("rule_v10", "vs. Rule-V10"),
-        ("V18_EA_JOINT", "vs. V18-EA"),
-        ("IJCAI26_PGMPO", "vs. IJCAI26-PGMPO"),
-        ("V19_HETERO_BC", "vs. HG-BC"),
-        ("EJOR26_Wu_GRU_Attn", "vs. EJOR26-Wu"),
-        ("RAL26_DetourDelta", "vs. RAL26-Detour"),
-        ("SPGA_AMR", "vs. COR26-SPGA"),
         ("IJPR25_DFJSPT_HMARL", "vs. IJPR25-DFJSP-T"),
+        ("EJOR26_Wu_GRU_Attn", "vs. EJOR26-Wu-GRU"),
+        ("RAL26_DetourDelta", "vs. RAL26-Detour"),
+        ("ASC26_MA_TRANS", "vs. ASC26-MA-Trans"),
+        ("V19_STAGED_RL", "vs. AHG-RL (Staged)"),
+        ("rule_v10", "vs. Rule-V10*"),
+        ("V19_HETERO_RL", "vs. AHG-RL (Full)"),
+        ("IJCAI26_PGMPO", "vs. IJCAI26-PGMPO"),
+        ("FGCS26_REN_GNN", "vs. FGCS26-Ren-GNN"),
+        ("SPGA_AMR", "vs. COR26-SPGA*"),
+        ("V18_EA_JOINT", "vs. V18-EA*"),
     ]
     y2 = np.arange(len(comp_keys))
     ax2.axvline(0.0, color="#1F2937", linewidth=1.1, linestyle="-")
     for idx, (pk, lbl) in enumerate(comp_keys):
         ps = paired[pk]
-        d_mean = float(ps["paired_delta_mean"])
-        lo, hi = float(ps["bootstrap_95ci"][0]), float(ps["bootstrap_95ci"][1])
+        pct = float(ps["delta_ja_pct"])
+        lo, hi = float(ps["boot_ci95_pct"][0]), float(ps["boot_ci95_pct"][1])
         pval = float(ps["wilcoxon_p"])
-        sig_ci = hi < 0.0
-        col = "#1D4ED8" if pval < 0.05 else ("#2E7D32" if sig_ci else "#64748B")
-        ax2.plot([lo, hi], [idx, idx], color=col, linewidth=2.2, solid_capstyle="round", zorder=3)
-        ax2.scatter([d_mean], [idx], color=col, s=48, zorder=4, edgecolor="white", linewidth=0.6)
-        p_txt = f"p={pval:.3g}" if pval >= 0.001 else f"p={pval:.1e}"
+        sig_ci = lo > 0.0
+        col = "#1D4ED8" if pval < 0.05 else ("#2E7D32" if sig_ci else ("#B45309" if pct < 0 else "#64748B"))
+        ax2.plot([lo, hi], [idx, idx], color=col, linewidth=2.1, solid_capstyle="round", zorder=3)
+        ax2.scatter([pct], [idx], color=col, s=44, zorder=4, edgecolor="white", linewidth=0.6)
+        p_txt = f"p={pval:.3f}" if pval >= 0.001 else f"p={pval:.1e}"
         sig_mark = "**" if pval < 0.01 else ("*" if pval < 0.05 else ("†" if sig_ci else ""))
         ax2.text(
-            420,
+            55.0,
             idx,
-            f"{ps['pct_change_vs_baseline']:+.1f}% ({p_txt}{sig_mark})",
+            f"{pct:+.1f}% ({p_txt}{sig_mark})",
             va="center",
             ha="left",
-            fontsize=7.0,
+            fontsize=6.7,
             fontweight="bold" if (pval < 0.05 or sig_ci) else "normal",
             color=col,
         )
     ax2.set_yticks(y2)
-    ax2.set_yticklabels([lbl for _, lbl in comp_keys], fontsize=7.6)
+    ax2.set_yticklabels([lbl for _, lbl in comp_keys], fontsize=7.3)
     ax2.set_ylim(len(comp_keys) + 0.55, -0.65)
-    ax2.set_xlim(-6350, 4950)
-    ax2.set_xlabel(r"Paired $\Delta J_A$ with 95% Bootstrap CI ($\Delta < 0$ better)")
-    ax2.set_title("(b) Paired Statistical Attribution (120 Episodes)")
+    ax2.set_xlim(-28.0, 97.0)
+    ax2.set_xlabel(r"Paired $\Delta J_A$ Reduction (%) with 95% Bootstrap CI (> 0 better)")
+    ax2.set_title("(b) Paired Attribution vs. CoRe-Sched (N = 120 Fresh)")
     ax2.text(
-        0.50, 0.018,
-        "*p<0.05, **p<0.01 (Wilcoxon); †95% CI strictly < 0",
-        transform=ax2.transAxes, ha="center", va="bottom", fontsize=6.9, color="#475569",
-        bbox=dict(boxstyle="round,pad=0.22", facecolor="#F8FAFC", edgecolor="#CBD5E1"),
+        0.50, 0.015,
+        "*p<0.05, **p<0.01 (Wilcoxon); †95% CI > 0; *method breaches 35ms SLA",
+        transform=ax2.transAxes, ha="center", va="bottom", fontsize=6.4, color="#475569",
+        bbox=dict(boxstyle="round,pad=0.20", facecolor="#F8FAFC", edgecolor="#CBD5E1"),
     )
 
-    # ── Panel (c): Wall-Clock P95 Latency vs Mean Objective Pareto Frontier (11 methods) ──
+    # ── Panel (c): Pooled Wall-Clock P95 Latency vs Mean J_A Pareto Frontier (12 methods) ──
     pareto_specs = [
-        ("CoRe-Sched", "CoRe-Sched ★", "#0B4F8A", "*", 185, (-16, -18)),
-        ("V19_STAGED_RL", "AHG-RL (Staged)", "#4E79A7", "s", 48, (-79, -11)),
-        ("V19_HETERO_RL", "AHG-RL (Full)", "#D95F02", "o", 52, (8, -2)),
-        ("V18_EA_JOINT", "V18-EA", "#59A14F", "D", 46, (-43, 6)),
-        ("IJCAI26_PGMPO", "IJCAI26-PGMPO", "#E15759", "^", 48, (7, 5)),
-        ("V19_HETERO_BC", "HG-BC", "#9C755F", "v", 46, (-42, 4)),
-        ("EJOR26_Wu_GRU_Attn", "EJOR26-Wu", "#B07AA1", "P", 48, (7, -3)),
-        ("RAL26_DetourDelta", "RAL26-Detour", "#76B7B2", "X", 48, (-74, 7)),
-        ("rule_v10", "Rule-V10", "#6B7280", "d", 46, (-42, 7)),
-        ("SPGA_AMR", "COR26-SPGA", "#D97706", "h", 54, (-62, 8)),
-        ("IJPR25_DFJSPT_HMARL", "IJPR25-DFJSP-T", "#7C3AED", "p", 56, (8, -3)),
+        ("V19_ADAPTIVE_RL", "CoRe-Sched ★\n(P99=34.9ms)", "#0B4F8A", "*", 205, (-74, -26)),
+        ("FGCS26_REN_GNN", "FGCS26-Ren-GNN", "#0D9488", "P", 54, (7, 4)),
+        ("IJCAI26_PGMPO", "IJCAI26-PGMPO", "#E15759", "^", 50, (-34, -15)),
+        ("V19_HETERO_RL", "AHG-RL (Full)", "#D95F02", "o", 50, (7, -8)),
+        ("V19_STAGED_RL", "AHG-RL (Staged)", "#4E79A7", "s", 48, (-76, -14)),
+        ("ASC26_MA_TRANS", "ASC26-MA-Trans", "#9333EA", "p", 56, (7, 5)),
+        ("RAL26_DetourDelta", "RAL26-Detour", "#76B7B2", "X", 48, (-68, 7)),
+        ("EJOR26_Wu_GRU_Attn", "EJOR26-Wu-GRU", "#B07AA1", "v", 48, (7, -3)),
+        ("IJPR25_DFJSPT_HMARL", "IJPR25-DFJSP-T", "#7C3AED", "h", 52, (7, -3)),
+        ("V18_EA_JOINT", "V18-EA (P99=75.8ms)", "#59A14F", "D", 50, (-14, -16)),
+        ("rule_v10", "Rule-V10", "#6B7280", "d", 46, (6, -3)),
+        ("SPGA_AMR", "COR26-SPGA", "#D97706", "H", 54, (-66, 8)),
     ]
-    ax3.axvline(35.0, color="#DC2626", linestyle="--", linewidth=1.3, alpha=0.85, label="35 ms Real-Time Budget")
+    ax3.axvspan(35.0, 72.0, color="#FEE2E2", alpha=0.32, zorder=0, label="35 ms SLA Violation Zone")
+    ax3.axvline(35.0, color="#DC2626", linestyle="--", linewidth=1.4, alpha=0.90)
     for pk, plbl, pcol, pmrk, psz, poff in pareto_specs:
         px, py = stats_map[pk]["p95"], stats_map[pk]["mean"]
-        ax3.scatter([px], [py], color=pcol, marker=pmrk, s=psz, edgecolor="#111827" if pk == "CoRe-Sched" else "white", linewidth=0.7, zorder=6 if pk == "CoRe-Sched" else 4)
+        is_core = pk == "V19_ADAPTIVE_RL"
+        ax3.scatter(
+            [px], [py], color=pcol, marker=pmrk, s=psz,
+            edgecolor="#111827" if is_core else "white", linewidth=0.75, zorder=6 if is_core else 4
+        )
         ax3.annotate(
             plbl,
             (px, py),
             xytext=poff,
             textcoords="offset points",
-            fontsize=7.0,
-            fontweight="bold" if pk in ("CoRe-Sched", "SPGA_AMR", "IJPR25_DFJSPT_HMARL") else "normal",
-            color=pcol if pk in ("CoRe-Sched", "SPGA_AMR", "IJPR25_DFJSPT_HMARL") else "#1F2937",
+            fontsize=6.6 if not is_core else 7.1,
+            fontweight="bold" if pk in ("V19_ADAPTIVE_RL", "V18_EA_JOINT", "FGCS26_REN_GNN", "ASC26_MA_TRANS") else "normal",
+            color=pcol if pk in ("V19_ADAPTIVE_RL", "FGCS26_REN_GNN", "ASC26_MA_TRANS") else "#1F2937",
         )
-    ax3.annotate(
-        "",
-        xy=(stats_map["CoRe-Sched"]["p95"] + 1.4, stats_map["CoRe-Sched"]["mean"] + 75),
-        xytext=(stats_map["V19_HETERO_RL"]["p95"] - 0.9, stats_map["V19_HETERO_RL"]["mean"] - 45),
-        arrowprops=dict(arrowstyle="->", color="#15803D", lw=1.9, connectionstyle="arc3,rad=-0.18"),
-    )
-    ax3.text(29.8, 5350, "2.57× faster\n-9.6% vs Full", ha="center", va="center", fontsize=7.2, fontweight="bold", color="#15803D",
-             bbox=dict(boxstyle="round,pad=0.20", facecolor="white", edgecolor="#BBF7D0", alpha=0.95))
-
-    ax3.set_xlim(5, 67)
-    ax3.set_ylim(4900, 9950)
-    ax3.set_xlabel("Mean Wall-Clock P95 Decision Latency (ms)")
+    ax3.set_xlim(8, 70)
+    ax3.set_ylim(5150, 9200)
+    ax3.set_xlabel("Pooled Wall-Clock P95 Decision Latency (ms)")
     ax3.set_ylabel(r"Mean Net Objective ($J_A$)")
-    ax3.set_title("(c) Wall-Clock Latency–Quality Pareto Frontier")
-    ax3.legend(loc="lower right", frameon=True, fontsize=7.4)
+    ax3.set_title("(c) Pooled Wall-Clock P95 vs. Quality (#1 Within SLA)")
+    ax3.legend(loc="upper right", frameon=True, fontsize=7.0)
 
     fig.tight_layout()
     out_p = FIG_DIR / "fig3_main_benchmark.png"
@@ -855,91 +859,109 @@ def plot_fig5_dual_layer_and_scaling() -> Path:
 
 
 def plot_fig6_pure_h1_and_lbbd() -> Path:
-    """Figure 6: Pure Physical Efficiency H1 (H2=0) Attribution & COR 2026 LBBD/CP Exact Reference Bounds."""
-    e9 = _load_json(AUDIT_DIR / "exp09_baseline_closure.json")
-    e10 = _load_json(AUDIT_DIR / "exp10_lbbd_exact_reference.json")
-    paired = e9["paired_vs_core_sched"]
+    """Figure 6: Gate G3 Mutually-Completed Pure H1 Attribution & Gate G1 Pure-Static Reference Subproblem."""
+    g3 = _load_json(AUDIT_DIR / "exp11_g3_fresh_frozen_holdout.json")
+    g1 = _load_json(AUDIT_DIR / "exp10_g1_static_reference.json")
+    paired = g3["paired_vs_core_sched"]
+    rows_by = g3["rows_by_policy"]
+    core_by_k = {r["episode_key"]: r for r in rows_by["V19_ADAPTIVE_RL"]}
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15.4, 5.15), gridspec_kw={"width_ratios": [1.18, 1.05]})
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16.0, 5.25), gridspec_kw={"width_ratios": [1.14, 1.12]})
 
-    # ── Panel (a): Pure Physical Efficiency Delta H1 on Mutually 100%-Completed Episodes (H2 = 0) ──
+    # ── Panel (a): Mutually 100%-Completed Pure Physical Efficiency Delta H1 (H2 = 0) ──
     comp_h1 = [
-        ("EJOR26_Wu_GRU_Attn", "vs. EJOR26-Wu"),
-        ("IJPR25_DFJSPT_HMARL", "vs. IJPR25-DFJSP-T"),
         ("RAL26_DetourDelta", "vs. RAL26-Detour"),
+        ("EJOR26_Wu_GRU_Attn", "vs. EJOR26-Wu-GRU"),
+        ("IJPR25_DFJSPT_HMARL", "vs. IJPR25-DFJSP-T"),
         ("rule_v10", "vs. Rule-V10"),
-        ("IJCAI26_PGMPO", "vs. IJCAI26-PGMPO"),
-        ("V18_EA_JOINT", "vs. V18-EA"),
         ("V19_STAGED_RL", "vs. AHG-RL (Staged)"),
         ("V19_HETERO_RL", "vs. AHG-RL (Full)"),
-        ("V19_HETERO_BC", "vs. HG-BC"),
+        ("IJCAI26_PGMPO", "vs. IJCAI26-PGMPO"),
+        ("V18_EA_JOINT", "vs. V18-EA"),
+        ("FGCS26_REN_GNN", "vs. FGCS26-Ren-GNN"),
+        ("ASC26_MA_TRANS", "vs. ASC26-MA-Trans"),
         ("SPGA_AMR", "vs. COR26-SPGA"),
     ]
     y = np.arange(len(comp_h1))
     h = 0.36
-    d_all = np.array([float(paired[k]["delta_h1_on_both_100pct"]) for k, _ in comp_h1])
-    d_ws = np.array([float(paired[k]["delta_h1_on_ws_both_100pct"]) for k, _ in comp_h1])
+    d_all, d_ws = [], []
+    for pk, _ in comp_h1:
+        ps = paired[pk]
+        d_all.append(float(ps["mut_core_h1"] - ps["mut_base_h1"]))
+        # Workshop-only mutually completed subset
+        b_map = {r["episode_key"]: r for r in rows_by[pk]}
+        ws_keys = [
+            k for k in sorted(set(core_by_k) & set(b_map))
+            if core_by_k[k]["suite_group"] in ("track1", "track2")
+            and core_by_k[k]["comp100"]
+            and b_map[k]["comp100"]
+        ]
+        if ws_keys:
+            d_ws.append(float(np.mean([core_by_k[k]["h1"] - b_map[k]["h1"] for k in ws_keys])))
+        else:
+            d_ws.append(0.0)
 
     ax1.axvline(0.0, color="#1F2937", linewidth=1.15)
-    b1 = ax1.barh(y - h / 2, d_all, h, label=r"All Mutually 100%-Completed Episodes ($H_2=0$)", color="#2B5B84", alpha=0.92)
-    b2 = ax1.barh(y + h / 2, d_ws, h, label=r"Workshops Only: Track 1 + Track 2 ($H_2=0$)", color="#D95F02", alpha=0.90)
+    ax1.barh(y - h / 2, d_all, h, label=r"All Mutually 100%-Completed Fresh Episodes ($H_2=0$)", color="#2B5B84", alpha=0.92)
+    ax1.barh(y + h / 2, d_ws, h, label=r"Workshops Only: Track 1 + Track 2 ($H_2=0$)", color="#D95F02", alpha=0.90)
 
     for idx, (va, vw) in enumerate(zip(d_all, d_ws)):
         ax1.text(
-            va - 70 if va < 0 else va + 70,
+            va - 80 if va < 0 else va + 80,
             idx - h / 2,
             f"{va:+.0f}",
             va="center",
             ha="right" if va < 0 else "left",
-            fontsize=6.9,
+            fontsize=6.6,
             fontweight="bold" if va < 0 else "normal",
             color="#1E3A5F" if va < 0 else "#475569",
         )
         ax1.text(
-            vw - 70 if vw < 0 else vw + 70,
+            vw - 80 if vw < 0 else vw + 80,
             idx + h / 2,
             f"{vw:+.0f}",
             va="center",
             ha="right" if vw < 0 else "left",
-            fontsize=6.9,
+            fontsize=6.6,
             fontweight="bold" if vw < 0 else "normal",
             color="#9A3412" if vw < 0 else "#475569",
         )
 
     ax1.set_yticks(y)
-    ax1.set_yticklabels([lbl for _, lbl in comp_h1], fontsize=8.0)
+    ax1.set_yticklabels([lbl for _, lbl in comp_h1], fontsize=7.6)
     ax1.invert_yaxis()
-    ax1.set_xlim(-4150, 1550)
+    ax1.set_xlim(-5100, 2000)
     ax1.set_xlabel(r"Paired Pure Efficiency $\Delta H_1 = \Delta(C_{\max}+2T_{\mathrm{task}}+2T_{\mathrm{op}})$ ($\Delta < 0$ better)")
-    ax1.set_title(r"(a) Pure Physical Efficiency $H_1$ Attribution ($H_2 = 0$ Strictly)")
-    ax1.legend(loc="lower left", frameon=True, fontsize=7.4)
+    ax1.set_title(r"(a) Gate G3 Pure Physical $H_1$ Attribution ($H_2 = 0$ Strictly)")
+    ax1.legend(loc="lower left", frameon=True, fontsize=7.1)
 
-    # ── Panel (b): Offline COR 2026 LBBD/CP Exact Reference Bounds vs Online Millisecond Schedulers ──
+    # ── Panel (b): Gate G1 Apples-to-Apples Pure Zero-Fault Static Common Subproblem ──
     groups = [
         ("4topo_standard", "4-Topo Standard\n(24 Static Inst.)"),
-        ("4topo_window_bottleneck", "4-Topo Windows\n(24 Static; 6/24 Opt)"),
-        ("track1_nominal", "Track 1 Workshop\n(6 Inst.; Online Faults)"),
+        ("4topo_window_bottleneck", "4-Topo Windows\n(24 Static Inst.)"),
+        ("track1_static", "Track 1 Workshop\n(6 Static Inst.)"),
     ]
-    by_g = e10["by_group"]
+    by_g = g1["by_group"]
     gx = np.arange(len(groups))
-    bw = 0.165
+    bw = 0.138
 
-    lb_vals = [float(by_g[g]["mean_lbbd_lb"]) for g, _ in groups]
-    ub_vals = [float(by_g[g]["mean_lbbd_ub"]) for g, _ in groups]
-    core_vals = [float(by_g[g]["mean_core_sched_h1"]) for g, _ in groups]
-    v18_vals = [float(by_g[g]["mean_v18_ea_h1"]) for g, _ in groups]
-    pgm_vals = [float(by_g[g]["mean_pgmpo_h1"]) for g, _ in groups]
-    spds = [float(by_g[g]["speedup_core_vs_lbbd"]) for g, _ in groups]
+    lb_vals = [float(by_g[g]["mean_lb_phys"]) for g, _ in groups]
+    cor_vals = [float(by_g[g]["mean_cor26_sim_ub"]) for g, _ in groups]
+    erd_vals = [float(by_g[g]["mean_erdogan_sim_h1"]) for g, _ in groups]
+    core_vals = [float(by_g[g]["mean_core_sched_h1_comp"]) for g, _ in groups]
+    v18_vals = [float(by_g[g]["mean_v18_ea_h1_comp"]) for g, _ in groups]
+    pgm_vals = [float(by_g[g]["mean_pgmpo_h1_comp"]) for g, _ in groups]
 
     bars_spec = [
-        (-2.0 * bw, lb_vals, "COR26-LBBD/CP LB (Offline Exact)", "#1E3A8A", None),
-        (-1.0 * bw, ub_vals, "COR26-LBBD/CP UB (1.45–1.89 s)", "#3B82F6", "//"),
-        (0.0 * bw, core_vals, "CoRe-Sched (Online, 11–16 ms)", "#15803D", None),
-        (1.0 * bw, v18_vals, "V18-EA (Online, ~26 ms)", "#D97706", None),
-        (2.0 * bw, pgm_vals, "IJCAI26-PGMPO (Online, ~27 ms)", "#DC2626", None),
+        (-2.5 * bw, lb_vals, "Valid Phys. LB (0 Violations)", "#1E3A8A", None),
+        (-1.5 * bw, cor_vals, "COR26-Ref Sim-UB (3.7–5.8 s)", "#3B82F6", "//"),
+        (-0.5 * bw, erd_vals, "EJOR26-Erdogan ILS-LP (1.2–8.7 s)", "#0D9488", "\\\\"),
+        (0.5 * bw, core_vals, "CoRe-Sched (Online, 33.4 ms)", "#15803D", None),
+        (1.5 * bw, v18_vals, "V18-EA (Online)", "#D97706", None),
+        (2.5 * bw, pgm_vals, "IJCAI26-PGMPO (Online)", "#DC2626", None),
     ]
     for off, vals, lbl, col, hatch in bars_spec:
-        ax2.bar(gx + off, vals, bw, label=lbl, color=col, edgecolor="#1F2937" if hatch else "white", hatch=hatch, linewidth=0.6)
+        ax2.bar(gx + off, vals, bw, label=lbl, color=col, edgecolor="#1F2937" if hatch else "white", hatch=hatch, linewidth=0.55)
         for gi, v in enumerate(vals):
             ax2.text(
                 gx[gi] + off,
@@ -947,31 +969,25 @@ def plot_fig6_pure_h1_and_lbbd() -> Path:
                 f"{v:.0f}",
                 ha="center",
                 va="bottom",
-                fontsize=6.5,
-                fontweight="bold" if "CoRe" in lbl or "UB" in lbl else "normal",
+                fontsize=6.1,
+                fontweight="bold" if ("LB" in lbl or "CoRe" in lbl or "Erdogan" in lbl) else "normal",
                 color=col,
             )
 
-    for gi, spd in enumerate(spds):
-        ax2.text(
-            gx[gi],
-            max(core_vals[gi], pgm_vals[gi]) * 1.62,
-            f"CoRe-Sched: {spd:.0f}× faster\nthan offline LBBD/CP",
-            ha="center",
-            va="center",
-            fontsize=6.9,
-            fontweight="bold",
-            color="#166534",
-            bbox=dict(boxstyle="round,pad=0.22", facecolor="#F0FDF4", edgecolor="#86EFAC"),
-        )
+    ax2.text(
+        0.50, 0.96,
+        "All 5 solvers audited in identical zero-fault Simulator · 0/270 LB_phys > H1_sim violations",
+        transform=ax2.transAxes, ha="center", va="top", fontsize=6.6, fontweight="bold", color="#166534",
+        bbox=dict(boxstyle="round,pad=0.20", facecolor="#F0FDF4", edgecolor="#86EFAC"),
+    )
 
     ax2.set_yscale("log")
-    ax2.set_ylim(30, 8500)
+    ax2.set_ylim(45, 11500)
     ax2.set_xticks(gx)
     ax2.set_xticklabels([lbl for _, lbl in groups], fontsize=8.0)
     ax2.set_ylabel(r"Mean Pure Physical Objective $H_1$ (log scale)")
-    ax2.set_title("(b) Offline Exact Reference Bounds (COR 2026 LBBD/CP) vs. Online")
-    ax2.legend(loc="upper left", frameon=True, fontsize=6.9, ncol=1)
+    ax2.set_title("(b) Gate G1 Pure Zero-Fault Static Reference Subproblem (54 Inst.)")
+    ax2.legend(loc="upper center", bbox_to_anchor=(0.50, 0.89), frameon=True, fontsize=6.5, ncol=2)
 
     fig.tight_layout()
     out_p = FIG_DIR / "fig6_pure_h1_and_lbbd.png"

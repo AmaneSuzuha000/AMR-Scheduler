@@ -50,6 +50,8 @@ _IJCAI26_CKPT = resolve_default_checkpoint("baselines_2026/ijcai26_choi_pgmpo.pt
 _TII26_CKPT = resolve_default_checkpoint("baselines_2026/tii26_ma_e2g_moe.pt")
 _ICRA26_CKPT = resolve_default_checkpoint("baselines_2026/icra26_zhang_kitting_hgnn.pt")
 _IJPR25_DFJSPT_CKPT = resolve_default_checkpoint("baselines_2026/ijpr25_dfjspt_hmarl.pt")
+_ASC26_MA_TRANS_CKPT = resolve_default_checkpoint("baselines_2026/asc26_ma_trans.pt")
+_FGCS26_REN_GNN_CKPT = resolve_default_checkpoint("baselines_2026/fgcs26_ren_gnn.pt")
 
 _COST_COLUMNS: tuple[str, ...] = (
     "cmax",
@@ -150,15 +152,29 @@ POLICY_SPECS: dict[str, PolicySpec] = {
     "SPGA_AMR": PolicySpec(
         name="SPGA_AMR",
         family="literature_2026",
-        description="Jia Li et al. (COR 2026) Similarity-based Parallel Genetic Algorithm [Paper-faithful reproduction]",
+        description="Jia Li et al. (COR 2026) Similarity-based Parallel Genetic Algorithm [Architecture-faithful, domain-adapted reimplementation]",
         uses_external_proposer=True,
     ),
     "IJPR25_DFJSPT_HMARL": PolicySpec(
         name="IJPR25_DFJSPT_HMARL",
         family="literature_2025",
-        description="Wang et al. (IJPR 2025) 3-Level Hierarchical Multi-Agent DRL for DFJSP-T [Paper-faithful reproduction]",
+        description="Wang et al. (IJPR 2025) 3-Level Hierarchical Multi-Agent DRL for DFJSP-T [Architecture-faithful, domain-adapted reimplementation]",
         uses_external_proposer=True,
         checkpoint_path=_IJPR25_DFJSPT_CKPT,
+    ),
+    "ASC26_MA_TRANS": PolicySpec(
+        name="ASC26_MA_TRANS",
+        family="literature_2026",
+        description="Shen, Zhang & Jin (ASC 193, 2026) MA-Trans Transformer + Resource GAT Dual-Agent PPO [Architecture-faithful, domain-adapted reimplementation]",
+        uses_external_proposer=True,
+        checkpoint_path=_ASC26_MA_TRANS_CKPT,
+    ),
+    "FGCS26_REN_GNN": PolicySpec(
+        name="FGCS26_REN_GNN",
+        family="literature_2026",
+        description="Ren, Liu, Huang & Cao (FGCS 182, 2026) 3D Disjunctive Graph GNN + DRL [Architecture-faithful, domain-adapted reimplementation]",
+        uses_external_proposer=True,
+        checkpoint_path=_FGCS26_REN_GNN_CKPT,
     ),
     "BALANS_IJCAI25": PolicySpec(
         name="BALANS_IJCAI25",
@@ -213,7 +229,10 @@ POLICY_SPECS: dict[str, PolicySpec] = {
 SUPPORTED_POLICIES: tuple[str, ...] = tuple(POLICY_SPECS.keys())
 
 DEFAULT_12_POLICIES: tuple[str, ...] = tuple(
-    p for p in SUPPORTED_POLICIES if p not in ("BALANS_IJCAI25", "IJPR25_DFJSPT_HMARL") and not p.startswith("V19_")
+    p
+    for p in SUPPORTED_POLICIES
+    if p not in ("BALANS_IJCAI25", "IJPR25_DFJSPT_HMARL", "ASC26_MA_TRANS", "FGCS26_REN_GNN")
+    and not p.startswith("V19_")
 )
 
 _POLICY_ALIASES: dict[str, str] = {
@@ -249,6 +268,13 @@ _POLICY_ALIASES: dict[str, str] = {
     "ijpr25_dfjspt": "IJPR25_DFJSPT_HMARL",
     "dfjspt_hmarl": "IJPR25_DFJSPT_HMARL",
     "dfjspt": "IJPR25_DFJSPT_HMARL",
+    "asc26_ma_trans": "ASC26_MA_TRANS",
+    "ma_trans": "ASC26_MA_TRANS",
+    "matrans": "ASC26_MA_TRANS",
+    "asc26": "ASC26_MA_TRANS",
+    "fgcs26_ren_gnn": "FGCS26_REN_GNN",
+    "ren_gnn": "FGCS26_REN_GNN",
+    "fgcs26": "FGCS26_REN_GNN",
     "balans_ijcai25": "BALANS_IJCAI25",
     "ijcai25_balans_plain": "BALANS_IJCAI25",
     "balans": "BALANS_IJCAI25",
@@ -366,7 +392,10 @@ def build_external_proposer(
     spec = POLICY_SPECS[canon]
     if spec.checkpoint_path is not None and not allow_untrained:
         allow_np_alias = (
-            (canon in ("IJCAI26_PGMPO", "EJOR26_Wu_GRU_Attn", "IJPR25_DFJSPT_HMARL") or canon.startswith("V19_"))
+            (
+                canon in ("IJCAI26_PGMPO", "EJOR26_Wu_GRU_Attn", "IJPR25_DFJSPT_HMARL", "ASC26_MA_TRANS", "FGCS26_REN_GNN")
+                or canon.startswith("V19_")
+            )
             and backend in ("auto", "numpy")
         )
         chk = (
@@ -390,6 +419,32 @@ def build_external_proposer(
 
         proposer = DFJSPTHMARLProposer(
             ckpt_path=_IJPR25_DFJSPT_CKPT,
+            policy_id=canon,
+            backend=backend,
+            allow_untrained=allow_untrained,
+            use_rust=use_rust,
+            seed=seed,
+        )
+        proposer._get_net()
+        return proposer
+    if canon == "ASC26_MA_TRANS":
+        from amr_sched.baselines.ma_trans_asc26 import MATransASC26Proposer
+
+        proposer = MATransASC26Proposer(
+            ckpt_path=_ASC26_MA_TRANS_CKPT,
+            policy_id=canon,
+            backend=backend,
+            allow_untrained=allow_untrained,
+            use_rust=use_rust,
+            seed=seed,
+        )
+        proposer._get_net()
+        return proposer
+    if canon == "FGCS26_REN_GNN":
+        from amr_sched.baselines.fgcs26_ren_gnn import FGCS26RenGNNProposer
+
+        proposer = FGCS26RenGNNProposer(
+            ckpt_path=_FGCS26_REN_GNN_CKPT,
             policy_id=canon,
             backend=backend,
             allow_untrained=allow_untrained,
@@ -748,6 +803,7 @@ def run_discrete_episode(
     v18_candidate_mode: str = "full",
     v18_hysteresis_mode: str = "default",
     allow_missing_pgmpo: bool = False,
+    include_decision_latencies: bool = False,
 ) -> dict[str, Any]:
     """Execute one discrete closed-loop episode and return audited metrics + 7 cost terms."""
     from amr_sched.rl import compute_expert_v10_action_mask, compute_expert_v9_state
@@ -923,6 +979,8 @@ def run_discrete_episode(
         abs(sum(float(rec[k]) for k in _COST_COLUMNS) - float(rec["net_obj"])),
         6,
     )
+    if include_decision_latencies:
+        rec["decision_latencies_ms"] = [round(float(v), 4) for v in decision_ms]
     return rec
 
 

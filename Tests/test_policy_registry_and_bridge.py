@@ -154,7 +154,7 @@ def _make_track2_physical_setup():
 
 def test_policy_registry_aliases_and_coverage():
     assert len(DEFAULT_12_POLICIES) == 12
-    assert len(SUPPORTED_POLICIES) == 20
+    assert len(SUPPORTED_POLICIES) == 22
     assert resolve_policy_name("v19_bc") == "V19_HETERO_BC"
     assert resolve_policy_name("v19_rl") == "V19_HETERO_RL"
     assert resolve_policy_name("v19_staged") == "V19_STAGED_RL"
@@ -166,6 +166,10 @@ def test_policy_registry_aliases_and_coverage():
     assert resolve_policy_name("core-sched") == "V19_ADAPTIVE_RL"
     assert resolve_policy_name("dfjspt") == "IJPR25_DFJSPT_HMARL"
     assert resolve_policy_name("ijpr25_dfjspt") == "IJPR25_DFJSPT_HMARL"
+    assert resolve_policy_name("ma_trans") == "ASC26_MA_TRANS"
+    assert resolve_policy_name("asc26_ma_trans") == "ASC26_MA_TRANS"
+    assert resolve_policy_name("ren_gnn") == "FGCS26_REN_GNN"
+    assert resolve_policy_name("fgcs26_ren_gnn") == "FGCS26_REN_GNN"
     assert resolve_policy_name("PGMPO_AMR_ALIGNED") == "IJCAI26_PGMPO"
     assert resolve_policy_name("v18") == "V18_EA_JOINT"
     assert resolve_policy_name("V10_RULE") == "rule_v10"
