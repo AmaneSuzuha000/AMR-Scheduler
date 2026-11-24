@@ -18,57 +18,61 @@
 
 ## Overview
 
-**AMR-Scheduler** (`v1.2.0`) is the open-source code and digital-twin companion repository for **`CoRe-Sched`** (*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*), a dual-engine learning-and-optimization platform for dynamic kitting-constrained production and multi-AMR rescheduling in discrete-workstation, narrow-aisle railway maintenance workshops.
+**AMR-Scheduler** (`v1.2.1`) is the open-source code and digital-twin companion repository for **`CoRe-Sched`** (*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*), a dual-engine learning-and-optimization platform for dynamic kitting-constrained production and multi-AMR rescheduling in discrete-workstation, narrow-aisle railway maintenance workshops.
 
 <p align="center">
   <img src="results/figures/fig1_core_sched_overview.png" alt="CoRe-Sched Dual-Engine Closed-Loop Overview" width="96%" />
 </p>
 
 ### Core Framework (`CoRe-Sched`)
-- **Learning Engine (`AHG-RL`)** (`amr_sched/rl/v19_hetero_graph.py`, `v19_hetero_constructor.py`, `causal_repair_cone.py`):
-  - **5-Entity Heterogeneous Graph Attention Encoder**: Encodes `Operation`, `Task`, `AMR`, `Bay`, and `Crew` nodes, directed precedence DAGs, bipartite kitting links, and corridor congestion/detour edge features via 2-layer cross-domain message passing.
-  - **Four-Stage Autoregressive Semantic Constructor (`BC -> KL-Anchored SMDP-PPO`)**: Sequentially decodes *Task Prioritization*, *Resource Assignment* (bay & crew), *Fleet Dispatch* (dynamic load + soft-commitment retention bias), and *Queue Sequencing*, with exact (`< 1e-5`) pure-NumPy inference parity for torch-free ROS 2 deployment.
-  - **Contextual Policy Selection (`Contextual LinUCB`) + Guarded Dual-Arm Probe + $J_A$-Aligned Scorer**: Observes a 6-D topology-agnostic coupling descriptor $\phi(s_t) \in [0, 1]^6$ to adaptively switch between `Full Joint` and `Staged` PPO policies, reinforced by a fleet-guarded counterfactual dual-arm probe ($|\mathcal{R}| \ge 4$) and exact $J_A$-aligned candidate ranking.
+- **Learning & Causal Repair Engine (`AHG-RL` + `CausalRepairCone`)** (`amr_sched/rl/v19_hetero_graph.py`, `v19_hetero_constructor.py`, `causal_repair_cone.py`, `v10_selector.py`):
+  - **5-Entity Heterogeneous Graph Attention Encoder & Pure-NumPy Promotion**: Encodes `Operation`, `Task`, `AMR`, `Bay`, and `Crew` nodes, directed precedence DAGs, bipartite kitting links, and corridor congestion/detour edge features, eagerly promoted to `< 1e-5` pure-NumPy inference matrices inside initialization (zero tick-0 cold-start spikes).
+  - **Four-Stage Autoregressive Semantic Constructor (`BC -> KL-Anchored SMDP-PPO`)**: Sequentially decodes *Task Prioritization*, *Resource Assignment* (bay & crew), *Fleet Dispatch* (dynamic load + soft-commitment retention bias), and *Queue Sequencing*.
+  - **Online Contextual Selection, Guarded Dual-Arm Probe, Stage-2 `CausalRepairCone` & Oscillation Arbiter**: Combines `Contextual LinUCB` ($\phi(s_t) \in [0, 1]^6$), fleet-guarded dual-arm probing ($|\mathcal{R}| \ge 4$), $J_A$-aligned candidate ranking, bounded Stage-2 Regret-2 `CausalRepairCone` over `FastJAWKittingSurrogate`, active-loading (`_load_end`) + edge safety guards, and symmetric `p4_choke_robust` surgical oscillation wakeups.
 - **Incremental Optimization Engine (`CVCR-IR`)** (`amr_sched/cvcr/evaluator.py`, `crates/`):
-  - **Sequence-Differenced Incremental Reservation Cache (`CVCR-IR (Seq-Diff)`) + Footprint-Aware Anytime SLA Guard**: Computes exact per-AMR effective task sequences, reuses unchanged AMRs' routes and Rust half-open interval reservations in-place (`median |ΔJ| = 0.00`), re-routes only the modified fleet subset $\Delta\mathcal{R}$ via native Rust `SpaceTime A* / SIPP` (`41 us` single-agent search), and strictly bounds worst-tail wall-clock latency under `35 ms`.
+  - **Sequence-Differenced Incremental Reservation Cache (`CVCR-IR (Seq-Diff)`) + Tightened Footprint-Aware SLA Guard**: Computes exact per-AMR effective task sequences, reuses unchanged AMRs' routes and Rust half-open interval reservations in-place (`median |ΔJ| = 0.00`), re-routes only $\Delta\mathcal{R}$ via native Rust `SpaceTime A* / SIPP` (`41 us` single-agent search), and bounds pooled wall-clock tail latency strictly below `23 ms` (`18.55 ms / 22.62 ms` Pooled P99 `< 35 ms`).
 - **Execution Layer (*Atomic Transaction Commit*) & Dual-Layer Digital Twin** (`amr_sched/cvcr/`, `tools/`, `RAWSimO.Live/`):
-  - Enforces epoch freshness, irrevocable `LOCKED` commitment protection, and atomic fallback-to-`KEEP` across discrete simulation (`AMRReschedulingEnv`), ROS 2 / Nav2 / Gazebo physical closed-loop execution (`PhysicalCVCRCoordinator`), and the C# WPF digital twin.
-  - **Unified Policy Registry (22 Registered Policies)** (`amr_sched/baselines/policy_registry.py`): Includes `core_sched` / `CoRe-Sched` (`V19_ADAPTIVE_RL`), `AHG-RL` ablations, internal CVCR optimizers (`V18_EA_JOINT`, `rule_v10`), architecture-faithful domain-adapted 2025–2026 direct joint production–AGV competitors (`IJPR25_DFJSPT_HMARL`, `ASC26_MA_TRANS`, `FGCS26_REN_GNN`, `SPGA_AMR`), static offline references (`COR26-Ref`, `EJOR26-Erdogan`), and broader 2025–2026 baselines (`IJCAI26_PGMPO`, `EJOR26_Wu_GRU_Attn`, `TII26_E2G_MoE`, `ICRA26_Kitting_HGNN`, `RAL26_DetourDelta`, `JAIR26_DyMAB`, `MIT26_TAPFPC_LNS`, `BALANS_IJCAI25`).
+  - Enforces epoch freshness, irrevocable `LOCKED` commitment protection, `_load_end` / valid-edge checks, and atomic fallback-to-`KEEP` across discrete simulation (`AMRReschedulingEnv`), ROS 2 / Nav2 / Gazebo physical closed-loop execution (`PhysicalCVCRCoordinator`), and the C# WPF digital twin.
+  - **Unified Policy Registry (22 Registered Policies)** (`amr_sched/baselines/policy_registry.py`): Includes `core_sched` / `CoRe-Sched` (`V19_ADAPTIVE_RL`), `AHG-RL` ablations, internal CVCR optimizers (`V18_EA_JOINT`, `rule_v10`), architecture-faithful domain-adapted 2025–2026 direct joint production–AGV competitors (`IJPR25_DFJSPT_HMARL`, `ASC26_MA_TRANS`, `FGCS26_REN_GNN`, `SPGA_AMR`), static offline references (`COR26-Ref` CP-SAT master relaxation + path verification solver, `EJOR26-Erdogan`), and broader 2025–2026 baselines (`IJCAI26_PGMPO`, `EJOR26_Wu_GRU_Attn`, `TII26_E2G_MoE`, `ICRA26_Kitting_HGNN`, `RAL26_DetourDelta`, `JAIR26_DyMAB`, `MIT26_TAPFPC_LNS`, `BALANS_IJCAI25`).
 
 ---
 
-## Verified Benchmark Highlights (`v1.2.0` Three-Gate Closure)
+## Verified Benchmark Highlights (`v1.2.1` NCSR Optimization & Dual-Cohort Blind Closure)
 
-### 1. Single-Session Fresh 120-Episode Frozen Blind Holdout (12 Methods, 100% Audit Pass)
+### 1. Dual 120-Episode Holdouts (`240` Blind Episodes / `2,880` Audited Runs, `100%` Audit Pass)
 
-Executed in **one single continuous uncontended wall-clock session** (`1,440` audited episodes, brand-new zero-overlap fresh blind seeds `[27101..27302]` & `[2901..2906]`; full per-episode CSV ledger in [`results/g3_fresh_blind_holdout.csv`](results/g3_fresh_blind_holdout.csv)). Methods marked `*` breach the `35 ms` real-time pooled P95 SLA.
+Executed sequentially in uncontended single-process wall-clock runs under strict seed quarantine across **Holdout Cohort A** ([`results/g3_fresh_blind_holdout.csv`](results/g3_fresh_blind_holdout.csv), seeds `[27101..27302]` & `[2901..2906]`) and **Single-Shot Blind Holdout Cohort B** ([`results/g5_pristine_blind_holdout.csv`](results/g5_pristine_blind_holdout.csv), untouched seeds `[37101..37302]` & `[3901..3906]`, executed once post-freeze). Methods marked `*` breach the `35 ms` Pooled P95/P99 real-time SLA.
 
-| Method | Mean $J_A$ ↓ | Median $J_A$ ↓ | Comp (100%) | Pure $H_1$ ($H_2=0$) ↓ | Churn ↓ | **Pooled P95 (ms)** ↓ | **Pooled P99 (ms)** ↓ | Mean Ep-P95 (ms) | `Track 2` (50-Node) ↓ |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`CoRe-Sched` (`core_sched`)** | **5,763.0 (#1 SLA)** | 2,061.8 | **117/120 (97.5%)** | 4,873.6 | 23.9 | **32.43** | **34.91** | 33.42 | **17,390.8 (24/24)** |
-| `V18-EA`* | 5,640.3 | **1,150.6** | 118/120 (98.3%) | 4,749.6 | 12.3 | *42.80* | *75.80* | 27.07 | 20,285.5 (22/24) |
-| `COR26-SPGA`* | 6,155.3 | 2,282.1 | 116/120 (96.7%) | **4,446.3** | 57.5 | *64.09* | *76.53* | 62.67 | 17,089.6 (23/24) |
-| `FGCS26-Ren-GNN` | 6,361.9 | 2,163.2 | 114/120 (95.0%) | 4,797.0 | 31.6 | 13.29 | 17.31 | 12.34 | 17,718.3 (24/24) |
-| `IJCAI26-PGMPO` | 6,408.9 | 1,235.6 | 114/120 (95.0%) | 4,941.2 | 14.5 | 23.89 | 29.96 | 20.16 | 21,494.5 (22/24) |
-| `AHG-RL (Full)` | 6,690.1 | 2,193.4 | 114/120 (95.0%) | 4,757.5 | 22.6 | 34.76 | 42.81 | 32.18 | 21,326.4 (22/24) |
-| `Rule-V10`* | 6,847.5 | 1,935.3 | 117/120 (97.5%) | 5,610.3 | 16.6 | *39.13* | *54.26* | 42.78 | 19,928.3 (24/24) |
-| `AHG-RL (Staged)` | 6,857.9 | 1,872.2 | 116/120 (96.7%) | 4,948.0 | 25.4 | 30.54 | 38.00 | 28.86 | 19,298.5 (23/24) |
-| `ASC26-MA-Trans` | 6,987.1 | 2,570.3 | 112/120 (93.3%) | 4,885.9 | 27.6 | **12.66** | **17.41** | 11.55 | **15,440.4 (24/24)** |
-| `RAL26-DetourDelta` | 7,197.7 | 2,424.6 | 113/120 (94.2%) | 5,413.1 | **10.8** | 28.70 | *72.35* | 27.74 | 24,505.1 (20/24) |
-| `EJOR26-Wu-GRU` | 8,025.7 | 1,398.0 | 114/120 (95.0%) | 5,392.2 | 21.8 | 34.12 | 40.48 | 28.41 | 30,993.1 (19/24) |
-| `IJPR25-DFJSP-T` | 8,736.4 | 2,146.7 | 113/120 (94.2%) | 5,344.3 | 29.5 | 16.45 | 22.86 | 14.10 | 26,423.0 (21/24) |
+| Method | **240-Ep Comp (`%`)** ↑ | Cohort A Mean $J_A$ ↓ | Cohort A P95 / P99 (ms) | Cohort B Mean / **Med $J_A$** ↓ | Cohort B P95 / P99 (ms) | **240-Ep Paired $\Delta J_A$ (`p`, `W/T/L`)** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`CoRe-Sched` (`core_sched`)** | **238/240 (99.2% #1)** | **5,177.9 (#1)** | **15.52 / 18.55** | 6,631.5 / **827.5 (#1)** | **19.45 / 22.62** | Reference (`5,904.7` Mean, `1,575.7` Med) |
+| `V18-EA`* | 234/240 (97.5%) | 5,654.1 | 27.53 / *79.38* | **5,387.0** / 991.7 | 25.49 / *77.74* | -6.96% (`p = 0.0666`, `99/0/141`) |
+| `IJCAI26-PGMPO` | 237/240 (98.8%) | 6,016.5 | 23.13 / *38.81* | 5,532.7 / 843.5 | 22.97 / 34.49 | -2.25% (`p = 0.901`, `116/0/124`) |
+| `Rule-V10`* | 234/240 (97.5%) | 6,674.2 | *37.16* / *52.28* | 6,175.6 / 1,455.2 | *35.90* / *51.30* | +8.10% (`p = 0.092`, `127/0/113`) |
+| `AHG-RL (Full)` | 235/240 (97.9%) | 6,019.2 | 32.84 / *52.34* | 6,942.6 / 3,610.4 | 33.14 / *42.61* | **+8.89%** (**`p = 0.00135`**, `144/0/96`) |
+| `AHG-RL (Staged)`* | 234/240 (97.5%) | 6,469.2 | 30.31 / *54.26* | 6,821.4 / 3,613.7 | *35.59* / *78.51* | **+11.15%** (**`p = 7.25e-5`**, `151/0/89`) |
+| `FGCS26-Ren-GNN` | 235/240 (97.9%) | 7,420.4 | 12.68 / 16.05 | 6,240.2 / 3,695.2 | 13.56 / 16.81 | **+13.55%** (**`p = 1.62e-4`**, `148/0/92`) |
+| `ASC26-MA-Trans` | 231/240 (96.2%) | 7,776.6 | **12.22 / 16.82** | 6,580.0 / 3,811.9 | **12.01 / 15.30** | **+17.74%** (**`p = 7.35e-4`**, `142/0/98`) |
+| `RAL26-DetourDelta` | 234/240 (97.5%) | 6,998.2 | 22.10 / *57.42* | 7,486.5 / 3,683.4 | 27.37 / *61.78* | **+18.47%** (**`p = 1.32e-10`**, `160/0/80`) |
+| `COR26-SPGA`* | 234/240 (97.5%) | 7,533.0 | *62.55* / *75.39* | 7,240.1 / 2,920.4 | *62.02* / *73.66* | **+20.06%** (**`p = 4.09e-7`**, `164/0/76`) |
+| `EJOR26-Wu-GRU` | 228/240 (95.0%) | 8,857.7 | 33.04 / *52.49* | 7,718.7 / 1,057.2 | 33.88 / *50.04* | **+28.76%** (**`p = 4.37e-4`**, `140/0/100`) |
+| `IJPR25-DFJSP-T` | 228/240 (95.0%) | 7,817.4 | 14.85 / 18.05 | 9,253.9 / 3,760.6 | 14.70 / 18.35 | **+30.82%** (**`p = 8.47e-14`**, `166/0/74`) |
 
-- **Strict Real-Time SLA Leadership**: `CoRe-Sched` ranks **#1 in Mean $J_A$ (`5,763.0`) and #1 in completion (`117/120`) among all SLA-compliant methods**, keeping even its **pooled wall-clock P99 (`34.91 ms`) strictly below `35 ms`**, whereas `V18-EA` breaches the SLA (`42.80 ms` pooled P95, `75.80 ms` P99; `-2.18%` non-significant overall mean difference $p = 0.0771$ while `CoRe-Sched` beats `V18-EA` by `-14.3%` on Track 2 and `+0.60%` on mutually-completed pure $H_1$).
-- **Paired Gains vs. 2025–2026 Competitors**: Cuts mean $J_A$ by **`+34.04%`** vs. `IJPR25-DFJSP-T` ($p = 5.41 \times 10^{-4}$), **`+28.19%`** vs. `EJOR26-Wu-GRU` (95% CI `[+12.2%, +39.1%]`), **`+19.93%`** vs. `RAL26-DetourDelta` ($p = 0.0050$), **`+17.52%`** vs. `ASC26-MA-Trans` (`69W/51L`), **`+15.97%`** vs. `AHG-RL (Staged)`, **`+13.86%`** vs. `AHG-RL (Full)`, **`+10.08%`** vs. `IJCAI26-PGMPO`, **`+9.41%`** vs. `FGCS26-Ren-GNN`, and **`+6.37%`** vs. `COR26-SPGA` (`73W/47L`, `2×` faster P95, `58.4%` less churn).
-- **Pure Zero-Fault Static Common-Subproblem Reference (54 Instances, `0 / 270` Violations)**: Executed end-to-end inside the identical zero-fault `Simulator` + `IndependentAuditor` ([`results/g1_static_reference_subproblem.csv`](results/g1_static_reference_subproblem.csv)). `COR26-Ref` (Phase-1 un-cut CP-SAT physical relaxation `LB_phys = 68.2 / 90.2 / 438.7`, `Sim-UB = 405.1 / 326.3 / 785.5` in `3.7–5.8 s`) and `EJOR26-Erdogan` (`ILS-LP`, `284.1 / 573.5 / 664.5` in `1.2–8.7 s`) verify `LB_phys <= H1_sim` across every solver with zero violations while quantifying the exact price of causal millisecond rescheduling.
-- **`CVCR-IR (Seq-Diff)` Cache Synergy, Physical Reconciliation & Scaling**: Restores isolated neural candidate cache hit rate from **`0.00%`** (`CVCR-IR Base`) to **`73.68%`** (`1.48×` candidate speedup, `median |ΔJ| = 0.00`; `86.8%–94.7%` closed-loop hits). 5-seed ROS 2 / Nav2 / Gazebo physical reconciliation achieves Track 1 Spearman $\rho = 0.7857$ (`7.18 ms` physical P95) and 10-AMR scaling sustains **`23.57 ms < 35 ms`** P95 (`2.21×` faster than full rebuild).
+- **Highest Completion & Strict Sub-`23 ms` Pooled P99 Across Both Cohorts**: `CoRe-Sched` leads all 12 methods in combined completion (**`238/240 = 99.2%`**), sweeps **Cohort A Rank #1 (`5,177.9`, `120/120`, `15.52 / 18.55 ms` P95/P99)**, leads **Cohort B Median $J_A$ (`827.5` #1)** at **`19.45 / 22.62 ms` P95/P99**, and defeats **8 of 11 comparators cleanly ($p \le 0.00135$)** across the 240 combined episodes (with full disclosure of the two Cohort B unfinished tail outliers `topo4_offset_dual_lane_window_bottleneck_37302 = 78,259.95` and `track2_kitting_windows_3906 = 117,637.65` lifting Cohort B Mean $J_A$ to `6,631.5`).
+- **72-Episode Single-Factor Ablations & `2 × 2` Trigger × Solver Decoupling** ([`results/g4_val72_repair_ablation.csv`](results/g4_val72_repair_ablation.csv)): Disabling `CausalRepairCone` (`+14.32%`, $p = 4.30 \times 10^{-5}$), `J_A`-aligned scoring (`+16.21%`, $p = 3.02 \times 10^{-4}$), `AHG-RL` priors (`+28.60%`), or ZeroChurn hysteresis (`+4.60%`) consistently degrades cost, while `RuleV10 + CoRe-Sched` (`4,190.3`, `72/72`) outperforms `V18-EA` (`4,252.9`), `RuleV10 + V18-EA` (`4,359.9`), and `V18Ctrl + CoRe-Sched` (`4,864.7`, `71/72`).
+- **Pure Zero-Fault Static Common-Subproblem Reference (54 Instances, `0 / 270` Violations)** ([`results/g1_static_reference_subproblem.csv`](results/g1_static_reference_subproblem.csv)): `COR26-Ref` (offline CP-SAT master relaxation + conflict-free path verification reference solver, `LB_phys = 68.2 / 90.2 / 438.7`, `Sim-UB = 412.4 / 346.8 / 793.0`, `0` claimed exact optima) and `EJOR26-Erdogan` (`ILS-LP`, `352.1 / 664.8 / 664.5`) satisfy `LB_phys <= H1_sim` across all 270 runs (`CoRe-Sched` static Pooled P95/P99 = `13.61 / 20.47 ms`).
+- **`CVCR-IR (Seq-Diff)` Cache Synergy, Physical Reconciliation & Scaling**: Restores isolated neural candidate hit rate from **`0.00%`** (`CVCR-IR Base`) to **`73.68%`** (`1.48×` speedup, `median |ΔJ| = 0.00`; `86.8%–94.7%` closed-loop hits); 5-seed ROS 2 / Nav2 / Gazebo physical reconciliation achieves Track 1 $\rho = 0.7857$ (`7.18 ms` physical P95); 10-AMR scaling sustains **`23.57 ms < 35 ms`** P95 (`2.21×` faster than full rebuild).
 
 <p align="center">
-  <img src="results/figures/fig3_main_benchmark.png" alt="CoRe-Sched 120-Episode Main Benchmark and Latency-Quality Pareto Frontier" width="96%" />
+  <img src="results/figures/fig7_dual_cohort_and_ablation.png" alt="Dual-Cohort 240-Episode Consistency, VAL-72 Ablations, and 2x2 Trigger x Solver Decoupling" width="96%" />
 </p>
 
 <p align="center">
-  <img src="results/figures/fig6_pure_h1_and_lbbd.png" alt="Pure Physical Efficiency H1 Attribution and Offline COR 2026 LBBD/CP Exact Reference Bounds" width="96%" />
+  <img src="results/figures/fig3_main_benchmark.png" alt="CoRe-Sched Cohort A Main Benchmark and Latency-Quality Pareto Frontier" width="96%" />
+</p>
+
+<p align="center">
+  <img src="results/figures/fig6_pure_h1_and_lbbd.png" alt="Dual-Cohort Pure Physical Efficiency H1 Attribution and Static Simulator Reference Subproblem" width="96%" />
 </p>
 
 <p align="center">
@@ -91,9 +95,10 @@ cargo build --release --manifest-path crates/Cargo.toml
 pip install -r requirements.txt
 pip install -e ".[dev,viz,web,rl]"
 
-# 3. Run workshop simulation, CoRe-Sched dual-engine benchmarks & figures
+# 3. Run workshop simulation, NCSR ablations, Dual-Cohort blind suites & 7 figures
 python -m amr_sched --tasks 50 --agvs 6 --layout workshop --planner rust_spacetime_astar
-python -B experiments/run_v19_exp08_learning_b2_synergy.py
+python -B experiments/run_post_v120_audit_and_ablation.py
+python -B experiments/run_g5_pristine_blind_holdout.py
 python -B experiments/run_dual_layer_reconciliation.py --multi-seed
 python -B experiments/run_workshop_scaling_4axis.py
 python -B experiments/plot_v19_paper_figures.py
@@ -117,14 +122,14 @@ AMR-Scheduler/
 │   ├── checkpoints/            # Packaged pure-NumPy (.npz) and PyTorch (.pt) inference weights
 │   ├── cvcr/                   # Causal snapshot, CVCR-IR (Seq-Diff) evaluator, frontier synthesis, Owner & Auditor
 │   ├── planners/               # Dijkstra, Spacetime A*, Rust A*, Rust batch SIPP
-│   ├── rl/                     # AHG-RL 5-entity Hetero-GNN constructor, Contextual LinUCB & Gymnasium SMDP env
+│   ├── rl/                     # AHG-RL 5-entity Hetero-GNN constructor, CausalRepairCone, Contextual LinUCB & SMDP env
 │   └── viz/                    # Workshop layout, Gantt, corridor heatmaps, trajectories, animations
 ├── crates/                     # Native Rust Cargo workspace (reservation_core & spacetime_planner)
 ├── RAWSimO.Live/               # C# (.NET 6) live TCP JSONL protocol consumer & topology tracker
 ├── RAWSimO.Visualization/      # C# WPF 2D visualizer & live monitoring UI
 ├── tools/                      # Benchmarks, ROS 2 / Nav2 / Gazebo bridges, 1:25 wheelset scene
-├── experiments/                # Training, mechanism audits, dual-layer reconciliation, 4-axis scaling & plotting
-├── results/                    # Verified CSV datasets, MANIFEST.json, 5 publication figures (`fig1`–`fig5`)
+├── experiments/                # Training, NCSR ablations, Dual-Cohort blind evaluation, reconciliation & plotting
+├── results/                    # Verified CSV datasets, MANIFEST.json, 7 publication figures (`fig1`–`fig7`)
 ├── docs/architecture/          # System architecture specification and ADRs
 ├── web/                        # FastAPI WebSocket monitoring & replay console
 └── Tests/                      # Python pytest suites + C# xUnit test suites

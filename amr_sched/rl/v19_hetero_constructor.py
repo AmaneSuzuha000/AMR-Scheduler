@@ -15,6 +15,8 @@ Supports:
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 import math
 from pathlib import Path
 from typing import Any, Optional
@@ -1424,6 +1426,186 @@ def compute_candidate_amr_footprint(
     }
 
 
+def _build_core_sched_proposal(
+    *,
+    policy_id: str,
+    snapshot: NativeSnapshot,
+    clf: Any,
+    best_assign: dict[str, str],
+    best_bays: dict[str, str],
+    best_crews: dict[str, int],
+    best_eval: EvalResult | None,
+    op_prio: dict[str, int],
+    eval_cnt: int,
+    t0: float,
+    budget_ms: float,
+    fallback_keep: bool,
+    task_sequences: Optional[dict[str, list[str]]] = None,
+    predicted_score: Optional[float] = None,
+    include_eval_seq_when_unwindowed: bool = False,
+) -> CandidateProposal:
+    """Package solution with 100% evaluator-to-executor immediate dispatch consistency & window-safe queues."""
+    if best_eval is None:
+        best_assign, best_bays, best_crews, op_prio = {}, {}, {}, {}
+        task_sequences = None
+    snap_digest = snapshot.compute_digest()
+    snap_by_id = {t.task_id: t for t in snapshot.tasks}
+    tick = int(snapshot.tick)
+    has_res_win = any(bool(getattr(op, "resource_windows", ())) for op in snapshot.operations)
+
+    commit_assign: dict[str, str] = {}
+    affected_set: set[str] = set()
+    for tid, new_agv in best_assign.items():
+        t_orig = snap_by_id.get(tid)
+        if t_orig is None:
+            continue
+        orig_agv = t_orig.assigned_agv
+        is_dist = orig_agv is not None and orig_agv in clf.disturbed_robots
+        is_rel = orig_agv is not None and orig_agv != new_agv and tid in clf.releasable_tasks
+        is_urg = orig_agv is None and getattr(t_orig, "is_urgent", False)
+        if orig_agv is not None or is_urg:
+            chosen = orig_agv if (orig_agv is not None and not is_rel and not is_dist) else new_agv
+            commit_assign[tid] = chosen
+            if chosen != orig_agv:
+                affected_set.add(tid)
+
+    seq_source: dict[str, list[str]] = {}
+    if best_eval is not None and best_eval.robot_order_seq:
+        seq_source = best_eval.robot_order_seq
+    elif task_sequences:
+        seq_source = task_sequences
+
+    # Compute exact idle healthy AMR immediate dispatches as evaluated by best_eval
+    eval_intended_immediate: dict[str, str] = {}
+    idle_healthy_rids = [
+        r.robot_id
+        for r in snapshot.robots
+        if r.cur_task is None
+        and not getattr(r, "in_transit", False)
+        and r.robot_id not in clf.disturbed_robots
+        and r.state.lower() not in ("blocked", "faulted")
+        and int(r.faulted_until) <= tick
+    ]
+    used_head_tids: set[str] = set()
+    for rid in sorted(idle_healthy_rids):
+        pick_tid: Optional[str] = None
+        for tid in seq_source.get(rid, ()):
+            t_o = snap_by_id.get(tid)
+            if (
+                t_o is not None
+                and tid not in used_head_tids
+                and t_o.status.lower() == "pending"
+                and int(t_o.release_step) <= tick
+                and best_assign.get(tid, rid) == rid
+            ):
+                pick_tid = tid
+                break
+        if pick_tid is None:
+            cand_tids = [
+                tid
+                for tid, aid in best_assign.items()
+                if aid == rid
+                and tid not in used_head_tids
+                and tid in snap_by_id
+                and snap_by_id[tid].status.lower() == "pending"
+                and int(snap_by_id[tid].release_step) <= tick
+            ]
+            if cand_tids:
+                cand_tids.sort(
+                    key=lambda tid: (
+                        0 if getattr(snap_by_id[tid], "is_urgent", False) else 1,
+                        int(op_prio.get(snap_by_id[tid].kit_op_id or "", 999999)),
+                        int(snap_by_id[tid].due_step if snap_by_id[tid].due_step is not None else 999999),
+                        tid,
+                    )
+                )
+                pick_tid = cand_tids[0]
+        if pick_tid is not None:
+            used_head_tids.add(pick_tid)
+            eval_intended_immediate[rid] = pick_tid
+            if not fallback_keep:
+                commit_assign[pick_tid] = rid
+                if snap_by_id[pick_tid].assigned_agv != rid:
+                    affected_set.add(pick_tid)
+
+    eff_task_sequences: Optional[dict[str, list[str]]] = None
+    if (not fallback_keep) and (not has_res_win) and include_eval_seq_when_unwindowed and seq_source:
+        eff_task_sequences = {}
+        for rid, seq in sorted(seq_source.items()):
+            q_tids = [
+                tid
+                for tid in seq
+                if tid in snap_by_id
+                and snap_by_id[tid].status.lower() != "completed"
+                and (tid in clf.frozen_tasks or best_assign.get(tid, rid) == rid)
+            ]
+            if q_tids:
+                eff_task_sequences[rid] = q_tids
+                for qtid in q_tids:
+                    if qtid not in clf.frozen_tasks:
+                        commit_assign[qtid] = rid
+                        if snap_by_id[qtid].assigned_agv != rid:
+                            affected_set.add(qtid)
+
+    affected_tasks = sorted(affected_set)
+    affected_robots = sorted(
+        {commit_assign[t] for t in affected_tasks if t in commit_assign}
+        | {
+            snap_by_id[t].assigned_agv
+            for t in affected_tasks
+            if t in snap_by_id and snap_by_id[t].assigned_agv is not None
+        }
+    )
+    affected_ops = sorted(
+        op.op_id
+        for op in snapshot.operations
+        if op.bay_id != best_bays.get(op.op_id, op.bay_id)
+        or op.crew_id != best_crews.get(op.op_id, op.crew_id)
+    )
+    pred_obj = float(
+        predicted_score
+        if predicted_score is not None
+        else (best_eval.objective if best_eval is not None else 0.0)
+    )
+    payload: dict[str, Any] = {
+        "policy": policy_id,
+        "snapshot_digest": snap_digest,
+        "assignment": sorted(commit_assign.items()),
+        "bays": sorted(best_bays.items()),
+        "crews": sorted(best_crews.items()),
+        "obj": round(pred_obj, 4),
+    }
+    if eff_task_sequences:
+        payload["task_sequences"] = sorted((str(k), list(v)) for k, v in eff_task_sequences.items())
+    digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+    elapsed_ms = (_cvcr_now_s() - t0) * 1000.0
+    return CandidateProposal(
+        schema="amr-lgcvcr.proposal.v1",
+        policy_id=policy_id,
+        snapshot_digest=snap_digest,
+        affected_robots=affected_robots,
+        affected_tasks=affected_tasks,
+        affected_operations=affected_ops,
+        proposed_assignment=commit_assign,
+        proposed_routes=best_eval.robot_paths if best_eval is not None else {},
+        proposed_bays=best_bays,
+        proposed_crews=best_crews,
+        predicted_obj=pred_obj,
+        predicted_makespan=max(best_eval.op_end.values(), default=snapshot.tick) if best_eval is not None else snapshot.tick,
+        candidate_digest=digest,
+        proposed_task_sequences=eff_task_sequences,
+        proposed_op_priorities=op_prio,
+        telemetry={
+            "eval_count": eval_cnt,
+            "elapsed_ms": round(elapsed_ms, 3),
+            "deadline_met": elapsed_ms <= budget_ms,
+            "cp_stats": {},
+            "eval_intended_immediate_assign": eval_intended_immediate,
+            "window_soft_head_mode": bool(has_res_win),
+        },
+    )
+
+
 class V19HeteroConstructorProposer:
     """Safe online joint constructor proposing verified `CandidateProposal` objects."""
 
@@ -1524,14 +1706,12 @@ class V19HeteroConstructorProposer:
             op.op_id: max(int(snapshot.tick), int(op.due_step) - int(op.proc_steps))
             for op in snapshot.operations
         }
-        t_keep0 = _cvcr_now_s()
         keep_eval = ev.evaluate(
             graph.base_assign,
             op_priority=base_op_prio,
             op_bay_overrides=graph.base_bays,
             op_crew_overrides=graph.base_crews,
         )
-        keep_eval_s = max(0.002, _cvcr_now_s() - t_keep0)
         if seed_b2 and keep_eval.valid:
             ev.set_incumbent(
                 graph.base_assign,
@@ -1558,7 +1738,7 @@ class V19HeteroConstructorProposer:
             if r.cur_task and r.robot_id not in clf.disturbed_robots
         }
 
-        if len(graph.rel_tids) > 0 and len(graph.agv_ids) >= 1:
+        if len(graph.rel_tids) > 0 and len(graph.agv_ids) >= 1 and (float(budget_ms) > 0.05):
             np_rng = np.random.default_rng(self.seed + int(snapshot.tick))
             seen_sigs: set[tuple[Any, ...]] = {
                 (
@@ -1640,7 +1820,7 @@ class V19HeteroConstructorProposer:
                     best_seq = cand.task_sequences
                     fallback_keep = False
 
-        prop = _build_external_proposal(
+        prop = _build_core_sched_proposal(
             policy_id=self.policy_id,
             snapshot=snapshot,
             clf=clf,
@@ -1652,7 +1832,10 @@ class V19HeteroConstructorProposer:
             eval_cnt=ev.calls,
             t0=t0,
             budget_ms=budget_ms,
+            fallback_keep=fallback_keep,
             task_sequences=best_seq if eff_stage == "A1234" else None,
+            predicted_score=best_score,
+            include_eval_seq_when_unwindowed=(eff_stage == "A1234"),
         )
         beat_keep = bool(
             not fallback_keep
@@ -1693,14 +1876,13 @@ class V19HeteroConstructorProposer:
 
 
 class V19AdaptiveCouplingProposer:
-    """CoRe-Sched (`AHG-RL` + `CVCR-IR (Seq-Diff)` + Atomic Transaction Commit) proposer.
+    """CoRe-Sched (`AHG-RL` + `CausalRepairCone` NCSR + `CVCR-IR (Seq-Diff)` + Atomic Commit).
 
     Registered under canonical key `V19_ADAPTIVE_RL` with CLI/API aliases `core_sched`,
     `core-sched`, `coresched`, and `ahg_rl`. Combines the learning engine (`AHG-RL`:
-    Heterogeneous Graph Attention Encoder + four-stage autoregressive constructor trained via
-    BC -> SMDP-PPO + Contextual LinUCB over dynamic coupling state `phi(s_t)`) with the
-    incremental optimization engine (`CVCR-IR (Seq-Diff)`: commitment-preserving sequence-
-    differenced incremental reservation evaluator) and Atomic Transaction Commit (`KEEP` fallback).
+    Heterogeneous Graph Attention Encoder + four-stage autoregressive constructor + Contextual
+    LinUCB over `phi(s_t)`), microsecond `FastJAWKittingSurrogate` screening, `Zero-Churn`
+    incremental projection, `CausalRepairCone` Regret-2/kitting refinement, and `CVCR-IR (Seq-Diff)`.
     """
 
     def __init__(
@@ -1714,17 +1896,24 @@ class V19AdaptiveCouplingProposer:
         allow_untrained: bool = False,
         use_rust: bool = True,
         seed: int = 0,
-        sample_candidates: int = 6,
+        sample_candidates: int = 4,
         alpha_makespan: float = 3.0,
         lambda_change: float = 15.0,
-        hysteresis_margin: float = 20.0,
+        hysteresis_margin: float = 8.0,
         evaluator_mode: str = "B2_SEEDED",
-        focus_sample_frac: float = 1.0,
+        focus_sample_frac: float = 0.5,
         enable_delayed_feedback: bool = False,
         enable_cascade_crosscheck: bool = False,
         use_ja_aligned_scorer: bool = True,
         enable_dual_arm_probe: bool = True,
-        dual_arm_min_amrs: int = 4,
+        dual_arm_min_amrs: int = 3,
+        enable_neural_candidates: bool = True,
+        enable_zero_churn_projection: bool = True,
+        enable_causal_cone_repair: bool = True,
+        enable_surrogate_screening: bool = True,
+        max_rust_verifications: int = 5,
+        enable_window_budget_guard: bool = True,
+        enable_exec_consistent_commit: bool = True,
     ) -> None:
         if mode not in ("rule", "bandit", "b2_guard"):
             raise ValueError(f"Unsupported adaptive mode {mode!r}; expected 'rule', 'bandit', or 'b2_guard'.")
@@ -1747,10 +1936,20 @@ class V19AdaptiveCouplingProposer:
         self.use_ja_aligned_scorer = bool(use_ja_aligned_scorer)
         self.enable_dual_arm_probe = bool(enable_dual_arm_probe)
         self.dual_arm_min_amrs = int(dual_arm_min_amrs)
+        self.enable_neural_candidates = bool(enable_neural_candidates)
+        self.enable_zero_churn_projection = bool(enable_zero_churn_projection)
+        self.enable_causal_cone_repair = bool(enable_causal_cone_repair)
+        self.enable_surrogate_screening = bool(enable_surrogate_screening)
+        self.max_rust_verifications = max(1, int(max_rust_verifications))
+        self.enable_window_budget_guard = bool(enable_window_budget_guard)
+        self.enable_exec_consistent_commit = bool(enable_exec_consistent_commit)
 
         self._full_net: Any = None
         self._staged_net: Any = None
+        self._np_full_net: Any = None
+        self._np_staged_net: Any = None
         self._eff_backend: Optional[str] = None
+        self._active_infer_backend: Optional[str] = None
         self._checkpoint_loaded: bool = False
         self._checkpoint_sha256: Optional[str] = None
 
@@ -1773,6 +1972,20 @@ class V19AdaptiveCouplingProposer:
         self.total_changed_ratios: list[float] = []
         self.total_eval_lats_ms: list[float] = []
 
+    @staticmethod
+    def _to_numpy_net(net: Any) -> NumpyV19HeteroConstructorNet:
+        if isinstance(net, NumpyV19HeteroConstructorNet):
+            return net
+        weights = {k: v.detach().cpu().numpy().astype(np.float32) for k, v in net.state_dict().items()}
+        return NumpyV19HeteroConstructorNet(
+            weights,
+            hidden_dim=int(net.hidden_dim),
+            n_heads=int(net.n_heads),
+            n_layers=int(net.n_layers),
+            action_stage=str(net.action_stage),
+            ablation_mode=str(net.ablation_mode),
+        )
+
     def _ensure_nets(self) -> tuple[Any, Any]:
         if self._full_net is None or self._staged_net is None:
             f_net, f_b, f_sha, _ = _load_v19_checkpoint(
@@ -1794,13 +2007,32 @@ class V19AdaptiveCouplingProposer:
             self._eff_backend = f_b
             self._checkpoint_loaded = (f_sha is not None) and (s_sha is not None)
             self._checkpoint_sha256 = f_sha
+            if self.backend in ("auto", "numpy"):
+                self._np_full_net = self._to_numpy_net(f_net)
+                self._np_staged_net = self._to_numpy_net(s_net)
+                self._active_infer_backend = "numpy"
+            else:
+                self._active_infer_backend = f_b
         return self._full_net, self._staged_net
 
+    def _ensure_infer_nets(self) -> tuple[Any, Any]:
+        f_net, s_net = self._ensure_nets()
+        if self.backend in ("auto", "numpy"):
+            if self._np_full_net is None or self._np_staged_net is None:
+                self._np_full_net = self._to_numpy_net(f_net)
+                self._np_staged_net = self._to_numpy_net(s_net)
+            self._active_infer_backend = "numpy"
+            return self._np_full_net, self._np_staged_net
+        self._active_infer_backend = self._eff_backend
+        return f_net, s_net
+
     def _effective_backend(self) -> str:
+        if self._active_infer_backend is not None:
+            return self._active_infer_backend
         if self._eff_backend is None:
-            self._ensure_nets()
-        assert self._eff_backend is not None
-        return self._eff_backend
+            self._ensure_infer_nets()
+        assert self._active_infer_backend is not None or self._eff_backend is not None
+        return str(self._active_infer_backend or self._eff_backend)
 
     def __call__(
         self,
@@ -1808,17 +2040,47 @@ class V19AdaptiveCouplingProposer:
         network: Network,
         budget_ms: float = 35.0,
     ) -> CandidateProposal:
-        full_net, staged_net = self._ensure_nets()
-        t0 = _cvcr_now_s()
-        # Enforce strict <= 35 ms real-time SLA even when RuleV10 outer epochs request 50-100 ms
-        eff_budget_ms = min(float(budget_ms), 35.0)
-        hard_budget_s = t0 + max(0.0, eff_budget_ms * 0.86 / 1000.0)
-        deadline = t0 + max(0.0, eff_budget_ms * 0.72 / 1000.0)
+        from amr_sched.cvcr import v17_window_protection as _v17, v18_frontier_synthesis as _v18
+        from amr_sched.rl.causal_repair_cone import (
+            FastJAWKittingSurrogate,
+            adaptive_stability_margin,
+            build_causal_repair_cone,
+            compute_candidate_ja_components,
+            compute_stability_sets,
+            observable_op_closure,
+            score_candidate_ja_unified,
+        )
 
+        select_coupled_op_pair = getattr(_v17, "select_coupled_op_pair", getattr(_v18, "select_coupled_op_pair", None))
+        full_net, staged_net = self._ensure_infer_nets()
+        t0 = _cvcr_now_s()
         clf = classify_commitments(snapshot)
+        tick = int(snapshot.tick)
+
+        has_res_win = any(bool(getattr(op, "resource_windows", ())) for op in snapshot.operations)
+        has_kit_win_tight = any(
+            getattr(t, "kitting_bottleneck_active", False)
+            and int(getattr(t, "adjustable_window_steps", 3)) <= 1
+            for t in snapshot.tasks
+        )
+        has_open_fault_win = bool(clf.disturbed_robots) and any(
+            int(getattr(t, "adjustable_window_steps", 3)) <= 1 for t in snapshot.tasks
+        )
+        is_window_tight = bool(has_kit_win_tight or has_open_fault_win)
+        if self.enable_window_budget_guard:
+            eff_budget_ms = min(float(budget_ms), 17.5 if is_window_tight else 29.0)
+            deadline = t0 + max(0.0, eff_budget_ms * 0.78 / 1000.0)
+            hard_budget_s = t0 + max(0.0, eff_budget_ms * 0.90 / 1000.0)
+        else:
+            eff_budget_ms = min(float(budget_ms), 35.0)
+            deadline = t0 + max(0.0, eff_budget_ms * 0.78 / 1000.0)
+            hard_budget_s = t0 + max(0.0, eff_budget_ms * 0.90 / 1000.0)
+
         graph = extract_v19_hetero_graph(snapshot, network, clf=clf)
+        healthy_agvs = [graph.agv_ids[i] for i in graph.healthy_agv_indices]
         phi = compute_dynamic_coupling_features(graph)
         coupling_score = float(0.30 * phi[0] + 0.25 * phi[1] + 0.20 * phi[2] + 0.25 * phi[3])
+        is_ws = len(network.nodes) >= 30
 
         seed_b2 = self.evaluator_mode == "B2_SEEDED"
         raw_ev_mode = "B2" if seed_b2 else self.evaluator_mode
@@ -1831,8 +2093,22 @@ class V19AdaptiveCouplingProposer:
             mode=raw_ev_mode,
             seq_diff_b2=seed_b2,
         )
+        fb = getattr(snapshot, "execution_feedback", None)
+        has_drift = bool(fb is not None and not fb.is_empty())
+        tw: dict[tuple[str, str], int] = {}
+        cut_step = 0
+        if has_drift and fb is not None and fb.blocked_intervals(t_commit=tick, default_horizon=12):
+            tw = {
+                (str(u), str(v)): int(w)
+                for (u, v), w in fb.corridor_q3_penalties().items()
+                if network.has_edge(u, v)
+            }
+            if tw:
+                cut_step = tick + 45
+                ev.set_traffic_weights(tw, cutoff_step=cut_step)
+
         base_op_prio = {
-            op.op_id: max(int(snapshot.tick), int(op.due_step) - int(op.proc_steps))
+            op.op_id: max(tick, int(op.due_step) - int(op.proc_steps))
             for op in snapshot.operations
         }
         t_keep0 = _cvcr_now_s()
@@ -1842,7 +2118,7 @@ class V19AdaptiveCouplingProposer:
             op_bay_overrides=graph.base_bays,
             op_crew_overrides=graph.base_crews,
         )
-        keep_eval_s = max(0.002, _cvcr_now_s() - t_keep0)
+        keep_eval_s = max(0.001, _cvcr_now_s() - t_keep0)
         if seed_b2 and keep_eval.valid:
             ev.set_incumbent(
                 graph.base_assign,
@@ -1851,29 +2127,7 @@ class V19AdaptiveCouplingProposer:
                 op_bay_overrides=graph.base_bays,
             )
 
-        # Delayed closed-loop realized-execution feedback for previous epoch's LinUCB decision
-        if self.mode == "bandit" and self.enable_delayed_feedback:
-            if (
-                self._prev_tick is not None
-                and int(snapshot.tick) > int(self._prev_tick)
-                and self._prev_x is not None
-                and self._prev_arm is not None
-                and self._prev_pred_obj is not None
-                and keep_eval.valid
-            ):
-                realized_surprise = max(
-                    -1.0,
-                    min(1.0, (float(self._prev_pred_obj) - float(keep_eval.objective)) / 250.0),
-                )
-                self._b[self._prev_arm] += 0.35 * realized_surprise * self._prev_x
-            elif self._prev_tick is not None and int(snapshot.tick) <= int(self._prev_tick):
-                self._prev_tick = None
-                self._prev_x = None
-                self._prev_arm = None
-                self._prev_pred_obj = None
-
         best_eval: EvalResult = keep_eval
-        best_score = float(keep_eval.objective)
         best_assign = dict(graph.base_assign)
         best_bays = dict(graph.base_bays)
         best_crews = dict(graph.base_crews)
@@ -1882,7 +2136,13 @@ class V19AdaptiveCouplingProposer:
         fallback_keep = True
         chosen_arm = "keep"
         selected_mode = "keep"
+        cands_evaluated = 0
         neural_cands_eval = 0
+        cone_cands_generated = 0
+        surr_pool_size = 0
+        shortlist_size = 0
+        cone_accepted = False
+        zc_accepted = False
         changed_ratios: list[float] = []
         b2_struct_hits = 0
         b2_struct_fallbacks = 0
@@ -1892,40 +2152,41 @@ class V19AdaptiveCouplingProposer:
             for r in snapshot.robots
             if r.cur_task and r.robot_id not in clf.disturbed_robots
         }
+        fresh_op_ids, pending_or_dist_set, _ = compute_stability_sets(snapshot, graph)
+        obs_ops = observable_op_closure(snapshot)
+        tasks_by_id = {t.task_id: t for t in snapshot.tasks}
+        is_open = tick <= 4
+        is_resc = bool(clf.disturbed_robots) or any(
+            (t.assigned_agv is None or t.status.lower() == "pending") and getattr(t, "is_urgent", False)
+            for t in snapshot.tasks
+        )
+        bay_delta = {
+            graph.bay_ids[i]: float(graph.bay_detour_norm[i]) * 15.0
+            for i in range(len(graph.bay_ids))
+        }
+        fast_surr = FastJAWKittingSurrogate(
+            network, snapshot, ev, graph, lambda_change=self.lambda_change
+        )
 
-        if self.use_ja_aligned_scorer:
-            from amr_sched.rl.causal_repair_cone import score_candidate_ja_aligned
-
-        def _score_keep() -> float:
+        def _score_evaluated(
+            asn: dict[str, str],
+            bs: dict[str, str],
+            cs_c: dict[str, int],
+            seq_c: Optional[dict[str, list[str]]],
+            ev_c: EvalResult,
+            is_full: bool,
+        ) -> tuple[float, float]:
             if self.use_ja_aligned_scorer:
-                return score_candidate_ja_aligned(
+                raw_s, tard_c = score_candidate_ja_unified(
                     snapshot,
-                    graph,
-                    keep_eval,
-                    graph.base_assign,
-                    graph.base_bays,
-                    graph.base_crews,
-                    None,
-                    rob_cur_healthy,
-                    lambda_change=self.lambda_change,
-                    sim_horizon=ev.sim_horizon,
-                )
-            return float(keep_eval.objective)
-
-        keep_score_val = _score_keep()
-        best_score = keep_score_val
-
-        def _score_cand(cand: Any, ev_c: EvalResult, is_full: bool) -> float:
-            if self.use_ja_aligned_scorer:
-                raw_s = score_candidate_ja_aligned(
-                    snapshot,
+                    network,
                     graph,
                     ev_c,
-                    cand.assign,
-                    cand.bays,
-                    cand.crews,
-                    cand.task_sequences,
-                    rob_cur_healthy,
+                    asn,
+                    bs,
+                    cs_c,
+                    obs_ops,
+                    fast_surr,
                     lambda_change=self.lambda_change,
                     sim_horizon=ev.sim_horizon,
                 )
@@ -1933,32 +2194,44 @@ class V19AdaptiveCouplingProposer:
                 changed_ops = sum(
                     1
                     for oid in graph.op_ids
-                    if cand.bays.get(oid) != graph.base_bays.get(oid)
-                    or cand.crews.get(oid) != graph.base_crews.get(oid)
+                    if bs.get(oid) != graph.base_bays.get(oid) or cs_c.get(oid) != graph.base_crews.get(oid)
                 )
                 qh_preempts = 0
-                if cand.task_sequences:
+                if seq_c:
                     for aid_r, cur_tid in rob_cur_healthy.items():
-                        seq_r = cand.task_sequences.get(aid_r)
+                        seq_r = seq_c.get(aid_r)
                         if seq_r and seq_r[0] != cur_tid and cur_tid in graph.clf.releasable_tasks:
                             qh_preempts += 1
                 raw_s = float(ev_c.objective) + self.lambda_change * float(changed_ops + qh_preempts)
-            if self.mode == "b2_guard" and is_full:
-                changed_ops = sum(
-                    1
-                    for oid in graph.op_ids
-                    if cand.bays.get(oid) != graph.base_bays.get(oid)
-                    or cand.crews.get(oid) != graph.base_crews.get(oid)
-                )
-                if changed_ops > 0:
-                    keep_max_op = max(keep_eval.op_end.values(), default=snapshot.tick)
-                    cand_max_op = max(ev_c.op_end.values(), default=snapshot.tick)
-                    if coupling_score < 0.22 or cand_max_op > keep_max_op + 12:
-                        raw_s += 25.0 * float(changed_ops)
-            return raw_s
+                tard_c = 0.0
+            if self.mode == "b2_guard" and is_full and changed_ops > 0 if not self.use_ja_aligned_scorer else False:
+                raw_s += 25.0 * float(changed_ops)
+            return raw_s, tard_c
 
-        if len(graph.rel_tids) > 0 and len(graph.agv_ids) >= 1:
-            np_rng = np.random.default_rng(self.seed + int(snapshot.tick))
+        if self.use_ja_aligned_scorer:
+            keep_score_val, keep_tard_val = _score_evaluated(
+                graph.base_assign, graph.base_bays, graph.base_crews, None, keep_eval, False
+            )
+        else:
+            keep_comp = compute_candidate_ja_components(
+                snapshot,
+                graph,
+                keep_eval,
+                graph.base_assign,
+                graph.base_bays,
+                graph.base_crews,
+                None,
+                rob_cur_healthy,
+                lambda_change=self.lambda_change,
+                sim_horizon=ev.sim_horizon,
+            ) if False else None
+            _ = keep_comp
+            keep_score_val = float(keep_eval.objective)
+            keep_tard_val = 0.0
+        best_score = keep_score_val
+
+        if graph.rel_tids and healthy_agvs and float(budget_ms) > 0.05:
+            np_rng = np.random.default_rng(self.seed + tick)
             if self.mode == "bandit":
                 x = np.concatenate([[1.0], phi.astype(np.float64)])
                 ucb = []
@@ -1975,87 +2248,61 @@ class V19AdaptiveCouplingProposer:
             other_net = staged_net if arm_pick == 1 else full_net
             selected_mode = "full" if arm_pick == 1 else "staged"
             other_mode = "staged" if arm_pick == 1 else "full"
-            seen_sigs: set[tuple[Any, ...]] = {
-                (
-                    tuple(sorted(graph.base_assign.items())),
-                    tuple(sorted(graph.base_bays.items())),
-                    tuple(sorted(graph.base_crews.items())),
-                    None,
-                )
-            }
-            keep_max_op = max(keep_eval.op_end.values(), default=snapshot.tick)
-            full_cascade_risk = False
+
+            keep_sig = (
+                tuple(sorted(graph.base_assign.items())),
+                tuple(sorted(graph.base_bays.items())),
+                tuple(sorted(graph.base_crews.items())),
+                tuple(sorted(base_op_prio.items())),
+            )
+            seen_sigs: set[tuple[Any, ...]] = {keep_sig}
+            max_inc_eval_s = max(0.001, 0.55 * keep_eval_s)
             max_full_eval_s = keep_eval_s
-            max_inc_eval_s = max(0.002, 0.55 * keep_eval_s)
-            for k in range(self.sample_candidates):
-                if k > 0 and (_cvcr_now_s() >= deadline or (_cvcr_now_s() + max_inc_eval_s) >= hard_budget_s):
-                    break
-                # Guarded counterfactual dual-arm probe (I04): probe the complementary arm greedy at k=1
-                # when fleet size >= dual_arm_min_amrs, eliminating single-arm regret without serial-line cascades.
-                use_dual_other = (
-                    self.enable_dual_arm_probe
-                    and k == 1
-                    and len(graph.agv_ids) >= self.dual_arm_min_amrs
-                )
-                use_net = other_net if use_dual_other else net_m
-                use_arm_name = other_mode if use_dual_other else selected_mode
-                use_is_full = (arm_pick == 0) if use_dual_other else (arm_pick == 1)
-                use_greedy = (k == 0) or use_dual_other
-                use_focus_frac = 1.0 if use_greedy else self.focus_sample_frac
+            arm_best_scores: dict[int, float] = {0: keep_score_val, 1: keep_score_val}
 
-                if (
-                    self.enable_cascade_crosscheck
-                    and k == self.sample_candidates - 1
-                    and self.sample_candidates >= 2
-                ):
-                    if arm_pick == 1 and (not best_eval.valid or full_cascade_risk):
-                        use_net = staged_net
-                        use_arm_name = "staged"
-                        use_is_full = False
-                        use_greedy = True
-                        use_focus_frac = 1.0
-                    elif arm_pick == 0 and coupling_score >= 0.35 and best_eval is keep_eval:
-                        use_net = full_net
-                        use_arm_name = "full"
-                        use_is_full = True
-                        use_greedy = True
-                        use_focus_frac = 1.0
+            def _try_verify(
+                tag_s: str,
+                asn_s: dict[str, str],
+                bs_s: dict[str, str],
+                cs_s: dict[str, int],
+                op_s: dict[str, int],
+                is_full_s: bool,
+                *,
+                force: bool = False,
+            ) -> bool:
+                nonlocal best_eval, best_score, best_assign, best_bays, best_crews, best_op_prio
+                nonlocal fallback_keep, chosen_arm, cone_accepted, zc_accepted, cands_evaluated, neural_cands_eval
+                nonlocal max_inc_eval_s, max_full_eval_s, b2_struct_hits, b2_struct_fallbacks
 
-                cand = decode_v19_candidate(
-                    use_net,
-                    graph,
-                    snapshot,
-                    greedy=use_greedy,
-                    np_rng=np_rng,
-                    tau=0.45,
-                    focus_sample_frac=use_focus_frac,
+                sg = (
+                    tuple(sorted(asn_s.items())),
+                    tuple(sorted(bs_s.items())),
+                    tuple(sorted(cs_s.items())),
+                    tuple(sorted(op_s.items())),
                 )
-                sig = (
-                    tuple(sorted(cand.assign.items())),
-                    tuple(sorted(cand.bays.items())),
-                    tuple(sorted(cand.crews.items())),
-                    tuple(sorted((aid, tuple(sq)) for aid, sq in cand.task_sequences.items()))
-                    if cand.task_sequences
-                    else None,
-                )
-                if sig in seen_sigs:
-                    continue
-                seen_sigs.add(sig)
+                if sg in seen_sigs:
+                    return False
+                if (not force) and _cvcr_now_s() >= deadline:
+                    return False
+
                 fp = compute_candidate_amr_footprint(
                     snapshot,
-                    graph.base_assign,
-                    graph.base_bays,
-                    keep_eval.robot_order_seq,
-                    cand.assign,
-                    cand.bays,
-                    cand.task_sequences,
+                    best_assign,
+                    best_bays,
+                    best_eval.robot_order_seq,
+                    asn_s,
+                    bs_s,
+                    None,
                 )
-                # CVCR-IR footprint-aware anytime SLA guard: skip expensive full-fleet evaluations
-                # that would breach the 35 ms real-time SLA, while still permitting fast B2 incremental hits.
-                est_ev_s = max_inc_eval_s if fp["is_b2_incremental_hit"] else max(max_full_eval_s, 1.15 * keep_eval_s)
-                if k > 0 and (_cvcr_now_s() + est_ev_s) >= hard_budget_s:
-                    continue
+                est_ev_s = (
+                    max_inc_eval_s
+                    if fp["is_b2_incremental_hit"]
+                    else max(max_full_eval_s, 1.10 * keep_eval_s)
+                )
+                if (not force) and (_cvcr_now_s() + est_ev_s) >= hard_budget_s:
+                    return False
 
+                seen_sigs.add(sg)
                 changed_ratios.append(float(fp["changed_amr_ratio"]))
                 if fp["is_b2_incremental_hit"]:
                     b2_struct_hits += 1
@@ -2064,78 +2311,301 @@ class V19AdaptiveCouplingProposer:
 
                 t_ev0 = _cvcr_now_s()
                 ev_c = ev.evaluate(
-                    cand.assign,
-                    op_priority=cand.op_prio,
-                    op_bay_overrides=cand.bays,
-                    op_crew_overrides=cand.crews,
-                    task_order_override=cand.task_sequences,
+                    asn_s,
+                    op_priority=op_s,
+                    op_bay_overrides=bs_s,
+                    op_crew_overrides=cs_s,
                 )
-                dt_ev_s = max(0.001, _cvcr_now_s() - t_ev0)
+                dt_ev_s = max(0.0005, _cvcr_now_s() - t_ev0)
                 if fp["is_b2_incremental_hit"]:
                     max_inc_eval_s = max(max_inc_eval_s, dt_ev_s)
                 else:
                     max_full_eval_s = max(max_full_eval_s, dt_ev_s)
-                neural_cands_eval += 1
-                if use_is_full:
-                    cand_max_op = max(ev_c.op_end.values(), default=snapshot.tick)
-                    c_ops_chg = sum(
-                        1
-                        for oid in graph.op_ids
-                        if cand.bays.get(oid) != graph.base_bays.get(oid)
-                    )
-                    if (
-                        not ev_c.valid
-                        or (c_ops_chg > 0 and cand_max_op > keep_max_op + 6)
-                        or float(fp["changed_amr_ratio"]) >= 0.85
-                    ):
-                        full_cascade_risk = True
 
-                cs = _score_cand(cand, ev_c, use_is_full)
-                margin = self.hysteresis_margin if best_eval is keep_eval else 1e-4
-                if ev_c.valid and (not best_eval.valid or cs + margin < best_score):
-                    if use_arm_name != selected_mode:
+                cands_evaluated += 1
+                is_cone_cand = tag_s.startswith("cone") or tag_s == "cliff_bridge"
+                if not is_cone_cand:
+                    neural_cands_eval += 1
+
+                sc_c, tard_c = _score_evaluated(asn_s, bs_s, cs_s, None, ev_c, is_full_s)
+                if tag_s.startswith("full"):
+                    arm_best_scores[1] = min(arm_best_scores[1], sc_c)
+                elif tag_s.startswith("staged"):
+                    arm_best_scores[0] = min(arm_best_scores[0], sc_c)
+
+                if not ev_c.valid:
+                    return False
+
+                if best_eval is keep_eval:
+                    if self.use_ja_aligned_scorer:
+                        if is_open or is_resc:
+                            margin = 0.0
+                        else:
+                            nnr = sum(
+                                1
+                                for tid_c, nr in asn_s.items()
+                                if tid_c in tasks_by_id
+                                and tasks_by_id[tid_c].status.lower() == "assigned"
+                                and tasks_by_id[tid_c].assigned_agv
+                                and tasks_by_id[tid_c].assigned_agv != nr
+                                and tasks_by_id[tid_c].assigned_agv not in clf.disturbed_robots
+                            )
+                            nso = sum(
+                                1
+                                for oid in graph.op_ids
+                                if oid not in fresh_op_ids
+                                and (
+                                    bs_s.get(oid, graph.base_bays[oid]) != graph.base_bays[oid]
+                                    or cs_s.get(oid, graph.base_crews[oid]) != graph.base_crews[oid]
+                                )
+                            )
+                            if nnr == 0 and nso == 0:
+                                margin = 0.0
+                            else:
+                                raw_m = 20.0 + 16.0 * float(nnr) + 20.0 * float(nso)
+                                tg = max(0.0, keep_tard_val - tard_c)
+                                margin = raw_m * max(0.20, 1.0 - min(0.80, tg / 70.0))
+                    else:
+                        margin = self.hysteresis_margin
+                else:
+                    margin = 1e-4
+
+                if (not best_eval.valid) or (sc_c + margin < best_score):
+                    cand_arm_name = "full" if is_full_s else ("staged" if tag_s.startswith("staged") else "cone_zc")
+                    if cand_arm_name != selected_mode:
                         self.crosscheck_rescues += 1
-                    best_eval, best_score = ev_c, cs
-                    best_assign, best_bays, best_crews = cand.assign, cand.bays, cand.crews
-                    best_op_prio, best_seq = cand.op_prio, cand.task_sequences
-                    chosen_arm = use_arm_name
+                    best_eval, best_score = ev_c, sc_c
+                    best_assign, best_bays, best_crews, best_op_prio = asn_s, bs_s, cs_s, op_s
+                    chosen_arm = tag_s
+                    cone_accepted = "cone" in tag_s or tag_s == "cliff_bridge"
+                    zc_accepted = "zc" in tag_s
                     fallback_keep = False
+                    if seed_b2:
+                        ev.set_incumbent(
+                            best_assign,
+                            best_eval,
+                            op_priority=best_op_prio,
+                            op_bay_overrides=best_bays,
+                        )
+                    return True
+                return False
+
+            # Stage 1: AHG-RL neural constructors + Zero-Churn projection
+            if self.enable_neural_candidates:
+                nn_cands: list[tuple[str, dict[str, str], dict[str, str], dict[str, int], dict[str, int], bool]] = []
+                n_neural_decode = min(3, max(1, self.sample_candidates))
+                lock_nn_bay = bool(is_ws and len(graph.agv_ids) >= 4)
+                for k in range(n_neural_decode):
+                    if k > 0 and (_cvcr_now_s() - t0) > 0.009:
+                        break
+                    use_dual_other = (
+                        self.enable_dual_arm_probe
+                        and k == 1
+                        and len(graph.agv_ids) >= self.dual_arm_min_amrs
+                    )
+                    use_net = other_net if use_dual_other else net_m
+                    use_arm_name = other_mode if use_dual_other else selected_mode
+                    use_is_full = (arm_pick == 0) if use_dual_other else (arm_pick == 1)
+                    use_greedy = (k == 0) or use_dual_other
+                    cand = decode_v19_candidate(
+                        use_net,
+                        graph,
+                        snapshot,
+                        greedy=use_greedy,
+                        np_rng=np_rng,
+                        tau=0.45,
+                        focus_sample_frac=1.0 if use_greedy else self.focus_sample_frac,
+                    )
+                    bn = (
+                        dict(graph.base_bays)
+                        if (lock_nn_bay or ((not is_ws) and not is_open))
+                        else {
+                            oid: (cand.bays.get(oid, graph.base_bays[oid]) if oid in fresh_op_ids else graph.base_bays[oid])
+                            for oid in graph.op_ids
+                        }
+                    )
+                    cn = {
+                        oid: (cand.crews.get(oid, graph.base_crews[oid]) if oid in fresh_op_ids else graph.base_crews[oid])
+                        for oid in graph.op_ids
+                    }
+                    raw_tag = f"{use_arm_name}_g" if use_greedy else f"{use_arm_name}_s{k}"
+                    nn_cands.append((raw_tag, cand.assign, bn, cn, cand.op_prio, use_is_full))
+                    if self.enable_zero_churn_projection and pending_or_dist_set and not is_open:
+                        za = {
+                            tid: (cand.assign.get(tid, graph.base_assign[tid]) if tid in pending_or_dist_set else graph.base_assign[tid])
+                            for tid in graph.base_assign
+                        }
+                        nn_cands.append((f"{use_arm_name}_zc", za, bn, cn, cand.op_prio, False))
+                surr_pool_size += len(nn_cands)
+                nn_cap = min(3, len(nn_cands))
+                shortlist_size += nn_cap
+                for i_n, item_n in enumerate(nn_cands[:nn_cap]):
+                    _try_verify(*item_n, force=(i_n == 0 and _cvcr_now_s() < hard_budget_s))
+
+            # Stage 2: Causal Joint Repair Cone + FastJAWKittingSurrogate Regret-2 + Danger-Cliff Guard
+            if self.enable_causal_cone_repair and (_cvcr_now_s() < deadline or not self.enable_neural_candidates):
+                has_fbay = any(o.op_id in fresh_op_ids and len(o.eligible_bays) > 1 for o in snapshot.operations)
+                allow_bd = has_fbay and (not has_drift) and (is_ws or is_open)
+                if allow_bd:
+                    b_opt, km_p = _v18.compute_semicircle_kitting_bays(
+                        snapshot,
+                        network,
+                        clf,
+                        fast_surr,
+                        best_bays,
+                        bay_delta,
+                        eligible_op_ids=fresh_op_ids,
+                        spread_empty_kits=is_open,
+                    )
+                else:
+                    b_opt, km_p = dict(best_bays), dict(best_op_prio)
+                c_opt = dict(best_crews)
+                if allow_bd and is_ws:
+                    fc_ops = [o for o in snapshot.operations if not o.started and o.op_id in fresh_op_ids and len(o.eligible_crews) > 1][:5]
+                    if fc_ops:
+                        bsc = fast_surr.score(best_assign, km_p, b_opt, c_opt)
+                        for o in fc_ops:
+                            cc = int(c_opt[o.op_id])
+                            for xc in o.eligible_crews:
+                                if int(xc) == cc:
+                                    continue
+                                c_opt[o.op_id] = int(xc)
+                                st = fast_surr.score(best_assign, km_p, b_opt, c_opt)
+                                if st + 1e-3 < bsc:
+                                    bsc, cc = st, int(xc)
+                                else:
+                                    c_opt[o.op_id] = cc
+                p_co = km_p if (has_res_win or has_fbay) else best_op_prio
+                cone = build_causal_repair_cone(snapshot, graph, best_eval, best_assign, best_bays, best_crews)
+                ccands: list[tuple[str, dict[str, str], dict[str, str], dict[str, int], dict[str, int], bool]] = []
+                if (not is_ws) and pending_or_dist_set and not is_open:
+                    ha_anc = {tid: aid for tid, aid in best_assign.items() if tid not in pending_or_dist_set}
+                    ccands.append((
+                        "cone_regret2_zc_keepbay",
+                        fast_surr.regret_k_assignment(healthy_agvs, ha_anc, sorted(pending_or_dist_set), best_bays, best_op_prio),
+                        dict(best_bays),
+                        dict(best_crews),
+                        dict(best_op_prio),
+                        False,
+                    ))
+                if pending_or_dist_set:
+                    ha_anc = {tid: aid for tid, aid in best_assign.items() if tid not in pending_or_dist_set}
+                    ccands.append((
+                        "cone_regret2_zc",
+                        fast_surr.regret_k_assignment(healthy_agvs, ha_anc, sorted(pending_or_dist_set), b_opt, p_co),
+                        b_opt,
+                        c_opt,
+                        p_co,
+                        False,
+                    ))
+                if (not is_ws) or (not self.enable_neural_candidates):
+                    fx_anc = {tid: aid for tid, aid in best_assign.items() if tid not in set(graph.rel_tids)}
+                    ccands.append((
+                        "cone_regret2_full",
+                        fast_surr.regret_k_assignment(healthy_agvs, fx_anc, sorted(graph.rel_tids), b_opt, p_co),
+                        b_opt,
+                        c_opt,
+                        p_co,
+                        True,
+                    ))
+                dc = sorted(set(pending_or_dist_set) | set(cone.cone_tasks))
+                if dc and len(dc) < len(graph.rel_tids):
+                    ac = {tid: aid for tid, aid in best_assign.items() if tid not in set(dc)}
+                    dc_b = best_bays if ((not is_ws) and not is_open) else b_opt
+                    ccands.append((
+                        "cone_regret2_lns",
+                        fast_surr.regret_k_assignment(healthy_agvs, ac, dc, dc_b, p_co),
+                        dc_b,
+                        c_opt,
+                        p_co,
+                        False,
+                    ))
+                cone_cands_generated = len(ccands)
+                surr_pool_size += len(ccands)
+                c_cap = 4 if (not is_ws or not self.enable_neural_candidates) else 2
+                shortlist_size += min(c_cap, len(ccands))
+                for i_c, item_c in enumerate(ccands[:c_cap]):
+                    _try_verify(*item_c, force=(not self.enable_neural_candidates and i_c == 0 and _cvcr_now_s() < hard_budget_s))
+
+                if select_coupled_op_pair is not None and has_res_win and best_eval.valid and (_cvcr_now_s() + 0.002) < deadline:
+                    dops = _v18._find_danger_cliff_ops(snapshot, best_eval, bay_delta)
+                    pr = select_coupled_op_pair(network, snapshot, best_eval, best_assign, best_op_prio) if dops else None
+                    if dops and pr is not None:
+                        for ldr, yld in ((pr[0], pr[1]), (pr[1], pr[0])):
+                            if (_cvcr_now_s() + 0.002) >= deadline:
+                                break
+                            bp_p = _v17.plan_bridge_order_control(
+                                network, snapshot, ev, best_assign, best_op_prio, ldr, yld,
+                                sim=None, base_bays=best_bays, base_crews=best_crews,
+                            )
+                            if bp_p.eligible and bp_p.eval_res is not None and bp_p.eval_res.valid:
+                                cands_evaluated += 1
+                                sc_bp, _ = _score_evaluated(best_assign, best_bays, best_crews, None, bp_p.eval_res, False)
+                                if sc_bp + 4.0 < best_score:
+                                    best_eval, best_score, best_op_prio = bp_p.eval_res, sc_bp, bp_p.op_priority
+                                    chosen_arm = "cliff_bridge"
+                                    cone_accepted = True
+                                    fallback_keep = False
 
             if self.mode == "bandit":
                 impr = max(-1.0, min(1.0, (keep_score_val - best_score) / 200.0))
-                eff_arm = 1 if chosen_arm == "full" else (0 if chosen_arm == "staged" else arm_pick)
-                self._A[eff_arm] += np.outer(x, x)
-                self._b[eff_arm] += (0.65 * impr if self.enable_delayed_feedback else impr) * x
-                self._prev_tick = int(snapshot.tick)
-                self._prev_x = x
-                self._prev_arm = eff_arm
-                self._prev_pred_obj = float(best_score)
-            if chosen_arm == "full" or (chosen_arm == "keep" and arm_pick == 1):
+                self._A[arm_pick] += np.outer(x, x)
+                self._b[arm_pick] += impr * x
+            if chosen_arm.startswith("full") or (chosen_arm == "keep" and arm_pick == 1):
                 self.full_selected_calls += 1
             else:
                 self.staged_selected_calls += 1
 
-        prop = _build_external_proposal(
-            policy_id=self.policy_id,
-            snapshot=snapshot,
-            clf=clf,
-            best_assign=best_assign,
-            best_bays=best_bays,
-            best_crews=best_crews,
-            best_eval=best_eval,
-            op_prio=best_op_prio,
-            eval_cnt=ev.calls,
-            t0=t0,
-            budget_ms=budget_ms,
-            task_sequences=best_seq,
+        use_exec_commit = bool(
+            self.enable_exec_consistent_commit and (is_ws or (not has_res_win) or is_open)
         )
+        if use_exec_commit:
+            prop = _build_core_sched_proposal(
+                policy_id=self.policy_id,
+                snapshot=snapshot,
+                clf=clf,
+                best_assign=best_assign,
+                best_bays=best_bays,
+                best_crews=best_crews,
+                best_eval=best_eval,
+                op_prio=best_op_prio,
+                eval_cnt=ev.calls,
+                t0=t0,
+                budget_ms=budget_ms,
+                fallback_keep=fallback_keep,
+                task_sequences=best_seq,
+                predicted_score=best_score,
+                include_eval_seq_when_unwindowed=False,
+            )
+            if tw:
+                prop.proposed_traffic_weights = tw
+                prop.proposed_traffic_cutoff = cut_step
+        else:
+            prop = _build_external_proposal(
+                policy_id=self.policy_id,
+                snapshot=snapshot,
+                clf=clf,
+                best_assign=best_assign,
+                best_bays=best_bays,
+                best_crews=best_crews,
+                best_eval=best_eval,
+                op_prio=best_op_prio,
+                eval_cnt=ev.calls,
+                t0=t0,
+                budget_ms=budget_ms,
+                task_sequences=best_seq,
+                traffic_weights=tw or None,
+                traffic_cutoff=cut_step,
+            )
+            prop.predicted_obj = float(best_score)
+
         beat_keep = bool(
             not fallback_keep
             and best_eval.valid
             and keep_eval.valid
-            and best_eval.objective + 1e-4 < keep_eval.objective
+            and best_score + 1e-4 < keep_score_val
         )
-        self.total_cands_evaluated += int(neural_cands_eval)
+        self.total_cands_evaluated += int(cands_evaluated)
         self.total_b2_inc_hits += int(ev.b2_inc_hits)
         self.total_b2_fallbacks += int(ev.b2_fallbacks)
         self.total_b1_calls += int(ev.b1_calls)
@@ -2153,6 +2623,14 @@ class V19AdaptiveCouplingProposer:
             coupling_score=round(coupling_score, 4),
             phi=[round(float(x), 4) for x in phi],
             neural_candidates_evaluated=neural_cands_eval,
+            total_candidates_evaluated=cands_evaluated,
+            cone_candidates_generated=cone_cands_generated,
+            surrogate_pool_size=surr_pool_size,
+            shortlist_size=shortlist_size,
+            cone_accepted=cone_accepted,
+            zero_churn_accepted=zc_accepted,
+            window_sensitive=is_window_tight,
+            eff_budget_ms=round(eff_budget_ms, 2),
             b2_inc_hits=int(ev.b2_inc_hits),
             b2_fallbacks=int(ev.b2_fallbacks),
             b1_calls=int(ev.b1_calls),
@@ -2164,8 +2642,8 @@ class V19AdaptiveCouplingProposer:
             mean_eval_lat_ms=round(float(np.mean(ev.eval_lats_ms)) if ev.eval_lats_ms else 0.0, 4),
             fallback_keep=fallback_keep,
             beat_keep=beat_keep,
-            keep_obj=round(float(keep_eval.objective), 4),
-            best_obj=round(float(best_eval.objective), 4),
+            keep_obj=round(float(keep_score_val), 4),
+            best_obj=round(float(best_score), 4),
         )
         return prop
 

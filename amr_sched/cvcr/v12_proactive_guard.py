@@ -359,6 +359,9 @@ def plan_haven_safe_corridor_repair(
     tmap = getattr(simulator, "_task_by_id", {})
     faulted = set(getattr(simulator, "_faulted_agvs", set()))
     transit = getattr(simulator, "_transit", {})
+    loading_active = {
+        aid for aid, end_t in getattr(simulator, "_load_end", {}).items() if int(end_t) > step
+    }
 
     stats = {
         "mode": "haven_v12",
@@ -514,12 +517,12 @@ def plan_haven_safe_corridor_repair(
         stall_threshold=stall_threshold,
         include_edge_gate_stalls=include_edge_gate_stalls,
     )
-    stalled = [aid for aid in raw_stalled if aid not in transit and aid not in repairs]
+    stalled = [aid for aid in raw_stalled if aid not in transit and aid not in loading_active and aid not in repairs]
     # Also include non-transit PICKED AMRs whose near-term hops intersect a live L1-blocked corridor
     if fb_blocked:
         for cand_agv in getattr(simulator, "agvs", []):
             cid = cand_agv.agv_id
-            if cid in transit or cid in repairs or cid in faulted or cid in stalled:
+            if cid in transit or cid in loading_active or cid in repairs or cid in faulted or cid in stalled:
                 continue
             c_job = jobs.get(cid)
             c_task = tmap.get(c_job.task_id) if (c_job is not None and c_job.task_id) else None
@@ -819,4 +822,10 @@ def plan_haven_safe_corridor_repair(
                 staged_edges.append((u, v, dep, arr))
             stats["solo_reroutes"] += 1
 
+    if loading_active:
+        repairs = {
+            aid: r
+            for aid, r in repairs.items()
+            if not (aid in loading_active and str(r.get("kind", "")) == "picked_reroute")
+        }
     return repairs, stats

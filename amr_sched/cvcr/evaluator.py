@@ -170,7 +170,7 @@ class CVCREvaluator:
         network: Network,
         snapshot: NativeSnapshot,
         mode: str = "B2",  # "A1" | "B1" | "B2"
-        max_speed: float = 1.0,
+        max_speed: Optional[float] = None,
         dt: float = 1.0,
         sim_horizon: Optional[int] = None,
         lambda_change: float = 15.0,
@@ -178,11 +178,15 @@ class CVCREvaluator:
         use_rust: bool = True,
         seq_diff_b2: bool = False,
     ) -> None:
+        if max_speed is None:
+            # Match Simulator (`env.py:805`, `planner_cls(max_speed=3.0, dt=1.0)`) so fast 4-Topo
+            # layouts are not slowed 3x while preserving slower edge speed limits via `min(max_speed, e.speed_limit)`.
+            max_speed = max(3.0, max((float(e.speed_limit) for e in network.edges.values()), default=1.0))
         self.network = network
         self.snapshot = snapshot
         self.mode = mode
         self.seq_diff_b2 = bool(seq_diff_b2)
-        self.max_speed = max_speed
+        self.max_speed = float(max_speed)
         self.dt = dt
 
         max_due = max(

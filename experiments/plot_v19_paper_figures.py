@@ -182,7 +182,7 @@ def plot_fig1_system_overview() -> Path:
     ax.text(0.215, 0.611, r"Causal Execution Snapshot $s_t$ & Dual-Layer Plant", ha="center", va="center", fontsize=8.1, fontweight="bold", color="#1E293B", zorder=4)
     ax.text(
         0.215, 0.540,
-        "• Discrete Rust/Python Plant (120 Unseen Holdouts)\n"
+        "• Discrete Rust/Python Plant (240 Unseen Holdouts)\n"
         "• ROS 2 + Nav2 + Gazebo Plant (5-Seed Reconciliation)\n"
         "• Disturbances: Corridor Blockages & Wave Surges",
         ha="center", va="center", fontsize=6.9, color="#334155", linespacing=1.42, zorder=4,
@@ -287,8 +287,8 @@ def plot_fig1_system_overview() -> Path:
     _rbox(ax, 0.474, 0.064, 0.478, 0.060, fc="#FEF3C7", ec="#D97706", lw=0.95, rad=0.008, zorder=3)
     ax.text(
         0.713, 0.094,
-        r"Exact Parity ($\mathrm{med}\,|\Delta J|=0.00$) · Cache Hit: 86.8% · Pooled P95/P99: 32.4 / 34.9 ms (< 35 ms SLA)",
-        ha="center", va="center", fontsize=6.8, fontweight="bold", color="#78350F", zorder=4,
+        r"Exact Parity ($\mathrm{med}\,|\Delta J|=0.00$) · NCSR + NumPy · Pooled P95/P99: 15.5–19.5 / 18.6–22.6 ms (< 35 ms)",
+        ha="center", va="center", fontsize=6.5, fontweight="bold", color="#78350F", zorder=4,
     )
 
     # Vertical arrows between AHG-RL and CVCR-IR
@@ -510,7 +510,7 @@ def plot_fig3_main_benchmark() -> Path:
     ax1.get_xticklabels()[0].set_color("#0B4F8A")
     ax1.set_ylabel(r"Mean Net Objective ($J_A$, lower is better)")
     ax1.set_ylim(0, max(tots) * 1.24)
-    ax1.set_title("(a) Fresh 120-Ep Frozen Blind Holdout (*Pool P95 > 35 ms)")
+    ax1.set_title("(a) Cohort A: 120-Ep Frozen Blind Holdout (*Pool P95 > 35 ms)")
     ax1.legend(loc="upper left", frameon=True, ncol=2, fontsize=7.0)
 
     # ── Panel (b): Paired % Improvement & 95% Bootstrap CI Forest Plot (11 comparators) ──
@@ -555,7 +555,7 @@ def plot_fig3_main_benchmark() -> Path:
     ax2.set_ylim(len(comp_keys) + 0.55, -0.65)
     ax2.set_xlim(-28.0, 97.0)
     ax2.set_xlabel(r"Paired $\Delta J_A$ Reduction (%) with 95% Bootstrap CI (> 0 better)")
-    ax2.set_title("(b) Paired Attribution vs. CoRe-Sched (N = 120 Fresh)")
+    ax2.set_title("(b) Paired Attribution vs. CoRe-Sched (N = 120, Cohort A)")
     ax2.text(
         0.50, 0.015,
         "*p<0.05, **p<0.01 (Wilcoxon); †95% CI > 0; *method breaches 35ms SLA",
@@ -564,8 +564,10 @@ def plot_fig3_main_benchmark() -> Path:
     )
 
     # ── Panel (c): Pooled Wall-Clock P95 Latency vs Mean J_A Pareto Frontier (12 methods) ──
+    core_p99 = stats_map["V19_ADAPTIVE_RL"]["p99"]
+    v18_p99 = stats_map["V18_EA_JOINT"]["p99"]
     pareto_specs = [
-        ("V19_ADAPTIVE_RL", "CoRe-Sched ★\n(P99=34.9ms)", "#0B4F8A", "*", 205, (-74, -26)),
+        ("V19_ADAPTIVE_RL", f"CoRe-Sched ★\n(P99={core_p99:.1f}ms)", "#0B4F8A", "*", 205, (9, 5)),
         ("FGCS26_REN_GNN", "FGCS26-Ren-GNN", "#0D9488", "P", 54, (7, 4)),
         ("IJCAI26_PGMPO", "IJCAI26-PGMPO", "#E15759", "^", 50, (-34, -15)),
         ("V19_HETERO_RL", "AHG-RL (Full)", "#D95F02", "o", 50, (7, -8)),
@@ -574,7 +576,7 @@ def plot_fig3_main_benchmark() -> Path:
         ("RAL26_DetourDelta", "RAL26-Detour", "#76B7B2", "X", 48, (-68, 7)),
         ("EJOR26_Wu_GRU_Attn", "EJOR26-Wu-GRU", "#B07AA1", "v", 48, (7, -3)),
         ("IJPR25_DFJSPT_HMARL", "IJPR25-DFJSP-T", "#7C3AED", "h", 52, (7, -3)),
-        ("V18_EA_JOINT", "V18-EA (P99=75.8ms)", "#59A14F", "D", 50, (-14, -16)),
+        ("V18_EA_JOINT", f"V18-EA (P99={v18_p99:.1f}ms)", "#59A14F", "D", 50, (8, -6)),
         ("rule_v10", "Rule-V10", "#6B7280", "d", 46, (6, -3)),
         ("SPGA_AMR", "COR26-SPGA", "#D97706", "H", 54, (-66, 8)),
     ]
@@ -597,7 +599,7 @@ def plot_fig3_main_benchmark() -> Path:
             color=pcol if pk in ("V19_ADAPTIVE_RL", "FGCS26_REN_GNN", "ASC26_MA_TRANS") else "#1F2937",
         )
     ax3.set_xlim(8, 70)
-    ax3.set_ylim(5150, 9200)
+    ax3.set_ylim(min(5000, stats_map["V19_ADAPTIVE_RL"]["mean"] - 220), 9200)
     ax3.set_xlabel("Pooled Wall-Clock P95 Decision Latency (ms)")
     ax3.set_ylabel(r"Mean Net Objective ($J_A$)")
     ax3.set_title("(c) Pooled Wall-Clock P95 vs. Quality (#1 Within SLA)")
@@ -932,7 +934,7 @@ def plot_fig6_pure_h1_and_lbbd() -> Path:
     ax1.invert_yaxis()
     ax1.set_xlim(-5100, 2000)
     ax1.set_xlabel(r"Paired Pure Efficiency $\Delta H_1 = \Delta(C_{\max}+2T_{\mathrm{task}}+2T_{\mathrm{op}})$ ($\Delta < 0$ better)")
-    ax1.set_title(r"(a) Gate G3 Pure Physical $H_1$ Attribution ($H_2 = 0$ Strictly)")
+    ax1.set_title(r"(a) Cohort A Pure Physical $H_1$ Attribution ($H_2 = 0$ Strictly)")
     ax1.legend(loc="lower left", frameon=True, fontsize=7.1)
 
     # ── Panel (b): Gate G1 Apples-to-Apples Pure Zero-Fault Static Common Subproblem ──
@@ -952,11 +954,17 @@ def plot_fig6_pure_h1_and_lbbd() -> Path:
     v18_vals = [float(by_g[g]["mean_v18_ea_h1_comp"]) for g, _ in groups]
     pgm_vals = [float(by_g[g]["mean_pgmpo_h1_comp"]) for g, _ in groups]
 
+    cor_t_lo = min(float(by_g[g]["mean_cor26_solve_s"]) for g, _ in groups)
+    cor_t_hi = max(float(by_g[g]["mean_cor26_solve_s"]) for g, _ in groups)
+    erd_t_lo = min(float(by_g[g]["mean_erdogan_solve_s"]) for g, _ in groups)
+    erd_t_hi = max(float(by_g[g]["mean_erdogan_solve_s"]) for g, _ in groups)
+    core_p95 = float(g1["core_sched_pooled_p95_ms"])
+
     bars_spec = [
         (-2.5 * bw, lb_vals, "Valid Phys. LB (0 Violations)", "#1E3A8A", None),
-        (-1.5 * bw, cor_vals, "COR26-Ref Sim-UB (3.7–5.8 s)", "#3B82F6", "//"),
-        (-0.5 * bw, erd_vals, "EJOR26-Erdogan ILS-LP (1.2–8.7 s)", "#0D9488", "\\\\"),
-        (0.5 * bw, core_vals, "CoRe-Sched (Online, 33.4 ms)", "#15803D", None),
+        (-1.5 * bw, cor_vals, f"COR26-Ref CP-SAT+Verif ({cor_t_lo:.1f}–{cor_t_hi:.1f} s)", "#3B82F6", "//"),
+        (-0.5 * bw, erd_vals, f"EJOR26-Erdogan ILS-LP ({erd_t_lo:.1f}–{erd_t_hi:.1f} s)", "#0D9488", "\\\\"),
+        (0.5 * bw, core_vals, f"CoRe-Sched (Online P95={core_p95:.1f} ms)", "#15803D", None),
         (1.5 * bw, v18_vals, "V18-EA (Online)", "#D97706", None),
         (2.5 * bw, pgm_vals, "IJCAI26-PGMPO (Online)", "#DC2626", None),
     ]
@@ -996,6 +1004,114 @@ def plot_fig6_pure_h1_and_lbbd() -> Path:
     return out_p
 
 
+def plot_fig7_dual_cohort_and_ablation() -> Path:
+    """Figure 7: Pristine Blind Cohort B (EXP-13), VAL-72 NCSR Ablations & 2x2 Trigger x Solver (EXP-12)."""
+    g3 = _load_json(AUDIT_DIR / "exp11_g3_fresh_frozen_holdout.json")
+    g5 = _load_json(AUDIT_DIR / "exp13_g5_pristine_blind_holdout.json")
+    exp12 = _load_json(AUDIT_DIR / "exp12_val72_repair_and_ablation.json")
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18.6, 5.2), gridspec_kw={"width_ratios": [1.35, 1.05, 1.05]})
+
+    # ── Panel (a): Dual-Cohort (Cohort B + Combined 240-Ep) Completion & Cohort B Pooled P99 SLA ──
+    pols = [
+        ("V19_ADAPTIVE_RL", "CoRe-Sched"),
+        ("FGCS26_REN_GNN", "FGCS26"),
+        ("IJCAI26_PGMPO", "PGMPO"),
+        ("V18_EA_JOINT", "V18-EA*"),
+        ("V19_HETERO_RL", "AHG-Full*"),
+        ("V19_STAGED_RL", "AHG-Stg*"),
+        ("rule_v10", "Rule-V10*"),
+        ("COR26-SPGA" if False else "SPGA_AMR", "SPGA*"),
+        ("RAL26_DetourDelta", "Detour*"),
+        ("ASC26_MA_TRANS", "MA-Trans"),
+        ("EJOR26_Wu_GRU_Attn", "Wu-GRU*"),
+        ("IJPR25_DFJSPT_HMARL", "DFJSP-T"),
+    ]
+    x = np.arange(len(pols))
+    comp_240 = [
+        100.0 * (int(g3["summaries"][pk]["comp100_n"]) + int(g5["summary"][pk]["comp100_count"])) / 240.0
+        for pk, _ in pols
+    ]
+    b_p99 = [float(g5["summary"][pk]["pooled_p99_ms"]) for pk, _ in pols]
+
+    cols_a = ["#0B4F8A" if pk == "V19_ADAPTIVE_RL" else "#64748B" for pk, _ in pols]
+    bars = ax1.bar(x, comp_240, width=0.58, color=cols_a, alpha=0.88, edgecolor="#1F2937", linewidth=0.55, zorder=2)
+    for xi, cval in enumerate(comp_240):
+        ax1.text(xi, cval + 0.25, f"{cval:.1f}%", ha="center", va="bottom", fontsize=6.2, fontweight="bold" if xi == 0 else "normal", color="#0B4F8A" if xi == 0 else "#334155")
+    ax1.set_ylim(92.0, 102.0)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels([lbl for _, lbl in pols], rotation=28, ha="right", fontsize=6.7)
+    ax1.get_xticklabels()[0].set_fontweight("bold")
+    ax1.get_xticklabels()[0].set_color("#0B4F8A")
+    ax1.set_ylabel("240-Ep Dual-Cohort Completion Rate (%)")
+    ax1.grid(axis="y", linestyle="--", alpha=0.35)
+
+    ax1_r = ax1.twinx()
+    ax1_r.plot(x, b_p99, color="#DC2626", marker="o", ms=4.5, lw=1.6, linestyle="-", label="Cohort B Pooled P99 (ms)", zorder=5)
+    ax1_r.axhline(35.0, color="#DC2626", linestyle="--", lw=1.2, alpha=0.85, label="35 ms Real-Time SLA")
+    ax1_r.set_ylabel("Cohort B Pooled Wall P99 (ms)", color="#B91C1C")
+    ax1_r.set_ylim(0, 92)
+    ax1.set_title("(a) Dual-Cohort 240-Ep Completion & Pristine Cohort B P99")
+    ax1_r.legend(loc="lower right", frameon=True, fontsize=6.8)
+
+    # ── Panel (b): VAL-72 Single-Factor NCSR Component Ablations (EXP-12) ──
+    abl_spec = [
+        ("CoRe w/o AHG-RL", "w/o AHG-RL (Falsifier)", "#B91C1C"),
+        ("CoRe Legacy-Scorer", "w/o Unified JA Scorer", "#D97706"),
+        ("CoRe w/o Cone", "w/o Causal Cone Repair", "#EA580C"),
+        ("CoRe w/o ZeroChurn", "w/o Zero-Churn Proj.", "#2563EB"),
+    ]
+    yb = np.arange(len(abl_spec))
+    core_ja_val = float(exp12["summary"]["CoRe-Sched"]["ja_mean"])
+    deg_pct = [100.0 * (float(exp12["summary"][k]["ja_mean"]) - core_ja_val) / core_ja_val for k, _, _ in abl_spec]
+    comp_lbls = [exp12["summary"][k]["comp100"] for k, _, _ in abl_spec]
+    p_vals = [float(exp12["paired_vs_core_sched"][k]["wilcoxon_p"]) for k, _, _ in abl_spec]
+
+    ax2.axvline(0.0, color="#1F2937", lw=1.1)
+    ax2.barh(yb, deg_pct, height=0.52, color=[c for _, _, c in abl_spec], alpha=0.88, edgecolor="#1F2937", lw=0.6)
+    for yi, (dp, clbl, pv) in enumerate(zip(deg_pct, comp_lbls, p_vals)):
+        sig = "**" if pv < 0.01 else ("*" if pv < 0.05 else "")
+        ax2.text(dp + 0.8, yi, f"+{dp:.1f}%{sig} ({clbl})", va="center", ha="left", fontsize=7.2, fontweight="bold", color="#1F2937")
+    ax2.set_yticks(yb)
+    ax2.set_yticklabels([lbl for _, lbl, _ in abl_spec], fontsize=7.6)
+    ax2.set_xlim(0, max(deg_pct) * 1.38)
+    ax2.set_xlabel(r"Quarantined VAL-72 Cost Degradation vs. CoRe-Sched (%)")
+    ax2.set_title(r"(b) Single-Factor NCSR Ablation (Full = 72/72, $J_A$ = " + f"{core_ja_val:.0f})")
+    ax2.grid(axis="x", linestyle="--", alpha=0.35)
+
+    # ── Panel (c): Orthogonal 2x2 Trigger x Solver Decoupling (VAL-72) ──
+    cells = [
+        ("CoRe-Sched", "RuleV10 +\nCoRe-Sched ★", "#0B4F8A"),
+        ("RuleV10 + V18-EA", "RuleV10 +\nV18-EA", "#D97706"),
+        ("V18Ctrl + CoRe-Sched", "V18Ctrl +\nCoRe-Sched", "#3B82F6"),
+        ("V18-EA", "V18Ctrl +\nV18-EA", "#59A14F"),
+    ]
+    xc = np.arange(len(cells))
+    wc = 0.34
+    c_ja = [float(exp12["summary"][k]["ja_mean"]) for k, _, _ in cells]
+    c_h1 = [float(exp12["summary"][k]["h1_mean"]) for k, _, _ in cells]
+    b1 = ax3.bar(xc - wc / 2, c_ja, width=wc, color=[c for _, _, c in cells], alpha=0.90, edgecolor="#1F2937", lw=0.6, label=r"Mean $J_A$")
+    b2 = ax3.bar(xc + wc / 2, c_h1, width=wc, color=[c for _, _, c in cells], alpha=0.45, hatch="//", edgecolor="#1F2937", lw=0.6, label=r"Pure $H_1$")
+    for xi, (jv, hv) in enumerate(zip(c_ja, c_h1)):
+        ax3.text(xi - wc / 2, jv + 55, f"{jv:.0f}", ha="center", va="bottom", fontsize=6.8, fontweight="bold", color="#1F2937")
+        ax3.text(xi + wc / 2, hv + 55, f"{hv:.0f}", ha="center", va="bottom", fontsize=6.8, color="#334155")
+    ax3.set_xticks(xc)
+    ax3.set_xticklabels([lbl for _, lbl, _ in cells], fontsize=7.4)
+    ax3.get_xticklabels()[0].set_fontweight("bold")
+    ax3.get_xticklabels()[0].set_color("#0B4F8A")
+    ax3.set_ylim(0, max(c_ja) * 1.18)
+    ax3.set_ylabel("Mean Objective on Quarantined VAL-72")
+    ax3.set_title(r"(c) Orthogonal $2\times 2$ Trigger $\times$ Solver Decoupling")
+    ax3.legend(loc="upper left", frameon=True, fontsize=7.2)
+    ax3.grid(axis="y", linestyle="--", alpha=0.35)
+
+    fig.tight_layout()
+    out_p = FIG_DIR / "fig7_dual_cohort_and_ablation.png"
+    fig.savefig(out_p, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    return out_p
+
+
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     paths = [
@@ -1005,8 +1121,9 @@ def main() -> None:
         plot_fig4_coupling_ablation_and_cache(),
         plot_fig5_dual_layer_and_scaling(),
         plot_fig6_pure_h1_and_lbbd(),
+        plot_fig7_dual_cohort_and_ablation(),
     ]
-    print("Generated 6 publication figures:")
+    print("Generated 7 publication figures:")
     for p in paths:
         print(f"  - {p}")
 

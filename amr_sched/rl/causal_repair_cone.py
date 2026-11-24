@@ -22,6 +22,7 @@ strict apples-to-apples ablation on quarantined DEV/VAL splits.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any, Optional
 
 import numpy as np
@@ -29,7 +30,133 @@ import numpy as np
 from amr_sched.cvcr.clock import now_s as _cvcr_now_s
 from amr_sched.cvcr.evaluator import CVCREvaluator, EvalResult
 from amr_sched.cvcr.snapshot import NativeSnapshot, op_predecessors
+from amr_sched.cvcr.v12_proactive_guard import (
+    compute_detour_delta_signals,
+    compute_kitting_marginal_start_value,
+)
+from amr_sched.network import Network
 from amr_sched.rl.v19_hetero_graph import V19HeteroGraph
+
+
+def compute_candidate_ja_components(
+    snapshot: NativeSnapshot,
+    graph: V19HeteroGraph,
+    ev_res: EvalResult,
+    assign: dict[str, str],
+    bays: dict[str, str],
+    crews: dict[str, int],
+    task_sequences: Optional[dict[str, list[str]]],
+    rob_cur_healthy: dict[str, str],
+    *,
+    lambda_change: float = 15.0,
+    sim_horizon: int = 1200,
+    est_compute_ms: float = 0.0,
+) -> dict[str, float]:
+    """Compute exact J_A-aligned proxy score and decomposed efficiency/churn terms from `EvalResult`."""
+    if not ev_res.valid:
+        pen = float(ev_res.objective) + 20_000.0
+        return {
+            "score": pen,
+            "cmax": float(sim_horizon),
+            "t_task_cost": 0.0,
+            "t_op_cost": 0.0,
+            "tardiness_cost": 0.0,
+            "unf_pen": 20_000.0,
+            "churn_count": 0.0,
+            "compute_cost": 0.05 * max(0.0, float(est_compute_ms)),
+        }
+
+    op_ends = ev_res.op_end
+    unloads = ev_res.order_unload_ticks
+    cmax_vals = [int(snapshot.tick)]
+    if op_ends:
+        cmax_vals.extend(int(v) for v in op_ends.values())
+    if unloads:
+        cmax_vals.extend(int(v) for v in unloads.values())
+    cmax = max(cmax_vals)
+
+    # Exact 2 * T_task + delivery slack term + unfinished task proxy
+    t_task_cost = 0.0
+    unf_pen = 0.0
+    tot_deliv = 0.0
+    for t in snapshot.tasks:
+        if t.status.lower() == "completed":
+            continue
+        u_t = unloads.get(t.task_id)
+        if u_t is None or int(u_t) >= sim_horizon:
+            unf_pen += 5000.0
+            u_val = sim_horizon
+        else:
+            u_val = int(u_t)
+        tot_deliv += float(u_val)
+        if t.due_step is not None:
+            t_task_cost += 2.0 * float(max(0, u_val - int(t.due_step)))
+
+    # Exact 2 * T_op + unfinished op proxy (uniform 2.0x weight matching env.py:662)
+    t_op_cost = 0.0
+    for op in snapshot.operations:
+        e_o = op_ends.get(op.op_id)
+        if e_o is None or int(e_o) >= sim_horizon:
+            unf_pen += 3000.0
+            e_val = sim_horizon
+        else:
+            e_val = int(e_o)
+        tard_o = max(0, e_val - int(op.due_step))
+        t_op_cost += 2.0 * float(tard_o)
+
+    # Exact soft-commitment churn matching env.py:1241-1265
+    chg_tasks = sum(
+        1
+        for t in snapshot.tasks
+        if t.status.lower() == "assigned"
+        and t.assigned_agv is not None
+        and assign.get(t.task_id, t.assigned_agv) != t.assigned_agv
+    )
+    urg_new = sum(
+        1
+        for t in snapshot.tasks
+        if t.assigned_agv is None
+        and getattr(t, "is_urgent", False)
+        and int(t.release_step) <= int(snapshot.tick)
+        and assign.get(t.task_id) is not None
+    )
+    chg_ops = sum(
+        1
+        for oid in graph.op_ids
+        if bays.get(oid) != graph.base_bays.get(oid) or crews.get(oid) != graph.base_crews.get(oid)
+    )
+    qh_preempts = 0
+    if task_sequences:
+        for aid_r, cur_tid in rob_cur_healthy.items():
+            seq_r = task_sequences.get(aid_r)
+            if seq_r and seq_r[0] != cur_tid and cur_tid in graph.clf.releasable_tasks:
+                qh_preempts += 1
+
+    churn_cnt = float(chg_tasks + urg_new + chg_ops + qh_preempts)
+    deliv_cost = 0.5 * tot_deliv
+    comp_cost = 0.05 * max(0.0, float(est_compute_ms))
+    tie_break = 0.01 * float(ev_res.starvation_ticks)
+    total = (
+        float(cmax)
+        + t_task_cost
+        + t_op_cost
+        + deliv_cost
+        + unf_pen
+        + float(lambda_change) * churn_cnt
+        + comp_cost
+        + tie_break
+    )
+    return {
+        "score": total,
+        "cmax": float(cmax),
+        "t_task_cost": t_task_cost,
+        "t_op_cost": t_op_cost,
+        "tardiness_cost": t_task_cost + t_op_cost,
+        "deliv_cost": deliv_cost,
+        "unf_pen": unf_pen,
+        "churn_count": churn_cnt,
+        "compute_cost": comp_cost,
+    }
 
 
 def score_candidate_ja_aligned(
@@ -44,76 +171,177 @@ def score_candidate_ja_aligned(
     *,
     lambda_change: float = 15.0,
     sim_horizon: int = 1200,
+    est_compute_ms: float = 0.0,
 ) -> float:
-    """Compute exact J_A-aligned proxy score from `EvalResult` (`C_max + 2*T_task + 2*T_op + 15*churn + unf`)."""
+    """Compute exact J_A-aligned proxy score from `EvalResult` (`C_max + 2*T_task + 2*T_op + 0.5*deliv + 15*churn + unf`)."""
+    return float(
+        compute_candidate_ja_components(
+            snapshot,
+            graph,
+            ev_res,
+            assign,
+            bays,
+            crews,
+            task_sequences,
+            rob_cur_healthy,
+            lambda_change=lambda_change,
+            sim_horizon=sim_horizon,
+            est_compute_ms=est_compute_ms,
+        )["score"]
+    )
+
+
+def observable_op_closure(snapshot: NativeSnapshot) -> set[str]:
+    """Compute causal transitive closure of operations whose kits & predecessors are visible."""
+    visible_tids = {t.task_id for t in snapshot.tasks}
+    obs: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for op in snapshot.operations:
+            if op.op_id in obs:
+                continue
+            if op.started or (
+                all(kt in visible_tids for kt in op.kit_task_ids)
+                and all(p in obs for p in op_predecessors(op))
+            ):
+                obs.add(op.op_id)
+                changed = True
+    return obs
+
+
+def score_candidate_ja_unified(
+    snapshot: NativeSnapshot,
+    network: Network,
+    graph: V19HeteroGraph,
+    ev_res: EvalResult,
+    assign: dict[str, str],
+    bays: dict[str, str],
+    crews: dict[str, int],
+    obs_ops: set[str],
+    fast_surr: Optional["FastJAWKittingSurrogate"],
+    *,
+    lambda_change: float = 15.0,
+    sim_horizon: int = 1200,
+) -> tuple[float, float]:
+    """Causal horizon-clean J_A scorer unifying compact aisle cells and specialized workshops."""
     if not ev_res.valid:
-        return float(ev_res.objective) + 20_000.0
+        return float(ev_res.objective) + 20_000.0, 0.0
 
-    # 1. Exact makespan C_max across operations and transport tasks
-    op_ends = ev_res.op_end
+    tick = int(snapshot.tick)
     unloads = ev_res.order_unload_ticks
-    cmax_vals = [int(snapshot.tick)]
-    if op_ends:
-        cmax_vals.extend(int(v) for v in op_ends.values())
-    if unloads:
-        cmax_vals.extend(int(v) for v in unloads.values())
-    cmax = max(cmax_vals)
-
-    # 2. Exact 2 * T_task + unfinished task proxy
-    t_task_cost = 0.0
+    op_ends = ev_res.op_end
+    t_cost = 0.0
     unf_pen = 0.0
+    deliv = 0.0
     for t in snapshot.tasks:
         if t.status.lower() == "completed":
             continue
-        u_t = unloads.get(t.task_id)
-        if u_t is None or int(u_t) >= sim_horizon:
+        u = unloads.get(t.task_id)
+        if u is None or int(u) >= sim_horizon:
             unf_pen += 5000.0
-            u_val = sim_horizon
+            uv = sim_horizon
         else:
-            u_val = int(u_t)
+            uv = int(u)
+        deliv += float(uv)
         if t.due_step is not None:
-            t_task_cost += 2.0 * float(max(0, u_val - int(t.due_step)))
+            t_cost += 2.0 * float(max(0, uv - int(t.due_step)))
 
-    # 3. Exact 2 * T_op + unfinished op proxy (plus gentle urgent tie-break)
-    t_op_cost = 0.0
-    for op in snapshot.operations:
-        e_o = op_ends.get(op.op_id)
-        if e_o is None or int(e_o) >= sim_horizon:
-            unf_pen += 3000.0
-            e_val = sim_horizon
-        else:
-            e_val = int(e_o)
-        tard_o = max(0, e_val - int(op.due_step))
-        t_op_cost += (2.5 if op.is_urgent else 2.0) * float(tard_o)
-
-    # 4. Exact soft-commitment churn (task reassignments + bay/crew changes + healthy head preempts)
-    chg_tasks = sum(
-        1
-        for tid in graph.rel_tids
-        if assign.get(tid) != graph.base_assign.get(tid)
-        and graph.tasks_by_id_status(tid) == "assigned"
-    ) if hasattr(graph, "tasks_by_id_status") else sum(
+    chg_t = sum(
         1
         for t in snapshot.tasks
         if t.status.lower() == "assigned"
         and t.assigned_agv is not None
         and assign.get(t.task_id, t.assigned_agv) != t.assigned_agv
     )
-    chg_ops = sum(
+    urg_new = sum(
+        1
+        for t in snapshot.tasks
+        if t.assigned_agv is None
+        and getattr(t, "is_urgent", False)
+        and int(t.release_step) <= tick
+        and assign.get(t.task_id) is not None
+    )
+    chg_o = sum(
         1
         for oid in graph.op_ids
         if bays.get(oid) != graph.base_bays.get(oid) or crews.get(oid) != graph.base_crews.get(oid)
     )
-    qh_preempts = 0
-    if task_sequences:
-        for aid_r, cur_tid in rob_cur_healthy.items():
-            seq_r = task_sequences.get(aid_r)
-            if seq_r and seq_r[0] != cur_tid and cur_tid in graph.clf.releasable_tasks:
-                qh_preempts += 1
 
-    # Tiny tie-breaking on starvation/delivery (0.01 weight so H1 + churn strictly dominates)
-    tie_break = 0.01 * float(ev_res.starvation_ticks)
-    return float(cmax) + t_task_cost + t_op_cost + unf_pen + float(lambda_change) * float(chg_tasks + chg_ops + qh_preempts) + tie_break
+    is_workshop = len(network.nodes) >= 30
+    op_cost = 0.0
+    cmax_vals = [tick] + [int(v) for v in unloads.values()]
+    if is_workshop:
+        bload: dict[str, int] = {}
+        for op in snapshot.operations:
+            b = bays.get(op.op_id, op.bay_id)
+            if not op.started:
+                bload[b] = bload.get(b, 0) + 1
+            if op.op_id in obs_ops:
+                e = op_ends.get(op.op_id)
+                if e is None or int(e) >= sim_horizon:
+                    unf_pen += 3000.0
+                    evv = sim_horizon
+                else:
+                    evv = int(e)
+                    cmax_vals.append(evv)
+                op_cost += 2.0 * float(max(0, evv - int(op.due_step)))
+            elif fast_surr is not None:
+                for kt in op.kit_task_ids:
+                    to = fast_surr.tasks_by_id.get(kt)
+                    if to is not None and to.status.lower() != "completed":
+                        op_cost += 0.25 * float(fast_surr.tt(to.pickup, b))
+        for ld in bload.values():
+            if ld > 1:
+                op_cost += 2.5 * float(ld * (ld - 1))
+        sc = (
+            1.5 * float(max(cmax_vals))
+            + t_cost
+            + op_cost
+            + 0.5 * deliv
+            + unf_pen
+            + float(lambda_change) * float(chg_t + urg_new + chg_o)
+            + 0.01 * float(ev_res.starvation_ticks)
+        )
+        return sc, t_cost + op_cost
+
+    has_phantom = any(int(v) >= sim_horizon for v in op_ends.values())
+    if not has_phantom:
+        for v in op_ends.values():
+            cmax_vals.append(int(v))
+        for op in snapshot.operations:
+            e = int(op_ends.get(op.op_id, sim_horizon))
+            op_cost += 2.0 * float(max(0, e - int(op.due_step)))
+        bpen = 0.0
+        op_w = float(lambda_change)
+    else:
+        bload_c: dict[str, int] = {}
+        for op in snapshot.operations:
+            if not op.started:
+                b = bays.get(op.op_id, op.bay_id)
+                bload_c[b] = bload_c.get(b, 0) + 1
+            if op.op_id in obs_ops:
+                e = op_ends.get(op.op_id)
+                if e is None or int(e) >= sim_horizon:
+                    unf_pen += 3000.0
+                    evv = sim_horizon
+                else:
+                    evv = int(e)
+                    cmax_vals.append(evv)
+                op_cost += 2.0 * float(max(0, evv - int(op.due_step)))
+        bpen = sum(6.0 * max(0, c - 1) for c in bload_c.values())
+        op_w = 0.0 if tick <= 4 else float(lambda_change)
+    sc = (
+        3.0 * float(max(cmax_vals))
+        + t_cost
+        + op_cost
+        + 0.5 * deliv
+        + bpen
+        + unf_pen
+        + float(lambda_change) * float(chg_t + urg_new)
+        + op_w * float(chg_o)
+    )
+    return sc, t_cost + op_cost
 
 
 @dataclass
@@ -689,3 +917,812 @@ class VOIBudgetedOperatorSearch:
                     break
 
         return best_ev, best_sc, best_asn, best_bays, best_crews, best_prio, best_seq, best_tag, evals_done
+
+
+# ---------------------------------------------------------------------------
+# Step 2 NCSR Primitives: Stability Sets, Zero-Churn Projection,
+# Microsecond J_A Surrogate Screening & Causal Cone Local Repair
+# ---------------------------------------------------------------------------
+
+
+def compute_stability_sets(
+    snapshot: NativeSnapshot,
+    graph: V19HeteroGraph,
+) -> tuple[set[str], set[str], dict[str, str]]:
+    """Partition modifiable entities into fresh/pending vs. healthy-anchored stability fences."""
+    tasks_by_id = {t.task_id: t for t in snapshot.tasks}
+    healthy_set = {graph.agv_ids[i] for i in graph.healthy_agv_indices}
+    is_opening = int(snapshot.tick) <= 4
+
+    fresh_op_ids: set[str] = set()
+    for op in snapshot.operations:
+        if op.op_id in graph.frozen_ops or op.started:
+            continue
+        vis_kits = [
+            tasks_by_id[kt]
+            for kt in op.kit_task_ids
+            if kt in tasks_by_id and tasks_by_id[kt].status.lower() != "completed"
+        ]
+        if not vis_kits:
+            if is_opening:
+                fresh_op_ids.add(op.op_id)
+            continue
+        if is_opening or any(
+            (
+                t.assigned_agv is None
+                or t.status.lower() == "pending"
+                or t.assigned_agv in graph.clf.disturbed_robots
+                or t.assigned_agv not in healthy_set
+            )
+            for t in vis_kits
+        ):
+            fresh_op_ids.add(op.op_id)
+
+    pending_or_dist_set: set[str] = set()
+    for tid in graph.rel_tids:
+        t = tasks_by_id.get(tid)
+        if t is None:
+            continue
+        if (
+            t.assigned_agv is None
+            or t.status.lower() == "pending"
+            or t.assigned_agv in graph.clf.disturbed_robots
+            or t.assigned_agv not in healthy_set
+        ):
+            pending_or_dist_set.add(tid)
+
+    healthy_anchor_assign = {
+        tid: aid
+        for tid, aid in graph.base_assign.items()
+        if tid not in pending_or_dist_set
+    }
+    return fresh_op_ids, pending_or_dist_set, healthy_anchor_assign
+
+
+def adaptive_stability_margin(
+    snapshot: NativeSnapshot,
+    graph: V19HeteroGraph,
+    cand_assign: dict[str, str],
+    cand_bays: dict[str, str],
+    cand_crews: dict[str, int],
+    fresh_op_ids: set[str],
+    *,
+    tardiness_gain: float = 0.0,
+    for_surrogate: bool = False,
+) -> float:
+    """Compute non-rescue stability margin preventing mid-episode churn while freeing pending dispatches."""
+    if int(snapshot.tick) <= 4:
+        return 2.0
+    tasks_by_id = {t.task_id: t for t in snapshot.tasks}
+    n_non_rescue = 0
+    for tid, new_agv in cand_assign.items():
+        t_orig = tasks_by_id.get(tid)
+        if (
+            t_orig is not None
+            and t_orig.status.lower() == "assigned"
+            and t_orig.assigned_agv is not None
+            and t_orig.assigned_agv != new_agv
+            and t_orig.assigned_agv not in graph.clf.disturbed_robots
+        ):
+            n_non_rescue += 1
+
+    n_stale_op_flips = sum(
+        1
+        for oid in graph.op_ids
+        if oid not in fresh_op_ids
+        and (
+            cand_bays.get(oid, graph.base_bays.get(oid)) != graph.base_bays.get(oid)
+            or cand_crews.get(oid, graph.base_crews.get(oid)) != graph.base_crews.get(oid)
+        )
+    )
+    if n_non_rescue == 0 and n_stale_op_flips == 0:
+        return 2.0 if for_surrogate else 4.0
+
+    raw_req = 8.0 + 12.0 * float(n_non_rescue) + 16.0 * float(n_stale_op_flips)
+    if for_surrogate:
+        return 0.5 * raw_req
+    scale = max(0.25, 1.0 - min(0.75, max(0.0, float(tardiness_gain)) / 80.0))
+    return raw_req * scale
+
+
+def project_zero_churn_candidate(
+    snapshot: NativeSnapshot,
+    graph: V19HeteroGraph,
+    assign: dict[str, str],
+    bays: dict[str, str],
+    crews: dict[str, int],
+    op_prio: dict[str, int],
+    task_sequences: Optional[dict[str, list[str]]],
+    fresh_op_ids: set[str],
+    pending_or_dist_set: set[str],
+    rob_cur_healthy: dict[str, str],
+) -> tuple[dict[str, str], dict[str, str], dict[str, int], dict[str, int], Optional[dict[str, list[str]]]]:
+    """Project any joint candidate onto non-disruptive `pending_or_dist` + `fresh_op_ids` moves."""
+    tasks_by_id = {t.task_id: t for t in snapshot.tasks}
+    zc_assign = dict(graph.base_assign)
+    for tid in pending_or_dist_set:
+        if tid in assign:
+            zc_assign[tid] = assign[tid]
+
+    zc_bays = dict(graph.base_bays)
+    zc_crews = dict(graph.base_crews)
+    for oid in fresh_op_ids:
+        if oid in bays:
+            zc_bays[oid] = bays[oid]
+        if oid in crews:
+            zc_crews[oid] = crews[oid]
+
+    zc_seq: Optional[dict[str, list[str]]] = None
+    if task_sequences:
+        # Rebuild exact per-robot queues aligned with zc_assign while preserving healthy heads
+        orig_rank: dict[str, int] = {}
+        rank_i = 0
+        for aid in sorted(task_sequences):
+            for tid in task_sequences[aid]:
+                orig_rank[tid] = rank_i
+                rank_i += 1
+        by_agv: dict[str, list[str]] = {}
+        for tid in graph.rel_tids:
+            aid = zc_assign.get(tid)
+            if aid:
+                by_agv.setdefault(aid, []).append(tid)
+        zc_seq = {}
+        for aid, tids in by_agv.items():
+            head = rob_cur_healthy.get(aid)
+            tids_sorted = sorted(
+                tids,
+                key=lambda tid: (
+                    0 if tid == head else 1,
+                    orig_rank.get(tid, 9999),
+                    int(tasks_by_id[tid].due_step or 9999) if tid in tasks_by_id else 9999,
+                    tid,
+                ),
+            )
+            if tids_sorted:
+                zc_seq[aid] = tids_sorted
+
+    return zc_assign, zc_bays, zc_crews, dict(op_prio), zc_seq
+
+
+class FastJAWKittingSurrogate:
+    """Microsecond zero-Rust analytical evaluator computing J_A-aligned proxy scores."""
+
+    _STATIC_TT_CACHE: dict[tuple[int, int, int, float], dict[str, dict[str, float]]] = {}
+
+    def __init__(
+        self,
+        network: Network,
+        snapshot: NativeSnapshot,
+        evaluator: CVCREvaluator,
+        graph: V19HeteroGraph,
+        *,
+        lambda_change: float = 15.0,
+    ) -> None:
+        self.network = network
+        self.snapshot = snapshot
+        self.evaluator = evaluator
+        self.graph = graph
+        self.lambda_change = float(lambda_change)
+        self.max_speed = float(getattr(evaluator, "max_speed", 3.0))
+        self.tasks = list(snapshot.tasks)
+        self.tasks_by_id = {t.task_id: t for t in self.tasks}
+        self.robots_by_id = {r.robot_id: r for r in snapshot.robots}
+        self.rob_cur_healthy = {
+            r.robot_id: r.cur_task
+            for r in snapshot.robots
+            if r.cur_task and r.robot_id not in graph.clf.disturbed_robots
+        }
+
+        if graph is not None and len(graph.bay_ids) == len(graph.bay_detour_norm):
+            self.bay_delta = {
+                graph.bay_ids[i]: float(graph.bay_detour_norm[i]) * 15.0
+                for i in range(len(graph.bay_ids))
+            }
+        else:
+            dd_sig = compute_detour_delta_signals(network, snapshot, simulator=None)
+            self.bay_delta = dict(dd_sig["bay_detour_delta"])
+        self.bay_delays: dict[str, float] = {}
+        for b, d in self.bay_delta.items():
+            if d > 0.5:
+                self.bay_delays[b] = min(6.0, 0.25 * float(d))
+
+        c_key = (id(network), len(network.nodes), len(network.edges), round(self.max_speed, 4))
+        tt_tbl = self.__class__._STATIC_TT_CACHE.get(c_key)
+        if tt_tbl is None:
+            if len(self.__class__._STATIC_TT_CACHE) >= 16:
+                self.__class__._STATIC_TT_CACHE.clear()
+            tt_tbl = {}
+            self.__class__._STATIC_TT_CACHE[c_key] = tt_tbl
+        self._sp_cache = tt_tbl
+        self.fb = getattr(snapshot, "execution_feedback", None)
+
+    def tt(self, src: str, dst: str) -> float:
+        if src == dst:
+            return 0.0
+        row = self._sp_cache.get(src)
+        if row is None:
+            row = self.network.shortest_travel_times(src, self.max_speed) if src in self.network.nodes else {}
+            self._sp_cache[src] = row
+        val = row.get(dst)
+        if val is not None:
+            return float(val)
+        ns, nd = self.network.nodes.get(src), self.network.nodes.get(dst)
+        if ns is not None and nd is not None:
+            return float(math.hypot(float(ns.x) - float(nd.x), float(ns.y) - float(nd.y)))
+        return 60.0
+
+    def bay_delay(self, node_id: str) -> float:
+        return float(self.bay_delays.get(node_id, 0.0))
+
+    def predict_unloads(
+        self,
+        assign: dict[str, str],
+        op_prio: dict[str, int],
+        op_bays: dict[str, str],
+        task_sequences: Optional[dict[str, list[str]]] = None,
+    ) -> dict[str, int]:
+        unloads: dict[str, int] = {}
+        by_r: dict[str, list[Any]] = {}
+        tick = int(self.snapshot.tick)
+        for t in self.tasks:
+            st = t.status.lower()
+            if st == "completed":
+                unloads[t.task_id] = int(t.complete_step or tick)
+            else:
+                rid = assign.get(t.task_id)
+                if rid:
+                    by_r.setdefault(rid, []).append(t)
+
+        for rid, tlist in by_r.items():
+            rob = self.robots_by_id.get(rid)
+            if rob is None:
+                continue
+            fb_off = float(self.fb.robot_ready_offset_steps(rid)) if self.fb is not None else 0.0
+            cur_n = rob.cur_node
+            cur_t = float(max(tick, rob.faulted_until)) + fb_off
+            seq_r = task_sequences.get(rid) if task_sequences else None
+            if seq_r:
+                pos_map = {tid: i for i, tid in enumerate(seq_r)}
+                tlist.sort(
+                    key=lambda x: (
+                        0 if x.status.lower() in ("picked", "loading", "to_dropoff", "unloading") else 1,
+                        pos_map.get(x.task_id, 9999),
+                        op_prio.get(x.kit_op_id or "", 0),
+                        x.release_step,
+                        x.task_id,
+                    )
+                )
+            else:
+                tlist.sort(
+                    key=lambda x: (
+                        0 if x.status.lower() in ("picked", "loading", "to_dropoff", "unloading") else 1,
+                        op_prio.get(x.kit_op_id or "", 0),
+                        x.release_step,
+                        x.task_id,
+                    )
+                )
+            cong = 1.0 + 0.045 * max(0, len(tlist) - 2)
+            for idx_t, t in enumerate(tlist):
+                st = t.status.lower()
+                drop = (
+                    op_bays.get(t.kit_op_id, t.dropoff)
+                    if (t.kit_op_id and st in ("pending", "assigned"))
+                    else t.dropoff
+                )
+                if st in ("picked", "loading", "to_dropoff", "unloading"):
+                    tr2 = cong * self.tt(cur_n, drop)
+                    if self.fb is not None and idx_t == 0:
+                        tr2 += float(self.fb.robot_leg_step_buffer(rid, int(round(tr2))))
+                    arr = cur_t + tr2 + self.bay_delay(drop) + 2.0
+                else:
+                    tr1 = cong * self.tt(cur_n, t.pickup)
+                    if self.fb is not None and idx_t == 0:
+                        tr1 += float(self.fb.robot_leg_step_buffer(rid, int(round(tr1))))
+                    tp = max(cur_t + tr1, float(t.release_step)) + 2.0
+                    tr2 = cong * self.tt(t.pickup, drop)
+                    arr = tp + tr2 + self.bay_delay(drop) + 2.0
+                unloads[t.task_id] = int(round(arr + 0.499))
+                cur_t = arr
+                cur_n = drop
+        return unloads
+
+    def score(
+        self,
+        assign: dict[str, str],
+        op_prio: dict[str, int],
+        op_bays: dict[str, str],
+        op_crews: dict[str, int],
+        task_sequences: Optional[dict[str, list[str]]] = None,
+    ) -> float:
+        unloads = self.predict_unloads(assign, op_prio, op_bays, task_sequences)
+        op_s, op_e, op_rr, _, _, starv = self.evaluator._propagate_production(
+            unloads, op_prio, op_bays, op_crews
+        )
+        dummy_ev = EvalResult(
+            robot_paths={},
+            robot_order_seq={},
+            order_unload_ticks=unloads,
+            op_start=op_s,
+            op_end=op_e,
+            op_res_ready=op_rr,
+            objective=0.0,
+            valid=True,
+            starvation_ticks=starv,
+            eval_latency_ms=0.0,
+            mode="SURR",
+        )
+        return score_candidate_ja_aligned(
+            self.snapshot,
+            self.graph,
+            dummy_ev,
+            assign,
+            op_bays,
+            op_crews,
+            task_sequences,
+            self.rob_cur_healthy,
+            lambda_change=self.lambda_change,
+            sim_horizon=self.evaluator.sim_horizon,
+        )
+
+    def regret_k_assignment(
+        self,
+        healthy_robots: list[str],
+        fixed_assign: dict[str, str],
+        tasks_to_insert: list[str],
+        op_bays: dict[str, str],
+        op_prio: dict[str, int],
+    ) -> dict[str, str]:
+        """Fast Potvin-Rousseau Regret-2 insertion with op-due criticality and cached shortest-path times."""
+        assign = dict(fixed_assign)
+        if not healthy_robots or not tasks_to_insert:
+            return assign
+        op_map = {op.op_id: op for op in self.snapshot.operations}
+        rob_node: dict[str, str] = {}
+        rob_free: dict[str, float] = {}
+        rob_loads: dict[str, int] = {}
+        by_r: dict[str, list[Any]] = {r: [] for r in healthy_robots}
+        for rid in healthy_robots:
+            rob = self.robots_by_id[rid]
+            rob_node[rid] = rob.cur_node
+            fb_o = float(self.fb.robot_ready_offset_steps(rid)) if self.fb is not None else 0.0
+            rob_free[rid] = float(max(self.snapshot.tick, rob.faulted_until)) + fb_o
+            rob_loads[rid] = 0
+        for tid, rid in assign.items():
+            if rid in by_r and tid in self.tasks_by_id:
+                t = self.tasks_by_id[tid]
+                if t.status.lower() != "completed":
+                    by_r[rid].append(t)
+        for rid, tlist in by_r.items():
+            tlist.sort(
+                key=lambda x: (
+                    0 if x.status.lower() in ("picked", "loading", "to_dropoff", "unloading") else 1,
+                    op_prio.get(x.kit_op_id or "", 0),
+                    x.release_step,
+                    x.task_id,
+                )
+            )
+            for t in tlist:
+                drop = (
+                    op_bays.get(t.kit_op_id, t.dropoff)
+                    if (op_bays and t.kit_op_id and t.status.lower() in ("pending", "assigned"))
+                    else t.dropoff
+                )
+                if t.status.lower() in ("picked", "loading", "to_dropoff", "unloading"):
+                    arr = rob_free[rid] + self.tt(rob_node[rid], drop) + self.bay_delay(drop) + 2.0
+                else:
+                    tp = max(rob_free[rid] + self.tt(rob_node[rid], t.pickup), float(t.release_step)) + 2.0
+                    arr = tp + self.tt(t.pickup, drop) + self.bay_delay(drop) + 2.0
+                rob_free[rid] = arr
+                rob_node[rid] = drop
+                rob_loads[rid] += 1
+
+        agv_idx_map = {aid: i for i, aid in enumerate(self.graph.agv_ids)}
+        rel_idx_map = {tid: i for i, tid in enumerate(self.graph.rel_tids)}
+        rem = [
+            tid
+            for tid in tasks_to_insert
+            if tid in self.tasks_by_id and self.tasks_by_id[tid].status.lower() != "completed"
+        ]
+        while rem:
+            best = None
+            for tid in rem:
+                t = self.tasks_by_id[tid]
+                drop = op_bays.get(t.kit_op_id, t.dropoff) if (op_bays and t.kit_op_id) else t.dropoff
+                due_eff = float(t.due_step if t.due_step is not None else 999)
+                if t.kit_op_id and t.kit_op_id in op_map:
+                    op = op_map[t.kit_op_id]
+                    due_eff = min(due_eff, float(op.due_step - op.proc_steps)) - (15.0 if op.is_urgent else 0.0)
+                ti = rel_idx_map.get(tid)
+                costs: list[tuple[float, str, float]] = []
+                for rid in healthy_robots:
+                    if ti is not None and not bool(self.graph.task_agv_mask[ti, agv_idx_map[rid]]):
+                        continue
+                    tp = max(rob_free[rid] + self.tt(rob_node[rid], t.pickup), float(t.release_step)) + 2.0
+                    comp = tp + self.tt(t.pickup, drop) + self.bay_delay(drop) + 2.0
+                    tard = 3.0 * max(0.0, comp - due_eff)
+                    chg = (
+                        15.0
+                        if (t.assigned_agv and t.assigned_agv != rid and t.status.lower() == "assigned")
+                        else 0.0
+                    )
+                    costs.append((comp + tard + chg + 1.5 * rob_loads[rid], rid, comp))
+                if not costs:
+                    r0 = healthy_robots[0]
+                    costs = [(rob_free[r0] + 60.0, r0, rob_free[r0] + 60.0)]
+                costs.sort(key=lambda x: (x[0], x[1]))
+                c1, r1, cmp1 = costs[0]
+                c2 = costs[1][0] if len(costs) >= 2 else c1 + 50.0
+                urg = 40.0 if (t.is_urgent or t.assigned_agv not in healthy_robots) else 0.0
+                key = ((c2 - c1) + urg - 0.15 * due_eff, -c1, tid)
+                if best is None or key > best[0]:
+                    best = (key, tid, r1, drop, cmp1)
+            assert best is not None
+            _, ptid, prid, pdrop, pcomp = best
+            rem.remove(ptid)
+            assign[ptid] = prid
+            rob_free[prid] = pcomp
+            rob_node[prid] = pdrop
+            rob_loads[prid] += 1
+        return assign
+
+
+def _compute_fresh_semicircle_bays(
+    snapshot: NativeSnapshot,
+    network: Network,
+    graph: V19HeteroGraph,
+    fast_surr: FastJAWKittingSurrogate,
+    fresh_op_ids: set[str],
+) -> tuple[dict[str, str], dict[str, int], dict[str, int]]:
+    """Co-locate `fresh_op_ids` bays via semicircle proximity + Detour-Delta & polish crews on surrogate."""
+    bays = dict(graph.base_bays)
+    crews = dict(graph.base_crews)
+    km = compute_kitting_marginal_start_value(snapshot)
+    tmap = fast_surr.tasks_by_id
+    bay_load: dict[str, int] = {}
+    is_opening = int(snapshot.tick) <= 4
+    ops_sorted = sorted(
+        snapshot.operations,
+        key=lambda o: (
+            0 if o.started else 1,
+            0 if o.op_id not in fresh_op_ids else 1,
+            0 if o.is_urgent else 1,
+            int(o.due_step),
+            -len(o.kit_task_ids),
+            o.op_id,
+        ),
+    )
+    km_prio: dict[str, int] = {}
+    for op in ops_sorted:
+        k_min = min(
+            (km[kt][0] * 1000 + km[kt][4] for kt in op.kit_task_ids if kt in km),
+            default=int(op.due_step),
+        )
+        km_prio[op.op_id] = max(int(snapshot.tick), int(min(k_min, op.due_step - op.proc_steps)))
+        if (
+            op.started
+            or op.op_id in graph.frozen_ops
+            or op.op_id not in fresh_op_ids
+            or len(op.eligible_bays) <= 1
+        ):
+            cur_b = bays.get(op.op_id, op.bay_id)
+            bay_load[cur_b] = bay_load.get(cur_b, 0) + 1
+            continue
+        kits = [tmap[tid] for tid in op.kit_task_ids if tid in tmap and tmap[tid].status.lower() != "completed"]
+        if not kits and not is_opening:
+            cur_b = bays.get(op.op_id, op.bay_id)
+            bay_load[cur_b] = bay_load.get(cur_b, 0) + 1
+            continue
+        pm = (1.5 if op.is_urgent else 1.0) + 0.25 * len(kits)
+        has_win = bool(getattr(op, "resource_windows", ()))
+        best_b = op.bay_id
+        best_cost = float("inf")
+        for cand_b in op.eligible_bays:
+            if cand_b not in network.nodes:
+                continue
+            d_sum = sum(float(fast_surr.tt(t.pickup, cand_b)) for t in kits) if kits else 0.0
+            ld = bay_load.get(cand_b, 0)
+            sw_est = 0.8 * ld + 0.5 * max(0, len(kits) - 1) + (1.2 if has_win else 0.0)
+            sw_w = 1.0 / (1.0 + math.exp(-0.3 * sw_est))
+            cong_pen = 6.0 * ld + 2.5 * sw_w
+            dd_pen = 1.0 * float(fast_surr.bay_delta.get(cand_b, 0.0))
+            sc = pm * d_sum + cong_pen + dd_pen
+            if sc < best_cost:
+                best_cost = sc
+                best_b = cand_b
+        bays[op.op_id] = best_b
+        bay_load[best_b] = bay_load.get(best_b, 0) + 1
+
+    # Quick greedy crew balance on fresh ops using fast_surr
+    if any(oid in fresh_op_ids and len(o.eligible_crews) > 1 for o in snapshot.operations for oid in (o.op_id,)):
+        best_sc = fast_surr.score(graph.base_assign, km_prio, bays, crews)
+        for op in snapshot.operations:
+            if op.started or op.op_id not in fresh_op_ids or len(op.eligible_crews) <= 1:
+                continue
+            cur_c = int(crews.get(op.op_id, op.crew_id))
+            for cand_c in op.eligible_crews:
+                if int(cand_c) == cur_c:
+                    continue
+                crews[op.op_id] = int(cand_c)
+                sc = fast_surr.score(graph.base_assign, km_prio, bays, crews)
+                if sc + 1e-3 < best_sc:
+                    best_sc = sc
+                    cur_c = int(cand_c)
+                else:
+                    crews[op.op_id] = cur_c
+    return bays, crews, km_prio
+
+
+def _regret2_insert_tasks(
+    snapshot: NativeSnapshot,
+    graph: V19HeteroGraph,
+    fast_surr: FastJAWKittingSurrogate,
+    anchor_assign: dict[str, str],
+    insert_tids: list[str],
+    op_prio: dict[str, int],
+    bays: dict[str, str],
+) -> tuple[dict[str, str], dict[str, list[str]]]:
+    """Potvin-Rousseau Regret-2 insertion over `insert_tids` holding `anchor_assign` fixed."""
+    assign = dict(anchor_assign)
+    healthy_agvs = [graph.agv_ids[i] for i in graph.healthy_agv_indices]
+    tmap = fast_surr.tasks_by_id
+    rob_map = fast_surr.robots_by_id
+    tick = int(snapshot.tick)
+
+    if not insert_tids or not healthy_agvs:
+        return assign, {}
+
+    # Seed per-AMR busy state from anchor_assign
+    end_t: dict[str, float] = {}
+    end_node: dict[str, str] = {}
+    q_cnt: dict[str, int] = {}
+    for aid in healthy_agvs:
+        rob = rob_map[aid]
+        t_cur = float(max(tick, rob.faulted_until))
+        if fast_surr.fb is not None:
+            t_cur += float(fast_surr.fb.robot_ready_offset_steps(aid))
+        n_cur = rob.cur_node
+        fixed_for_r = [
+            tmap[tid]
+            for tid, r_id in assign.items()
+            if r_id == aid and tid in tmap and tmap[tid].status.lower() != "completed"
+        ]
+        fixed_for_r.sort(
+            key=lambda x: (
+                0 if x.status.lower() in ("picked", "loading", "to_dropoff", "unloading") else 1,
+                op_prio.get(x.kit_op_id or "", 0),
+                x.release_step,
+                x.task_id,
+            )
+        )
+        for ft in fixed_for_r:
+            drop = bays.get(ft.kit_op_id, ft.dropoff) if (ft.kit_op_id and ft.status.lower() in ("pending", "assigned")) else ft.dropoff
+            if ft.status.lower() in ("picked", "loading", "to_dropoff", "unloading"):
+                t_cur = t_cur + fast_surr.tt(n_cur, drop) + fast_surr.bay_delay(drop) + 2.0
+            else:
+                tp = max(t_cur + fast_surr.tt(n_cur, ft.pickup), float(ft.release_step)) + 2.0
+                t_cur = tp + fast_surr.tt(ft.pickup, drop) + fast_surr.bay_delay(drop) + 2.0
+            n_cur = drop
+        end_t[aid] = t_cur
+        end_node[aid] = n_cur
+        q_cnt[aid] = len(fixed_for_r)
+
+    agv_idx_map = {aid: i for i, aid in enumerate(graph.agv_ids)}
+    rel_idx_map = {tid: i for i, tid in enumerate(graph.rel_tids)}
+    unassigned = [tid for tid in insert_tids if tid in tmap]
+    while unassigned:
+        best_pick: Optional[tuple[float, float, str, str, float, str]] = None
+        for tid in unassigned:
+            t = tmap[tid]
+            drop = bays.get(t.kit_op_id, t.dropoff) if t.kit_op_id else t.dropoff
+            ti = rel_idx_map.get(tid)
+            feas_costs: list[tuple[float, str, float]] = []
+            for aid in healthy_agvs:
+                if ti is not None and not bool(graph.task_agv_mask[ti, agv_idx_map[aid]]):
+                    continue
+                cong = 1.0 + 0.045 * max(0, q_cnt[aid] - 1)
+                tp = max(end_t[aid] + cong * fast_surr.tt(end_node[aid], t.pickup), float(t.release_step)) + 2.0
+                finish = tp + cong * fast_surr.tt(t.pickup, drop) + fast_surr.bay_delay(drop) + 2.0
+                # Tardiness-aware insertion cost
+                due = float(t.due_step if t.due_step is not None else (tick + 120))
+                tard_cost = 2.0 * max(0.0, finish - due)
+                cost = finish + tard_cost
+                feas_costs.append((cost, aid, finish))
+            if not feas_costs:
+                aid0 = healthy_agvs[0]
+                feas_costs = [(end_t[aid0] + 60.0, aid0, end_t[aid0] + 60.0)]
+            feas_costs.sort(key=lambda x: (x[0], x[1]))
+            c1, a1, f1 = feas_costs[0]
+            regret = (feas_costs[1][0] - c1) if len(feas_costs) >= 2 else 0.0
+            if getattr(t, "is_urgent", False):
+                regret += 25.0
+            key_p = (regret, -c1, tid)
+            if best_pick is None or key_p > (best_pick[0], best_pick[1], best_pick[2]):
+                best_pick = (regret, -c1, tid, a1, f1, drop)
+
+        assert best_pick is not None
+        _, _, pick_tid, pick_aid, pick_finish, pick_drop = best_pick
+        assign[pick_tid] = pick_aid
+        end_t[pick_aid] = pick_finish
+        end_node[pick_aid] = pick_drop
+        q_cnt[pick_aid] += 1
+        unassigned.remove(pick_tid)
+
+    # Order per-AMR sequence cleanly respecting active healthy head
+    seqs: dict[str, list[str]] = {}
+    for aid in healthy_agvs:
+        head = fast_surr.rob_cur_healthy.get(aid)
+        a_tids = [tid for tid in graph.rel_tids if assign.get(tid) == aid]
+        if a_tids:
+            a_tids.sort(
+                key=lambda tid: (
+                    0 if tid == head else 1,
+                    op_prio.get(tmap[tid].kit_op_id or "", 0),
+                    int(tmap[tid].release_step),
+                    tid,
+                )
+            )
+            seqs[aid] = a_tids
+    return assign, seqs
+
+
+def generate_causal_cone_candidates(
+    snapshot: NativeSnapshot,
+    network: Network,
+    graph: V19HeteroGraph,
+    ev: CVCREvaluator,
+    fast_surr: FastJAWKittingSurrogate,
+    keep_eval: EvalResult,
+    base_op_prio: dict[str, int],
+    neural_pool: list[tuple[str, dict[str, str], dict[str, str], dict[str, int], dict[str, int], Optional[dict[str, list[str]]], bool]],
+    fresh_op_ids: set[str],
+    pending_or_dist_set: set[str],
+    *,
+    budget_ms_limit: float = 0.7,
+) -> list[tuple[str, dict[str, str], dict[str, str], dict[str, int], dict[str, int], Optional[dict[str, list[str]]], bool]]:
+    """Generate high-leverage Causal Cone + Regret-2 + Polished candidates inside <0.7ms."""
+    t_start = _cvcr_now_s()
+    out: list[tuple[str, dict[str, str], dict[str, str], dict[str, int], dict[str, int], Optional[dict[str, list[str]]], bool]] = []
+    if not graph.rel_tids or len(graph.healthy_agv_indices) < 1:
+        return out
+
+    healthy_agvs = [graph.agv_ids[i] for i in graph.healthy_agv_indices]
+    agv_idx_map = {aid: i for i, aid in enumerate(graph.agv_ids)}
+    task_idx_map = {tid: i for i, tid in enumerate(graph.rel_tids)}
+    rob_cur_h = fast_surr.rob_cur_healthy
+
+    bays_semi, crews_semi, km_prio = _compute_fresh_semicircle_bays(
+        snapshot, network, graph, fast_surr, fresh_op_ids
+    )
+    cone = build_causal_repair_cone(
+        snapshot, graph, keep_eval, graph.base_assign, graph.base_bays, graph.base_crews
+    )
+
+    # 1. Regret-2 Zero-Churn (`cone_regret2_zc`): keeps healthy_anchor fixed, only pending_or_dist + fresh_op_ids
+    if pending_or_dist_set:
+        anchor_zc = {tid: aid for tid, aid in graph.base_assign.items() if tid not in pending_or_dist_set}
+        r2_asn_zc, r2_seq_zc = _regret2_insert_tasks(
+            snapshot, graph, fast_surr, anchor_zc, sorted(pending_or_dist_set), base_op_prio, bays_semi
+        )
+        out.append(("cone_regret2_zc", r2_asn_zc, bays_semi, crews_semi, base_op_prio, r2_seq_zc, False))
+
+    # 2. Causal-Cone + Pending Regret-2 Destroy-and-Repair (`cone_regret2_full`)
+    destroy_set = set(pending_or_dist_set) | set(cone.cone_tasks)
+    if destroy_set and len(healthy_agvs) >= 2:
+        anchor_cone = {tid: aid for tid, aid in graph.base_assign.items() if tid not in destroy_set}
+        r2_asn_c, r2_seq_c = _regret2_insert_tasks(
+            snapshot, graph, fast_surr, anchor_cone, sorted(destroy_set), km_prio, bays_semi
+        )
+        out.append(("cone_regret2_full", r2_asn_c, bays_semi, crews_semi, km_prio, r2_seq_c, True))
+
+    # 3. Bottleneck Kitting Parallel Co-Alignment (`cone_kit_coalign`)
+    rel_set = set(graph.rel_tids)
+    kits = [kt for kt in cone.bottleneck_kit_group if kt in rel_set]
+    if len(kits) >= 2 and len(healthy_agvs) >= 2:
+        ka_asn = dict(graph.base_assign)
+        used_r: set[str] = set()
+        changed_ka = False
+        for kt in kits:
+            ti = task_idx_map.get(kt)
+            if ti is None:
+                continue
+            feas = [
+                aid for aid in healthy_agvs
+                if bool(graph.task_agv_mask[ti, agv_idx_map[aid]])
+            ]
+            if not feas:
+                continue
+            feas.sort(key=lambda aid: (1 if aid in used_r else 0, float(graph.task_agv_feats[ti, agv_idx_map[aid], 0]), aid))
+            pick_r = feas[0]
+            used_r.add(pick_r)
+            if ka_asn.get(kt) != pick_r:
+                ka_asn[kt] = pick_r
+                changed_ka = True
+        if changed_ka:
+            ka_seq = {aid: [tid for tid in graph.rel_tids if ka_asn.get(tid) == aid] for aid in healthy_agvs}
+            ka_seq = {k: v for k, v in ka_seq.items() if v}
+            out.append(("cone_kit_coalign", ka_asn, dict(graph.base_bays), dict(graph.base_crews), dict(base_op_prio), ka_seq, True))
+
+    # 4. Critical Queue-Head Promotion (`cone_queue_promote`) on keep_eval sequences
+    if keep_eval.robot_order_seq and cone.cone_tasks:
+        t0_q = cone.cone_tasks[0]
+        rid_q = graph.base_assign.get(t0_q)
+        if rid_q and rid_q in keep_eval.robot_order_seq:
+            seq_q = [x for x in keep_eval.robot_order_seq[rid_q] if x in rel_set or x == rob_cur_h.get(rid_q)]
+            if t0_q in seq_q:
+                pos = seq_q.index(t0_q)
+                tgt = 1 if (seq_q and seq_q[0] == rob_cur_h.get(rid_q)) else 0
+                if pos > tgt:
+                    new_seq_r = list(seq_q)
+                    new_seq_r.pop(pos)
+                    new_seq_r.insert(tgt, t0_q)
+                    seqs_qp = {k: list(v) for k, v in keep_eval.robot_order_seq.items() if v}
+                    seqs_qp[rid_q] = new_seq_r
+                    prio_qp = dict(base_op_prio)
+                    t_obj = fast_surr.tasks_by_id.get(t0_q)
+                    if t_obj and t_obj.kit_op_id and t_obj.kit_op_id in prio_qp:
+                        prio_qp[t_obj.kit_op_id] = max(int(snapshot.tick), prio_qp[t_obj.kit_op_id] - 15)
+                    out.append(("cone_queue_promote", dict(graph.base_assign), dict(graph.base_bays), dict(graph.base_crews), prio_qp, seqs_qp, False))
+
+    # 5. Surrogate 1-Pass Causal Cone Polish on Top Seed(s) (neural + ZC)
+    if (_cvcr_now_s() - t_start) * 1000.0 < budget_ms_limit and len(healthy_agvs) >= 2:
+        seeds_to_polish: list[tuple[str, dict[str, str], dict[str, str], dict[str, int], dict[str, int], Optional[dict[str, list[str]]], bool]] = []
+        if neural_pool:
+            scored_np = [
+                (fast_surr.score(asn, op_p, bs, cs, sq), tag, asn, bs, cs, op_p, sq, is_f)
+                for tag, asn, bs, cs, op_p, sq, is_f in neural_pool
+            ]
+            scored_np.sort(key=lambda item: item[0])
+            top0 = scored_np[0]
+            seeds_to_polish.append((top0[1], top0[2], top0[3], top0[4], top0[5], top0[6], top0[7]))
+            for item in scored_np[1:]:
+                if item[1].endswith("_zc") or item[1].startswith("zc"):
+                    seeds_to_polish.append((item[1], item[2], item[3], item[4], item[5], item[6], item[7]))
+                    break
+        elif out:
+            seeds_to_polish.append(out[0])
+
+        focus_tasks = cone.cone_tasks[:6] if cone.cone_tasks else graph.rel_tids[:6]
+        for s_tag, s_asn, s_bs, s_cs, s_op, s_sq, s_full in seeds_to_polish:
+            if (_cvcr_now_s() - t_start) * 1000.0 >= budget_ms_limit:
+                break
+            cur_a = dict(s_asn)
+            cur_b = dict(s_bs)
+            cur_c = dict(s_cs)
+            cur_sq = {k: list(v) for k, v in s_sq.items()} if s_sq else None
+            best_sc = fast_surr.score(cur_a, s_op, cur_b, cur_c, cur_sq)
+            changed = False
+            restrict_pending = s_tag.endswith("_zc")
+            for tid in focus_tasks:
+                if restrict_pending and tid not in pending_or_dist_set:
+                    continue
+                ti = task_idx_map.get(tid)
+                if ti is None:
+                    continue
+                orig_r = cur_a.get(tid)
+                best_r = orig_r
+                for aid in healthy_agvs:
+                    if aid == orig_r or not bool(graph.task_agv_mask[ti, agv_idx_map[aid]]):
+                        continue
+                    cur_a[tid] = aid
+                    # Update sequence minimally for accurate queue position simulation
+                    trial_sq = None
+                    if cur_sq is not None:
+                        trial_sq = {k: list(v) for k, v in cur_sq.items()}
+                        if orig_r in trial_sq and tid in trial_sq[orig_r]:
+                            trial_sq[orig_r].remove(tid)
+                        trial_sq.setdefault(aid, []).append(tid)
+                    sc = fast_surr.score(cur_a, s_op, cur_b, cur_c, trial_sq)
+                    if sc + 1.0 < best_sc:
+                        best_sc = sc
+                        best_r = aid
+                        changed = True
+                if best_r is not None:
+                    if cur_sq is not None and best_r != orig_r:
+                        if orig_r in cur_sq and tid in cur_sq[orig_r]:
+                            cur_sq[orig_r].remove(tid)
+                        cur_sq.setdefault(best_r, []).append(tid)
+                    cur_a[tid] = best_r
+            if changed:
+                out.append((f"{s_tag}+cone", cur_a, cur_b, cur_c, dict(s_op), cur_sq, s_full))
+
+    return out

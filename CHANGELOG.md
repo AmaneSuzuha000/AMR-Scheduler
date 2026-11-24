@@ -2,6 +2,20 @@
 
 All notable changes to the **AMR-Scheduler** platform are documented in this file.
 
+## [1.2.1] - 2026-11-24
+
+### Added & Verified (NCSR Optimization, VAL-72 Ablations & Dual 240-Ep Holdouts)
+- **In-Place `CoRe-Sched` NCSR Fixes (`v19_hetero_constructor.py`, `v12_proactive_guard.py`, `v10_selector.py`)**:
+  - Eagerly pre-populated pure-NumPy actors (`_np_full_net`, `_np_staged_net`) inside `_ensure_nets()` to eliminate tick-0 cold-start spikes (`< 1e-5` parity).
+  - Enabled Stage-2 Regret-2 `CausalRepairCone` (`FastJAWKittingSurrogate`) with execution-consistent commits (`enable_exec_consistent_commit=True`), valid navigation-edge filtering (`network.has_edge`), active-loading shielding (`_load_end > step`), and symmetric `p4_choke_robust` corridor-oscillation wakeup arbitration (8-tick cooldown).
+  - Tightened anytime SLA caps (`17.5 / 29.0 ms` under `35 ms`), locking pooled wall-clock P99 to `18.55 ms` (Cohort A) and `22.62 ms` (Blind Cohort B).
+- **Quarantined `VAL-72` Ablations & `2 × 2` Trigger × Solver Decoupling (`experiments/run_post_v120_audit_and_ablation.py`, `results/g4_val72_repair_ablation.csv`, `Tests/test_post_v120_ncsr_audit.py`)**:
+  - Quantified single-factor contributions (`w/o Cone` `+14.32%` $p=4.30\times 10^{-5}$; `Legacy-Scorer` `+16.21%` $p=3.02\times 10^{-4}$; `w/o AHG-RL` `+28.60%`; `w/o ZeroChurn` `+4.60%`) and isolated trigger–solver co-adaptation (`RuleV10 + CoRe-Sched` `4,190.3` `72/72`).
+- **Dual 120-Episode Holdouts & Gate G1 Re-Verification (`experiments/run_g5_pristine_blind_holdout.py`, `results/g5_pristine_blind_holdout.csv`, `fig7_dual_cohort_and_ablation.png`)**:
+  - **Cohort A (`120` eps)**: `CoRe-Sched` ranks **#1 overall** (`5,177.9` Mean $J_A$, `120/120` 100%, `15.52 / 18.55 ms` P95/P99).
+  - **Single-Shot Blind Cohort B (`120` untouched eps)**: **#1 Median $J_A$ (`827.5`)**, `118/120` (98.3%), `19.45 / 22.62 ms` P95/P99, `7/11` paired wins ($p \le 0.0132$), transparently reporting `topo4_37302` & `track2_3906` heavy-tail outliers (`6,631.5` Mean).
+  - **Combined `240` Episodes (`2,880` runs)**: **#1 completion (`238/240 = 99.2%`)** and `p \le 0.00135` paired wins over `8 / 11` comparators, plus `0 / 270` Gate G1 static relaxation violations (`COR26-Ref` offline CP-SAT master relaxation + conflict-free path verification reference solver, `0` claimed exact optima) and **Fig. 7** (`fig1`–`fig7`).
+
 ## [1.2.0] - 2026-11-24
 
 ### Added & Verified (Three-Gate Scientific Closure)

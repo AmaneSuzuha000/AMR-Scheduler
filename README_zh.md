@@ -18,56 +18,60 @@
 
 ## 项目概述
 
-**AMR-Scheduler**（`v1.2.0`）是 **`CoRe-Sched`**（*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*）框架的官方开源代码与数字孪生平台，面向**离散工位、多物料齐套汇合、狭窄单车道走廊**的铁路货车与轮对检修车间，实现毫秒级在线生产—多 AMR 联合重调度。
+**AMR-Scheduler**（`v1.2.1`）是 **`CoRe-Sched`**（*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*）框架的官方开源代码与数字孪生平台，面向**离散工位、多物料齐套汇合、狭窄单车道走廊**的铁路货车与轮对检修车间，实现毫秒级在线生产—多 AMR 联合重调度。
 
 <p align="center">
   <img src="results/figures/fig1_core_sched_overview.png" alt="CoRe-Sched 双引擎闭环在线重调度架构" width="96%" />
 </p>
 
 ### 核心双引擎与执行架构
-- **自适应异构图学习引擎（`AHG-RL`）**（`amr_sched/rl/v19_hetero_graph.py`, `v19_hetero_constructor.py`, `causal_repair_cone.py`）：
-  - **5 类实体异构图注意力编码器**：编码 `Operation`、`Task`、`AMR`、`Bay`、`Crew` 节点及工序前驱 DAG、齐套二分连接与通道拥堵绕行边特征；
-  - **四阶段自回归语义构造器（`BC -> KL 锚定 SMDP-PPO`）**：依次解码*任务优先级排序*、*工位/班组资源分配*、*车队动态负载分派*与*单车队列定序*，并导出与 PyTorch 误差 `< 1e-5` 的纯 NumPy `.npz` 权重，支持无 PyTorch 的 ROS 2 物理协调器直接运行；
-  - **在线上下文策略选择（`Contextual LinUCB`）+ 反事实双臂探测 + $J_A$ 对齐评分器**：基于 6 维拓扑无关耦合状态 $\phi(s_t) \in [0, 1]^6$ 自适应切换 `Full Joint` 与 `Staged` 策略，并结合车队规模守卫双臂探测（$|\mathcal{R}| \ge 4$）与精确 $J_A$ 评分器。
+- **自适应异构图学习与因果修复引擎（`AHG-RL` + `CausalRepairCone`）**（`amr_sched/rl/v19_hetero_graph.py`, `v19_hetero_constructor.py`, `causal_repair_cone.py`, `v10_selector.py`）：
+  - **5 类实体异构图注意力编码器与纯 NumPy 提前提升**：编码 `Operation`、`Task`、`AMR`、`Bay`、`Crew` 节点及工序前驱 DAG、齐套二分连接与通道拥堵绕行边特征，初始化阶段即提升至与 PyTorch 误差 `< 1e-5` 的纯 NumPy 推理矩阵，根除首步冷启动延迟抖动；
+  - **四阶段自回归语义构造器（`BC -> KL 锚定 SMDP-PPO`）**：依次解码*任务优先级排序*、*工位/班组资源分配*、*车队动态负载分派*与*单车队列定序*；
+  - **在线上下文切换 + 双臂探测 + 二阶段 `CausalRepairCone` + 对称振荡仲裁**：耦合 `Contextual LinUCB`（$\phi(s_t) \in [0, 1]^6$）、车队守卫反事实双臂探测（$|\mathcal{R}| \ge 4$）、精确 $J_A$ 评分器、基于 `FastJAWKittingSurrogate` 的 Regret-2 局部修复锥、活跃装货（`_load_end`）/有效边安全守卫与对称 `p4_choke_robust` 外科走廊振荡唤醒。
 - **承诺保持增量预约优化引擎（`CVCR-IR`）**（`amr_sched/cvcr/evaluator.py`, `crates/`）：
-  - **序列差分增量预约缓存（`CVCR-IR (Seq-Diff)`）+ 足迹感知实时 SLA 守卫**：按单车精确有效任务序列差分定位变更车队子集 $\Delta\mathcal{R}$，原位复用未变车辆的 Rust 半开区间预约与无冲突路径（与全量重建 `median |ΔJ| = 0.00` 严格等价），并基于候选足迹严格保障最坏尾延迟低于 `35 ms`。
+  - **序列差分增量预约缓存（`CVCR-IR (Seq-Diff)`）+ 紧缩 SLA 守卫**：按单车精确有效任务序列差分定位 $\Delta\mathcal{R}$，原位复用未变车辆的 Rust 半开区间预约与无冲突路径（`median |ΔJ| = 0.00`），将双队列盲测的汇总尾延迟 `Pooled P99` 严格控制在 `23 ms` 以内（`18.55 ms / 22.62 ms < 35 ms`）。
 - **原子事务提交执行层（*Atomic Transaction Commit*）与双层数字孪生**：
-  - 统一注册入口（共 **22** 个已注册策略）：涵盖 `core_sched` / `CoRe-Sched`（`V19_ADAPTIVE_RL`）、2025–2026 直接联合动态 FJSP–AGV 神经与元启发式基线（`IJPR25_DFJSPT_HMARL`、`ASC26_MA_TRANS`、`FGCS26_REN_GNN`、`SPGA_AMR`）、静态离线参照（`COR26-Ref`、`EJOR26-Erdogan`）及更广泛的 2025–2026 顶会/顶刊基线。
+  - 统一注册入口（共 **22** 个已注册策略）：涵盖 `core_sched` / `CoRe-Sched`（`V19_ADAPTIVE_RL`）、2025–2026 直接联合动态 FJSP–AGV 神经与元启发式基线（`IJPR25_DFJSPT_HMARL`、`ASC26_MA_TRANS`、`FGCS26_REN_GNN`、`SPGA_AMR`）、静态离线参照（`COR26-Ref` CP-SAT 主松弛 + 路径验证离线参考求解器、`EJOR26-Erdogan`）及更广泛的 2025–2026 顶会/顶刊基线。
 
 ---
 
-## 核心实证亮点（`v1.2.0` 三道科研门禁闭环验证）
+## 核心实证亮点（`v1.2.1` NCSR 优化与双队列 240 局盲测闭环）
 
-### 1. 单次无竞争 120 局新鲜冻结盲测主结果（12 方法，100% 独立轨迹审计通过）
+### 1. 双 120 局隔离盲测队列（共 `240` 局 / `2,880` 局独立审计运行，100% 审计通过）
 
-在**单次连续无竞争墙钟会话**中运行（`1,440` 局，全新零重叠新鲜盲测种子 `[27101..27302]` & `[2901..2906]`；逐局原始台账见 [`results/g3_fresh_blind_holdout.csv`](results/g3_fresh_blind_holdout.csv)）。标 `*` 方法的汇总 Pooled P95 突破 `35 ms` 实时红线。
+在严格零重叠种子隔离下连续执行 **Holdout Cohort A**（[`results/g3_fresh_blind_holdout.csv`](results/g3_fresh_blind_holdout.csv)，`[27101..27302]` & `[2901..2906]`）与 **单次零返工 Blind Cohort B**（[`results/g5_pristine_blind_holdout.csv`](results/g5_pristine_blind_holdout.csv)，`[37101..37302]` & `[3901..3906]`，冻结后仅运行一次）。标 `*` 方法突破 `35 ms` Pooled P95/P99 实时红线。
 
-| 方法 | 平均 $J_A$ ↓ | 中位数 $J_A$ ↓ | 完工率 (100%) | 纯物理 $H_1$ ($H_2=0$) ↓ | 抖动 ↓ | **Pooled P95 (ms)** ↓ | **Pooled P99 (ms)** ↓ | Mean Ep-P95 (ms) | `Track 2` (50 节点) ↓ |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`CoRe-Sched` (`core_sched`)** | **5,763.0 (SLA 内第 1)** | 2,061.8 | **117/120 (97.5%)** | 4,873.6 | 23.9 | **32.43** | **34.91** | 33.42 | **17,390.8 (24/24)** |
-| `V18-EA`* | 5,640.3 | **1,150.6** | 118/120 (98.3%) | 4,749.6 | 12.3 | *42.80* | *75.80* | 27.07 | 20,285.5 (22/24) |
-| `COR26-SPGA`* | 6,155.3 | 2,282.1 | 116/120 (96.7%) | **4,446.3** | 57.5 | *64.09* | *76.53* | 62.67 | 17,089.6 (23/24) |
-| `FGCS26-Ren-GNN` | 6,361.9 | 2,163.2 | 114/120 (95.0%) | 4,797.0 | 31.6 | 13.29 | 17.31 | 12.34 | 17,718.3 (24/24) |
-| `IJCAI26-PGMPO` | 6,408.9 | 1,235.6 | 114/120 (95.0%) | 4,941.2 | 14.5 | 23.89 | 29.96 | 20.16 | 21,494.5 (22/24) |
-| `AHG-RL (Full)` | 6,690.1 | 2,193.4 | 114/120 (95.0%) | 4,757.5 | 22.6 | 34.76 | 42.81 | 32.18 | 21,326.4 (22/24) |
-| `Rule-V10`* | 6,847.5 | 1,935.3 | 117/120 (97.5%) | 5,610.3 | 16.6 | *39.13* | *54.26* | 42.78 | 19,928.3 (24/24) |
-| `AHG-RL (Staged)` | 6,857.9 | 1,872.2 | 116/120 (96.7%) | 4,948.0 | 25.4 | 30.54 | 38.00 | 28.86 | 19,298.5 (23/24) |
-| `ASC26-MA-Trans` | 6,987.1 | 2,570.3 | 112/120 (93.3%) | 4,885.9 | 27.6 | **12.66** | **17.41** | 11.55 | **15,440.4 (24/24)** |
-| `RAL26-DetourDelta` | 7,197.7 | 2,424.6 | 113/120 (94.2%) | 5,413.1 | **10.8** | 28.70 | *72.35* | 27.74 | 24,505.1 (20/24) |
-| `EJOR26-Wu-GRU` | 8,025.7 | 1,398.0 | 114/120 (95.0%) | 5,392.2 | 21.8 | 34.12 | 40.48 | 28.41 | 30,993.1 (19/24) |
-| `IJPR25-DFJSP-T` | 8,736.4 | 2,146.7 | 113/120 (94.2%) | 5,344.3 | 29.5 | 16.45 | 22.86 | 14.10 | 26,423.0 (21/24) |
+| 方法 | **240 局完工率** ↑ | Cohort A 均值 $J_A$ ↓ | Cohort A P95 / P99 (ms) | Cohort B 均值 / **中位数 $J_A$** ↓ | Cohort B P95 / P99 (ms) | **240 局配对 $\Delta J_A$ (`p`, `胜/平/负`)** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`CoRe-Sched` (`core_sched`)** | **238/240 (99.2% 第 1)** | **5,177.9 (第 1)** | **15.52 / 18.55** | 6,631.5 / **827.5 (第 1)** | **19.45 / 22.62** | 基准（均值 `5,904.7`，中位 `1,575.7`） |
+| `V18-EA`* | 234/240 (97.5%) | 5,654.1 | 27.53 / *79.38* | **5,387.0** / 991.7 | 25.49 / *77.74* | -6.96% (`p = 0.0666`, `99/0/141`) |
+| `IJCAI26-PGMPO` | 237/240 (98.8%) | 6,016.5 | 23.13 / *38.81* | 5,532.7 / 843.5 | 22.97 / 34.49 | -2.25% (`p = 0.901`, `116/0/124`) |
+| `Rule-V10`* | 234/240 (97.5%) | 6,674.2 | *37.16* / *52.28* | 6,175.6 / 1,455.2 | *35.90* / *51.30* | +8.10% (`p = 0.092`, `127/0/113`) |
+| `AHG-RL (Full)` | 235/240 (97.9%) | 6,019.2 | 32.84 / *52.34* | 6,942.6 / 3,610.4 | 33.14 / *42.61* | **+8.89%** (**`p = 0.00135`**, `144/0/96`) |
+| `AHG-RL (Staged)`* | 234/240 (97.5%) | 6,469.2 | 30.31 / *54.26* | 6,821.4 / 3,613.7 | *35.59* / *78.51* | **+11.15%** (**`p = 7.25e-5`**, `151/0/89`) |
+| `FGCS26-Ren-GNN` | 235/240 (97.9%) | 7,420.4 | 12.68 / 16.05 | 6,240.2 / 3,695.2 | 13.56 / 16.81 | **+13.55%** (**`p = 1.62e-4`**, `148/0/92`) |
+| `ASC26-MA-Trans` | 231/240 (96.2%) | 7,776.6 | **12.22 / 16.82** | 6,580.0 / 3,811.9 | **12.01 / 15.30** | **+17.74%** (**`p = 7.35e-4`**, `142/0/98`) |
+| `RAL26-DetourDelta` | 234/240 (97.5%) | 6,998.2 | 22.10 / *57.42* | 7,486.5 / 3,683.4 | 27.37 / *61.78* | **+18.47%** (**`p = 1.32e-10`**, `160/0/80`) |
+| `COR26-SPGA`* | 234/240 (97.5%) | 7,533.0 | *62.55* / *75.39* | 7,240.1 / 2,920.4 | *62.02* / *73.66* | **+20.06%** (**`p = 4.09e-7`**, `164/0/76`) |
+| `EJOR26-Wu-GRU` | 228/240 (95.0%) | 8,857.7 | 33.04 / *52.49* | 7,718.7 / 1,057.2 | 33.88 / *50.04* | **+28.76%** (**`p = 4.37e-4`**, `140/0/100`) |
+| `IJPR25-DFJSP-T` | 228/240 (95.0%) | 7,817.4 | 14.85 / 18.05 | 9,253.9 / 3,760.6 | 14.70 / 18.35 | **+30.82%** (**`p = 8.47e-14`**, `166/0/74`) |
 
-- **实时 SLA 综合第 1**：`CoRe-Sched` 在所有满足 `35 ms` 实时红线的方法中排名**第 1（平均 $J_A = 5,763.0$，完工 `117/120`）**，连 **Pooled P99（`34.91 ms`）** 均严格低于 `35 ms`；而 `V18-EA` 虽在总体均值略低 `2.18%`（$p = 0.0771$ 不显著）却突破红线（Pooled P95 `42.80 ms`、P99 `75.80 ms`），且 `CoRe-Sched` 在高耦合 `Track 2` 领先 `14.3%`、在共同完工纯 $H_1$ 上略胜（`4,640.5` vs `4,668.5`）。
-- **全面领先 2025–2026 联合神经与路由基线**：较 `IJPR25-DFJSP-T` 降本 **`+34.04%`**（$p = 5.41 \times 10^{-4}$）、`EJOR26-Wu-GRU` **`+28.19%`**（95% CI `[+12.2%, +39.1%]`）、`RAL26-DetourDelta` **`+19.93%`**（$p = 0.0050$）、`ASC26-MA-Trans` **`+17.52%`**、`AHG-RL (Staged)` **`+15.97%`**、`AHG-RL (Full)` **`+13.86%`**、`IJCAI26-PGMPO` **`+10.08%`**、`FGCS26-Ren-GNN` **`+9.41%`**、`COR26-SPGA` **`+6.37%`**（延迟减半、抖动降 `58.4%`）。
-- **54 局纯零故障静态公共子问题同仿真器参照（`0 / 270` 下界违例）**：完整台账见 [`results/g1_static_reference_subproblem.csv`](results/g1_static_reference_subproblem.csv)。`COR26-Ref`（一阶段无割 CP-SAT 物理松弛 `LB_phys = 68.2 / 90.2 / 438.7`，仿真验证 `Sim-UB = 405.1 / 326.3 / 785.5`）与 `EJOR26-Erdogan`（`ILS-LP`，`284.1 / 573.5 / 664.5`）在全部 5 个求解器中严格满足 `LB_phys <= H1_sim`（0 违例）。
+- **全组第 1 完工率与双队列 Pooled P99 `< 23 ms`**：`CoRe-Sched` 取得 **`238/240（99.2%）`** 总完工率第 1，包揽 **Cohort A 平均第 1（`5,177.9`, `120/120`, `15.52 / 18.55 ms`）** 与 **Blind Cohort B 中位数第 1（`827.5`, `118/120`, `19.45 / 22.62 ms`）**，跨 240 局显著战胜 **8 / 11 个对比方法（$p \le 0.00135$）**，并透明披露 Cohort B 两局未完工长尾算例（`topo4_offset_dual_lane_window_bottleneck_37302 = 78,259.95`、`track2_kitting_windows_3906 = 117,637.65`）对均值的影响。
+- **72 局单因子消融与 `2 × 2` 触发器 × 求解器因子解耦**（[`results/g4_val72_repair_ablation.csv`](results/g4_val72_repair_ablation.csv)）：剥离 `CausalRepairCone`（`+14.32%` $p=4.30\times 10^{-5}$）、旧评分器（`+16.21%` $p=3.02\times 10^{-4}$）、`AHG-RL` 先验（`+28.60%`）或 ZeroChurn（`+4.60%`）均稳定退化；`RuleV10 + CoRe-Sched`（`4,190.3`, `72/72`）优于 `V18-EA`（`4,252.9`）、`RuleV10 + V18-EA`（`4,359.9`）与 `V18Ctrl + CoRe-Sched`（`4,864.7`, `71/72`）。
+- **54 局纯零故障静态公共子问题同仿真器参照（`0 / 270` 下界违例）**（[`results/g1_static_reference_subproblem.csv`](results/g1_static_reference_subproblem.csv)）：`COR26-Ref`（CP-SAT 主松弛 + 无冲突路径验证离线参考求解器，`LB_phys = 68.2 / 90.2 / 438.7`，`Sim-UB = 412.4 / 346.8 / 793.0`，宣称全局最优 `0`）与 `EJOR26-Erdogan`（`352.1 / 664.8 / 664.5`）严格满足 `LB_phys <= H1_sim`，`CoRe-Sched` 静态 Pooled P95/P99 为 `13.61 / 20.47 ms`。
 - **`CVCR-IR (Seq-Diff)` 缓存协同、物理对账与 10 车扩展**：隔离缓存命中率从 `0.00%` 恢复至 `73.68%`（闭环 `86.8%–94.7%`，`median |ΔJ| = 0.00`）；5 种子 ROS 2 / Nav2 / Gazebo 物理对账 Track 1 $\rho = 0.7857$（物理 P95 `7.18 ms`）；62 节点扩至 10 车时 P95 仅 **`23.57 ms < 35 ms`**（提速 `2.21×`）。
 
 <p align="center">
-  <img src="results/figures/fig3_main_benchmark.png" alt="CoRe-Sched 120 场盲测成本分解与时延—质量帕累托前沿" width="96%" />
+  <img src="results/figures/fig7_dual_cohort_and_ablation.png" alt="双 120 局盲测一致性、72 局消融与 2x2 触发器解耦" width="96%" />
 </p>
 
 <p align="center">
-  <img src="results/figures/fig6_pure_h1_and_lbbd.png" alt="纯物理效率 H1 归因与 COR 2026 LBBD/CP 离线精确参考下界" width="96%" />
+  <img src="results/figures/fig3_main_benchmark.png" alt="CoRe-Sched Cohort A 盲测成本分解与时延—质量帕累托前沿" width="96%" />
+</p>
+
+<p align="center">
+  <img src="results/figures/fig6_pure_h1_and_lbbd.png" alt="双队列纯物理效率 H1 归因与静态同仿真器参照下界" width="96%" />
 </p>
 
 <p align="center">
@@ -90,14 +94,20 @@ cargo build --release --manifest-path crates/Cargo.toml
 pip install -r requirements.txt
 pip install -e ".[dev,viz,web,rl]"
 
-# 3. 运行车间仿真、CoRe-Sched 双引擎基准与 5 张插图重绘
+# 3. 运行车间仿真、NCSR 消融、双队列盲测与 7 张插图重绘
 python -m amr_sched --tasks 50 --agvs 6 --layout workshop --planner rust_spacetime_astar
-python -B experiments/run_v19_exp08_learning_b2_synergy.py
+python -B experiments/run_post_v120_audit_and_ablation.py
+python -B experiments/run_g5_pristine_blind_holdout.py
 python -B experiments/run_dual_layer_reconciliation.py --multi-seed
 python -B experiments/run_workshop_scaling_4axis.py
 python -B experiments/plot_v19_paper_figures.py
 
 # 4. 运行全套验证测试
+python -m pytest -q
+cargo test --manifest-path crates/Cargo.toml
+dotnet test Tests/RAWSimO.Live.Tests/RAWSimO.Live.Tests.csproj -c Release
+python tools/data_manifest.py --check
+```
 python -m pytest -q
 cargo test --manifest-path crates/Cargo.toml
 dotnet test Tests/RAWSimO.Live.Tests/RAWSimO.Live.Tests.csproj -c Release

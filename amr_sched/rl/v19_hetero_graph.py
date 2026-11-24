@@ -202,6 +202,172 @@ class V19HeteroGraph:
     clf: CommitmentClassification
 
 
+def compute_simulator_aligned_base_assign(
+    snapshot: NativeSnapshot,
+    network: Network,
+    c_clf: CommitmentClassification,
+    agvs_sorted: list[Any],
+    healthy_flags: list[bool],
+    rel_set: set[str],
+) -> tuple[dict[str, str], dict[str, str], dict[str, int]]:
+    """Build exact GreedyAllocator-aligned `base_assign`, `fixed_assign`, and `fixed_counts`.
+
+    Replaces arbitrary modulo round-robin on unassigned `PENDING` tasks with the exact
+    1-to-1 greedy matching used by `Simulator._assign_step` + `GreedyAllocator.allocate`
+    for immediately idle healthy AMRs, plus shortest-completion sequential rollover for
+    remaining unassigned releasable/disturbed tasks so `KEEP` evaluates the true incumbent.
+    """
+    tick = int(snapshot.tick)
+    agv_ids = [r.robot_id for r in agvs_sorted]
+    agv_idx_map = {aid: idx for idx, aid in enumerate(agv_ids)}
+    healthy_agv_ids = [agv_ids[idx] for idx, ok in enumerate(healthy_flags) if ok]
+    op_dropoff_by_id = {op.op_id: op.bay_id for op in snapshot.operations}
+
+    fixed_assign: dict[str, str] = {}
+    base_assign: dict[str, str] = {}
+    fixed_counts: dict[str, int] = {aid: 0 for aid in agv_ids}
+
+    # Pre-seed already committed / healthy incumbent tasks (matches original fixed_counts!)
+    unassigned_rel: list[TaskSnapshot] = []
+    for t in sorted(snapshot.tasks, key=lambda x: x.task_id):
+        if t.task_id in rel_set:
+            if t.assigned_agv and t.assigned_agv in agv_idx_map and healthy_flags[agv_idx_map[t.assigned_agv]]:
+                base_assign[t.task_id] = t.assigned_agv
+            else:
+                unassigned_rel.append(t)
+        elif t.assigned_agv is not None:
+            fixed_assign[t.task_id] = t.assigned_agv
+            base_assign[t.task_id] = t.assigned_agv
+            if t.status.lower() != "completed" and t.assigned_agv in fixed_counts:
+                fixed_counts[t.assigned_agv] += 1
+
+    if not unassigned_rel or not healthy_agv_ids:
+        if unassigned_rel and agv_ids:
+            for t in unassigned_rel:
+                base_assign[t.task_id] = agv_ids[0]
+        return fixed_assign, base_assign, fixed_counts
+
+    # Compute exact Simulator max_speed travel times (`planner.max_speed = 3.0`)
+    max_spd = max(3.0, max((float(e.speed_limit) for e in network.edges.values()), default=1.0))
+    sp_cache: dict[str, dict[str, float]] = {}
+
+    def _tt(src: str, dst: str) -> float:
+        if src == dst:
+            return 0.0
+        table = sp_cache.get(src)
+        if table is None:
+            table = network.shortest_travel_times(src, max_spd) if src in network.nodes else {}
+            sp_cache[src] = table
+        val = table.get(dst)
+        if val is not None:
+            return float(val)
+        ns, nd = network.nodes.get(src), network.nodes.get(dst)
+        if ns is not None and nd is not None:
+            return float(math.hypot(float(ns.x) - float(nd.x), float(ns.y) - float(nd.y)))
+        return 1e6
+
+    # Match `Simulator._assign_step` + `GreedyAllocator.allocate` for immediately idle healthy AGVs
+    idle_healthy = [
+        r for idx, r in enumerate(agvs_sorted)
+        if healthy_flags[idx]
+        and r.cur_task is None
+        and not r.in_transit
+        and r.state.lower() not in ("blocked", "faulted")
+        and int(r.faulted_until) <= tick
+    ]
+    ready_pending = [
+        t for t in unassigned_rel
+        if (t.assigned_agv is None or t.assigned_agv not in healthy_agv_ids)
+        and t.status.lower() == "pending"
+        and int(t.release_step) <= tick
+    ]
+    used_agv: set[str] = set()
+    used_task: set[str] = set()
+    if idle_healthy and ready_pending:
+        pairs: list[tuple[int, float, str, str]] = []
+        for r in idle_healthy:
+            here = r.cur_node
+            for t in ready_pending:
+                to_pick = _tt(here, t.pickup)
+                if to_pick >= 1e5:
+                    continue
+                to_drop = _tt(t.pickup, t.dropoff)
+                if to_drop >= 1e5:
+                    continue
+                prio_rank = -1 if t.is_urgent else 0
+                pairs.append((prio_rank, to_pick + to_drop, r.robot_id, t.task_id))
+        pairs.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+        for _, _, aid, tid in pairs:
+            if aid in used_agv or tid in used_task:
+                continue
+            base_assign[tid] = aid
+            used_agv.add(aid)
+            used_task.add(tid)
+
+    # Estimate post-commit node and readiness per healthy AGV for any remaining unassigned tasks
+    est_free: dict[str, float] = {}
+    est_node: dict[str, str] = {}
+    tasks_by_id_loc = {t.task_id: t for t in snapshot.tasks}
+    for idx, r in enumerate(agvs_sorted):
+        if not healthy_flags[idx]:
+            continue
+        aid = r.robot_id
+        rem_t = float(tick + len(r.route))
+        end_n = r.route[-1] if r.route else r.cur_node
+        if aid in used_agv:
+            # Find the matched task to advance estimated availability
+            for tid_m, aid_m in base_assign.items():
+                if tid_m in used_task and aid_m == aid:
+                    tm = tasks_by_id_loc[tid_m]
+                    drop_m = op_dropoff_by_id.get(tm.kit_op_id or "", tm.dropoff) if tm.kit_op_id else tm.dropoff
+                    rem_t = max(rem_t, float(tick)) + _tt(r.cur_node, tm.pickup) + _tt(tm.pickup, drop_m) + 4.0
+                    end_n = drop_m
+                    break
+        # Include any already-queued assigned tasks on this AGV
+        queued_t = [
+            t for t in snapshot.tasks
+            if t.task_id not in used_task
+            and base_assign.get(t.task_id) == aid
+            and t.task_id != r.cur_task
+            and t.status.lower() not in ("completed",)
+        ]
+        for qt in sorted(queued_t, key=lambda x: (x.release_step, x.due_step or 9999, x.task_id)):
+            drop_q = op_dropoff_by_id.get(qt.kit_op_id or "", qt.dropoff) if qt.kit_op_id else qt.dropoff
+            rem_t = max(rem_t, float(qt.release_step)) + _tt(end_n, qt.pickup) + _tt(qt.pickup, drop_q) + 4.0
+            end_n = drop_q
+        est_free[aid] = rem_t
+        est_node[aid] = end_n
+
+    remaining = [t for t in unassigned_rel if t.task_id not in base_assign]
+    remaining.sort(
+        key=lambda t: (
+            0 if t.is_urgent else 1,
+            int(t.release_step),
+            int(t.due_step) if t.due_step is not None else 9999,
+            t.task_id,
+        )
+    )
+    for t in remaining:
+        drop_t = op_dropoff_by_id.get(t.kit_op_id or "", t.dropoff) if t.kit_op_id else t.dropoff
+        best_aid = min(
+            healthy_agv_ids,
+            key=lambda aid: (
+                max(est_free[aid], float(t.release_step)) + _tt(est_node[aid], t.pickup) + _tt(t.pickup, drop_t),
+                aid,
+            ),
+        )
+        base_assign[t.task_id] = best_aid
+        est_free[best_aid] = (
+            max(est_free[best_aid], float(t.release_step))
+            + _tt(est_node[best_aid], t.pickup)
+            + _tt(t.pickup, drop_t)
+            + 4.0
+        )
+        est_node[best_aid] = drop_t
+
+    return fixed_assign, base_assign, fixed_counts
+
+
 def extract_v19_hetero_graph(
     snapshot: NativeSnapshot,
     network: Network,
@@ -240,7 +406,6 @@ def extract_v19_hetero_graph(
     if not any(healthy_flags) and agvs_sorted:
         healthy_flags = [True for _ in agvs_sorted]
     healthy_agv_indices = [idx for idx, ok in enumerate(healthy_flags) if ok]
-    healthy_agv_ids = [agv_ids[idx] for idx in healthy_agv_indices]
 
     bay_set: set[str] = set()
     for op in ops_sorted:
@@ -262,22 +427,9 @@ def extract_v19_hetero_graph(
     crew_ids = sorted(crew_set) if crew_set else [0]
     crew_idx_map = {cid: idx for idx, cid in enumerate(crew_ids)}
 
-    fixed_assign: dict[str, str] = {}
-    base_assign: dict[str, str] = {}
-    fixed_counts: dict[str, int] = {aid: 0 for aid in agv_ids}
-    for tid_i, t in enumerate(sorted(snapshot.tasks, key=lambda x: x.task_id)):
-        if t.task_id in rel_set:
-            if t.assigned_agv and t.assigned_agv in agv_idx_map and healthy_flags[agv_idx_map[t.assigned_agv]]:
-                base_assign[t.task_id] = t.assigned_agv
-            elif healthy_agv_ids:
-                base_assign[t.task_id] = healthy_agv_ids[tid_i % len(healthy_agv_ids)]
-            elif agv_ids:
-                base_assign[t.task_id] = agv_ids[0]
-        elif t.assigned_agv is not None:
-            fixed_assign[t.task_id] = t.assigned_agv
-            base_assign[t.task_id] = t.assigned_agv
-            if t.status.lower() != "completed" and t.assigned_agv in fixed_counts:
-                fixed_counts[t.assigned_agv] += 1
+    fixed_assign, base_assign, fixed_counts = compute_simulator_aligned_base_assign(
+        snapshot, network, c_clf, agvs_sorted, healthy_flags, rel_set
+    )
 
     base_bays = {op.op_id: op.bay_id for op in ops_sorted}
     base_crews = {op.op_id: int(op.crew_id) for op in ops_sorted}

@@ -3,7 +3,7 @@
 from dataclasses import replace
 
 from amr_sched.network import Network, Node
-from holdout_scenarios_v17 import build_holdout_v17_scenario
+from experiments.holdout_scenarios_v17 import build_holdout_v17_scenario
 
 
 LAYOUTS = ("perimeter_bypass", "narrow_spine", "offset_dual_lane", "workshop_cells")

@@ -614,11 +614,13 @@ class RuleV10PortfolioPolicy:
         self.enable_v11_stall_override = bool(enable_v11_stall_override)
         self.stall_threshold = int(stall_threshold)
         self.last_dec = -999
+        self.last_surgical = -999
         self.prev_emerg: Any = (False, False)
 
     def reset(self) -> None:
         """Reset stateful query counters between episodes."""
         self.last_dec = -999
+        self.last_surgical = -999
         self.prev_emerg = (False, False)
 
     def select_action(self, obs_v9: np.ndarray, info: dict[str, Any], sim: Any = None) -> int:
@@ -653,6 +655,18 @@ class RuleV10PortfolioPolicy:
             )
         self.prev_emerg = ce
         if not q:
+            if (
+                sim is not None
+                and getattr(sim, "_p4_choke_robust", False)
+                and len(mask) > 1
+                and mask[1] == 1
+                and (tick - self.last_surgical) >= 8
+            ):
+                from amr_sched.cvcr.p4_belief_choke import detect_choke_oscillation_agvs
+
+                if detect_choke_oscillation_agvs(sim):
+                    self.last_surgical = tick
+                    return 1
             return ACTION_KEEP
         self.last_dec = tick
         if stalled and len(mask) > 8 and mask[8] == 1:
