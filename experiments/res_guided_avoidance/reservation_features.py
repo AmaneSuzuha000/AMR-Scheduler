@@ -171,7 +171,9 @@ def extract_multi_robot_obs(
     ego_node_map = {nid: (cd, et, ux, uy) for nid, cd, et, ux, uy in ego_future}
     l_hor_m = max(4.0, min(14.0, cum_d if cum_d > 1.0 else 8.0))
 
-    # Scan peer future reservations intersecting ego upcoming nodes within t_hor_s
+    # Scan peer future reservations intersecting ego upcoming nodes.
+    # Strict time isolation: `spatial_intent` / `intent_notime` MUST NOT filter or sort by time!
+    use_time = (mode == "full_res")
     conflicts: list[tuple[float, float, float, float, float, float, float]] = []
     for other_id, segs in res_view.items():
         if other_id == rid or not segs:
@@ -181,7 +183,7 @@ def extract_multi_robot_obs(
                 continue
             t_en_s = t_en * sim.mmap.macro_step_s
             t_ex_s = t_ex * sim.mmap.macro_step_s
-            if t_ex_s < sim.t_s - 1.0 or t_en_s > sim.t_s + t_hor_s:
+            if use_time and (t_ex_s < sim.t_s - 1.0 or t_en_s > sim.t_s + t_hor_s):
                 continue
             cd, est_t, ego_ux, ego_uy = ego_node_map[nd_o]
             # Approach tangent of peer robot at this node
@@ -202,11 +204,10 @@ def extract_multi_robot_obs(
             sin_psi = clip_val(ego_ux * ouy - ego_uy * oux, -1.0, 1.0)
 
             s_norm = clip_val(cd / l_hor_m, 0.0, 1.0)
-            dt_arr = clip_val((t_en_s - est_t) / t_hor_s, -1.0, 1.0)
-            ovl = clip_val((min(t_ex_s, est_t + 2.0) - max(t_en_s, est_t - 2.0)) / t_hor_s, 0.0, 1.0)
-            prio_diff = clip_val((o_prio - ego_prio) / 2.0, -1.0, 1.0)
-            # Sort key: earliest temporal/spatial conflict
-            score_sort = s_norm + 0.5 * abs(dt_arr)
+            dt_arr = clip_val((t_en_s - est_t) / t_hor_s, -1.0, 1.0) if use_time else 0.0
+            ovl = clip_val((min(t_ex_s, est_t + 2.0) - max(t_en_s, est_t - 2.0)) / t_hor_s, 0.0, 1.0) if use_time else 0.0
+            prio_diff = clip_val((o_prio - ego_prio) / 2.0, -1.0, 1.0) if use_time else 0.0
+            score_sort = (s_norm + 0.5 * abs(dt_arr)) if use_time else s_norm
             conflicts.append((score_sort, s_norm, dt_arr, ovl, cos_psi, sin_psi, prio_diff))
 
     conflicts.sort(key=lambda t: t[0])

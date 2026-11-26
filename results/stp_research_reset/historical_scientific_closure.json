@@ -1,0 +1,151 @@
+{
+  "phase": "Execution-Aware-STP-Audit",
+  "manifest_drift_count": 0,
+  "hash_checks": [
+    {
+      "path": "experiments/res_guided_avoidance/geometry_and_shield.py",
+      "expected_sha256": "cd4bd6bd37fd9196f88839ade90f76926e4b7044f9b772f4f51dd363ff057911",
+      "current_sha256": "cd4bd6bd37fd9196f88839ade90f76926e4b7044f9b772f4f51dd363ff057911",
+      "matched": true
+    },
+    {
+      "path": "experiments/res_guided_avoidance/metric_world.py",
+      "expected_sha256": "aee2586ee3a17a7cab1e0dbabcc79ee6fd1a2dac0427ef9d929da61e12a46d75",
+      "current_sha256": "aee2586ee3a17a7cab1e0dbabcc79ee6fd1a2dac0427ef9d929da61e12a46d75",
+      "matched": true
+    },
+    {
+      "path": "experiments/res_guided_avoidance/motion_primitives.py",
+      "expected_sha256": "eabca935b21e3e3c4cf4db1865ada39d2e132c8720c669a355aae5c25930cee1",
+      "current_sha256": "eabca935b21e3e3c4cf4db1865ada39d2e132c8720c669a355aae5c25930cee1",
+      "matched": true
+    },
+    {
+      "path": "experiments/res_guided_avoidance/reservation_features.py",
+      "expected_sha256": "a248b6fa65691820fad419177d48c7b0f788a5352e7d8929791a501da17a19c8",
+      "current_sha256": "a248b6fa65691820fad419177d48c7b0f788a5352e7d8929791a501da17a19c8",
+      "matched": true
+    },
+    {
+      "path": "experiments/res_guided_avoidance/ramp_ppo.py",
+      "expected_sha256": "e67c09f62beb51a258a29a6c603275a37e69acb897581dcac03088d615cabc99",
+      "current_sha256": "e67c09f62beb51a258a29a6c603275a37e69acb897581dcac03088d615cabc99",
+      "matched": true
+    },
+    {
+      "path": "out/ramp_robust/robust_ramp_report.json",
+      "expected_sha256": "f93c4a26e644a9791e4fa9535d5d6171e12d4c8389b35b1944f1ee395af2b7f7",
+      "current_sha256": "f93c4a26e644a9791e4fa9535d5d6171e12d4c8389b35b1944f1ee395af2b7f7",
+      "matched": true
+    },
+    {
+      "path": "out/ramp_robust/factorial_and_blind_per_episode.csv",
+      "expected_sha256": "94b2f1bd61409b846c4948e156119167783648d31dd8c1589d4b02b9042ab219",
+      "current_sha256": "94b2f1bd61409b846c4948e156119167783648d31dd8c1589d4b02b9042ab219",
+      "matched": true
+    },
+    {
+      "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_s42.npz",
+      "expected_sha256": "59776284a5b7de7cf68850629932fe787272870e795eb04c185af9ffc8be0196",
+      "current_sha256": "59776284a5b7de7cf68850629932fe787272870e795eb04c185af9ffc8be0196",
+      "matched": true
+    },
+    {
+      "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_robust_s42.npz",
+      "expected_sha256": "40c0b146be58a2c7f8efb696440303a5c0eaa8464bfb1eba8dda5e932190fea2",
+      "current_sha256": "40c0b146be58a2c7f8efb696440303a5c0eaa8464bfb1eba8dda5e932190fea2",
+      "matched": true
+    },
+    {
+      "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_s43.npz",
+      "expected_sha256": "96e99dff0db20cd0c1ddb38a11d7e338a0c7f76bf2f80481ae10ffb414f5b9b4",
+      "current_sha256": "96e99dff0db20cd0c1ddb38a11d7e338a0c7f76bf2f80481ae10ffb414f5b9b4",
+      "matched": true
+    },
+    {
+      "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_robust_s43.npz",
+      "expected_sha256": "b18f96935555116fcbfbab106eb74579bdabecb134da47dc634fa22d9b461710",
+      "current_sha256": "b18f96935555116fcbfbab106eb74579bdabecb134da47dc634fa22d9b461710",
+      "matched": true
+    },
+    {
+      "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_s44.npz",
+      "expected_sha256": "c083f31dd429e67f71622cdafb82a1156a5490fb71224e4df38e9a90796d3c85",
+      "current_sha256": "c083f31dd429e67f71622cdafb82a1156a5490fb71224e4df38e9a90796d3c85",
+      "matched": true
+    },
+    {
+      "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_robust_s44.npz",
+      "expected_sha256": "adb8144e0c873db28d5ccb7082a51229763c60cb153ef68310b47666bd1695b6",
+      "current_sha256": "adb8144e0c873db28d5ccb7082a51229763c60cb153ef68310b47666bd1695b6",
+      "matched": true
+    }
+  ],
+  "reserved_blind_8001_8010_hits": [],
+  "r1_robust_accounting": {
+    "dev_6001_6003": "17/18 (94.4%)",
+    "blind_7001_7006": "36/36 (100.0%)",
+    "task4_conflict_suites": "15/15 (100.0%)",
+    "dev_outlier_replay": {
+      "first_wall_t_s": 39.25,
+      "wall_substep_ticks_at_step": 3,
+      "culprits": [
+        {
+          "rid": "R_00",
+          "x": 17.648,
+          "y": 8.778,
+          "theta": -2.422,
+          "v": 0.0,
+          "omega": -0.703,
+          "wall_clear_m": -0.0105,
+          "cur_node": "C_6_3",
+          "phase": "to_dropoff"
+        }
+      ],
+      "total_wall_substeps": 3,
+      "total_peer_substeps": 0,
+      "total_intruder_substeps": 0,
+      "independent_collision_events": 1,
+      "completed_tasks": 4
+    }
+  },
+  "verified_vs_falsified": [
+    {
+      "mechanism": "CPS-A* Upstream Reservation & Congestion Routing",
+      "verdict": "GO (Retained)"
+    },
+    {
+      "mechanism": "Continuous Unicycle Motion & Two-Disc Capsule Swept Check",
+      "verdict": "GO (Retained)"
+    },
+    {
+      "mechanism": "Temporal Reservation Margin m_ij(z)",
+      "verdict": "GO (Retained, M2 +40.7% over M1)"
+    },
+    {
+      "mechanism": "Kinodynamic Motion Primitive Pool (K=6)",
+      "verdict": "GO (Retained)"
+    },
+    {
+      "mechanism": "Uncertainty-Aware Safety Check (robust_safety)",
+      "verdict": "GO (Retained, 0 peer cols in DEV+BLIND)"
+    },
+    {
+      "mechanism": "R1_Robust Deterministic Coordinator",
+      "verdict": "FROZEN STRONG BASELINE"
+    },
+    {
+      "mechanism": "RG-PPO Direct Continuous (v, omega)",
+      "verdict": "NO-GO (Falsified)"
+    },
+    {
+      "mechanism": "RAMP-PPO Primitive Selection",
+      "verdict": "NO-GO (Falsified: -5.33%/-8.86% vs R1_Robust; CF Oracle <=+0.85% fleet)"
+    },
+    {
+      "mechanism": "STCP-RL Conflict Passing-Order RL",
+      "verdict": "NO-GO (Falsified: +0.43% over Det; severe BTPG-max/SJRL overlap)"
+    }
+  ],
+  "epistemological_scope_note": "Task 3 (+0.58% ego / +0.85% fleet over N=60 snapshots) and Task 4 (+0.43% over N=36 conflicts) measure local single-decision counterfactual headroom given fixed R1_Robust continuation. They falsify incremental value for those two local RL layers, NOT global theoretical optimality of R1_Robust."
+}

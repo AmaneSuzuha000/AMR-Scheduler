@@ -2,7 +2,7 @@
 
 ## 1. System Overview
 
-**AMR-Scheduler** (`v1.3.0`) is a hybrid Python / Rust / C# / ROS 2 research and digital twin platform designed for multi-robot material delivery scheduling and coordination in discrete-workstation, batch-material, narrow-aisle railway freight car maintenance workshops.
+**AMR-Scheduler** (`v1.4.0`) is a hybrid Python / Rust / C# / ROS 2 research infrastructure and digital twin platform serving two complementary tracks over shared layouts, spatiotemporal kernels, and independent verification harnesses: **Track A** (Layers 2–3, active focus on congestion-aware routing, execution-aware STP, and continuous physical motion safety) and **Track B** (Layers 4–5, frozen validated `CoRe-Sched` dynamic production–multi-AMR rescheduling suite).
 
 ```mermaid
 flowchart TD
@@ -91,3 +91,23 @@ flowchart TD
    - Real or Gazebo chassis actuation flows through hardware/C++ watchdogs (`250 ms` SCOUT CAN timeout, velocity clamping `<= 1.5 m/s`, hard E-stop interlock, odometry freshness gates) and `amr_gazebo_guard`.
 2. **Rejection & Rollback Guarantee**:
    - Any candidate violating commitment immutability (`VIOLATION_IRREVOCABLE_TASK_MUTATION`), mid-edge safety (`VIOLATION_LIVE_REPAIR_IN_TRANSIT`), or stale state is atomically rejected while preserving the prior conflict-free schedule.
+
+---
+
+## 5. Five-Layer Dual-Track Research Architecture & Multi-Fidelity Roadmap
+
+| Stack Layer | Responsibility | Key Modules & Algorithms | Current Status |
+| :--- | :--- | :--- | :--- |
+| **Layer 5 · Joint Production–Resource Opt** | Process–bay–crew–transport coupling | `V18`, `V19` (`AHG-RL`), `V20_1`, `RGRO` | Frozen validated baseline (Track B) |
+| **Layer 4 · Dynamic Task Scheduling** | Task assignment, commitment preservation, rescheduling | `CVCR-IR`, allocators, dispatching baselines | Frozen validated baseline (Track B) |
+| **Layer 3 · Multi-Robot Traffic Coordination** | Spatiotemporal reservation, congestion field, right-of-way | `CPS-A*`, `EALR`, `U1a_EdgeSpan_Fix`, `ExecutionAuditSim` | Active focus (Track A) |
+| **Layer 2 · Local Physical Motion Planning** | Kinodynamic primitives, swept capsule safety, local yield | `R1_Robust`, `motion_primitives`, `BrakingInvariantShield` | Active focus (Track A) |
+| **Layer 1 · Physical Execution & Sensing** | Unicycle / chassis control, localization, CAN/ROS 2 | ROS 2 / Nav2, Gazebo, AgileX SCOUT Mini | Digital twin & HIL verified |
+
+### Platform Assets Built Through Empirical Falsification
+- **Continuous Unicycle World & Swept Safety (`metric_world.py`, `geometry_and_shield.py`)**: Originated during `RG-PPO` and `Robust RAMP` studies; eliminates longitudinal single-disc underestimates (`0.10–0.20 m`) and eliminates blind peer collisions (`12,247 -> 0` under `R1_Robust`).
+- **Bitwise Counterfactual Evaluation Harness (`clone_snapshot()`, `audit_env.py`)**: Quantifies causal marginal headroom (`<= +0.85%` at `RAMP`, `+0.43%` at `STCP-RL`, `-10.53%` at finite-pool `EA-STP`) without training speculation.
+- **Multi-Tick Edge Span Fix (`U1a_EdgeSpan_Fix`)**: Resolves unreserved mid-corridor traversal spans (`18/18` DEV ZeroCol, `+6.00%` completion at `0.376 ms/plan`).
+
+### Planned Multi-Fidelity Execution Interface (Future Roadmap)
+To prevent excessive simulation overhead while closing the sim-to-exec gap identified in Layer 3 (`-17.25 s` structural ETA offset between simplified hop speed and `R1_Robust`), future integration will decouple a **fast discrete execution backend** (high-throughput Layer 4–5 search & training) from a **high-fidelity continuous backend** (`CPS-A* + R1_Robust` continuous rollout validation, turn/congestion/braking ETA calibration, and paired cross-fidelity re-benchmarking). Cross-fidelity runtime compatibility and paired evaluation of frozen Layer 4–5 policies on the continuous backend are not yet integrated or claimed.

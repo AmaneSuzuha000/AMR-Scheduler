@@ -18,7 +18,17 @@
 
 ## 项目概述
 
-**AMR-Scheduler**（`v1.3.0`）是 **`CoRe-Sched`**（*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*）框架的官方开源代码与数字孪生平台，面向**离散工位、狭窄单车道走廊**的铁路货车与轮对检修车间及高密度多 AGV 仓库系统，实现毫秒级在线生产—多 AMR 联合重调度与拥堵感知交通协调。
+**AMR-Scheduler**（`v1.4.0`）是面向多移动机器人系统的**长期共享科研基础设施与数字孪生实验平台**，在统一的场景拓扑、时空规划核、连续物理执行器与独立审计体系之上支撑两条互补研究主线：
+
+- **Track A · 底层时空规划与连续物理避障（`Layer 2–3`，当前研究重心）**：
+  - **Layer 3 · 多机器人交通协调**：拥堵感知 `CPS-A*`、执行延误局部修复 `EALR`、多子步边跨度修正规划（`U1a_EdgeSpan_Fix`）与通行权协调；
+  - **Layer 2 · 局部物理运动规划**：确定性预约余量基元执行器 **`R1_Robust`**、`K=6` 运动基元、双圆扫掠胶囊车体与高斯不确定性制动护盾；
+  - **Layer 1 · 物理执行与感知**：ROS 2 / Nav2 / Gazebo 仿真孪生与 SCOUT Mini 线控底盘。
+- **Track B · 上层工业生产—多 AMR 联合重调度（`Layer 4–5`，已验证主线基线，当前暂时冻结）**：
+  - **Layer 5 · 生产资源联合优化**：工序、工位、班组与物料运输联合优化（`V18`、`V19`、`V20_1`、`RGRO`）；
+  - **Layer 4 · 动态运输任务调度**：承诺保持增量评估（`CVCR-IR`）、异构图构造器（`AHG-RL`）及派车分配器。
+
+> **架构重定位与双保真度演进路线**：早期工作（`v1.0–v1.3`）重点在简化运动假设上探索 Layer 4–5 上层智能调度；当前阶段暂时冻结上层主线并下沉深化 **Layer 2–3** 物理执行底座，用连续运动学、扫掠几何、物理让行与更精准的运输时间（ETA）建模支撑上层可信决策。各消融与证伪研究沉淀了连续仿真器、安全护盾、反事实快照评估器及确定性 `U1a + R1_Robust` 执行栈等持久工程资产；未来规划通过**双保真度执行接口（Multi-Fidelity Interface）**衔接快速离散训练与高保真 `CPS-A* + R1_Robust` 校验（跨保真度集成与上层调度器配对重测尚属后续规划工作）。
 
 <p align="center">
   <img src="results/figures/fig1_core_sched_overview.png" alt="CoRe-Sched 双引擎闭环在线重调度架构" width="96%" />
@@ -31,9 +41,9 @@
   - **在线上下文切换 + 双臂探测 + 二阶段 `CausalRepairCone` + 对称振荡仲裁**：耦合 `Contextual LinUCB`（$\phi(s_t) \in [0, 1]^6$）、车队守卫反事实双臂探测（$|\mathcal{R}| \ge 4$）、精确 $J_A$ 评分器、基于 `FastJAWKittingSurrogate` 的 Regret-2 局部修复锥、活跃装货（`_load_end`）/有效边安全守卫与对称 `p4_choke_robust` 外科走廊振荡唤醒。
 - **承诺保持增量预约优化引擎（`CVCR-IR`）**（`amr_sched/cvcr/evaluator.py`, `crates/`）：
   - **序列差分增量预约缓存（`CVCR-IR (Seq-Diff)`）+ 紧缩 SLA 守卫**：按单车精确有效任务序列差分定位 $\Delta\mathcal{R}$，原位复用未变车辆的 Rust 半开区间预约与无冲突路径（`median |ΔJ| = 0.00`），将双队列盲测的汇总尾延迟 `Pooled P99` 严格控制在 `23 ms` 以内（`18.55 ms / 22.62 ms < 35 ms`）。
-- **原生 Rust 端到端时空规划内核与连续运动学安全护盾（`v1.3.0`）**（`crates/`, `amr_sched/planners/rust_spacetime_astar.py`, `experiments/track_r_cpsa/`, `experiments/cps_astar_routing/`）：
+- **原生 Rust 端到端时空规划内核、鲁棒胶囊护盾与执行感知时空规划（`v1.3.0–v1.4.0`）**（`crates/`, `amr_sched/planners/rust_spacetime_astar.py`, `experiments/{track_r_cpsa, cps_astar_routing, res_guided_avoidance, stp_research_reset}/`）：
   - 原位 `SlotCongestionField`、`plan_cps_indexed`、惰性 `RustBatchSippPlanner` 与零影子 `RustReservationTable.fast()` 在 `80–200` 车 MovingAI `Warehouse_40x40` 仓库测试中取得 **`11.71×–14.40×`** 端到端规划加速（`crates/` `26/26` 单元测试全过）；
-  - 分层交通协调栈融合 *EJOR 2026* 上层派车（Wu et al.）、纯净复现的 `CPS-A*` 拥堵感知路由（Guo & Huang，[`pengguo-hub/CPSAStar-TRC`](https://github.com/pengguo-hub/CPSAStar-TRC)，未打包第三方在审代码）、积压感知 DFL 阻塞者选择（`Route A`）、执行延误局部修复（`EALR v2/v3`）及 2D 连续运动学 PPO + 递归制动障碍护盾（`Route B`，`0` 物理碰撞）。
+  - 分层交通协调栈融合 *EJOR 2026* 上层派车（Wu et al.）、纯净复现的 `CPS-A*` 拥堵感知路由（Guo & Huang，[`pengguo-hub/CPSAStar-TRC`](https://github.com/pengguo-hub/CPSAStar-TRC)）、积压感知 DFL 阻塞者选择、执行延误局部修复（`EALR v2/v3`）、双圆胶囊不确定性感知安全校验（`R1_Robust`，36 局不相交盲测 `100.0%` 零碰撞）及多子步边跨度修正规划（`U1a_EdgeSpan_Fix`）。
 - **原子事务提交执行层（*Atomic Transaction Commit*）与双层数字孪生**：
   - 统一注册入口（共 **24** 个已注册策略）：涵盖 `core_sched` / `CoRe-Sched`（`V19_ADAPTIVE_RL`）、`V20_NAJS`、`V20_1_NAJS`（`PDG 2.0`）、2025–2026 直接联合动态 FJSP–AGV 神经与元启发式基线（`IJPR25_DFJSPT_HMARL`、`ASC26_MA_TRANS`、`FGCS26_REN_GNN`、`SPGA_AMR`）、静态离线参照（`COR26-Ref` CP-SAT 主松弛 + 路径验证离线参考求解器、`EJOR26-Erdogan`）及更广泛的 2025–2026 顶会/顶刊基线。
 
@@ -81,6 +91,12 @@
   <img src="results/figures/gazebo_overview.png" alt="1:25 Gazebo 轮对检修车间数字孪生" width="48%" />
   <img src="results/figures/layout.png" alt="车间拓扑与工位布局" width="48%" />
 </p>
+
+### 2. 连续物理执行安全与上层时空规划实证闭环（`v1.4.0`）
+
+- **双圆胶囊不确定性安全护盾（`R1_Robust`）**（[`results/ramp_robust/robust_ramp_report.md`](results/ramp_robust/robust_ramp_report.md)）：修正单圆几何低估（`0.10–0.20 m`）并引入高斯视界安全裕度（$\epsilon(t) = 1.96\sqrt{\sigma_p^2 + (\min(t, 1.0)\,\sigma_v)^2}$）后，清零全部 `12,247` 次盲测车间碰撞事件（`36` 局盲测 `7001–7006` 零碰撞率由 `58.3% → 100.0%`），确定性 **`R1_Robust`**（`4.69` 完工）稳定优于冻结（`-5.33%`）与重训（`-8.86%`）`RAMP-PPO`。
+- **反事实决策空间上限审计**（[`results/decision_headroom/decision_headroom_report.md`](results/decision_headroom/decision_headroom_report.md)）：基于 `N = 60` `clone_snapshot()` 多时域回滚（全队伍 `clear_15s` 上限 `<= +0.85%`）与 `N = 36` 冲突簇穷举通行排列（相对 `R1_Default_Order` `5.667` 完工仅 `+0.43%`，`100.0%` ZeroCol），证实局部运动基元层与冲突定序层在安全约束下已接近确定性上限。
+- **执行感知上层规划审计（`U1a_EdgeSpan_Fix`）**（[`results/stp_research_reset/upper_level_headroom_report.md`](results/stp_research_reset/upper_level_headroom_report.md)）：量化 `CPS-A*` → `R1_Robust` 结构性早到偏差（`N = 252` 条路段均值 `-17.25 s`，`94.4%` 早到）；修复多子步边跨度预约（`U1a_EdgeSpan_Fix`）即以 `0.376 ms` 代价使 DEV 零碰撞升至 **`18/18 (100.0%)`**、完工提升 **`+6.00%`**（`5.889` vs `5.556`），而有限候选池反事实选择器（`U4`）相对最优确定性为 `-10.53%`（`17` vs `19`）。
 
 ---
 

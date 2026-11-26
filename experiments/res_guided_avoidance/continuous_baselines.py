@@ -235,3 +235,56 @@ def res_yield_controller(sim: MultiRobotUnicycleSim, rid: str) -> tuple[float, f
     if obs_r[24] < 0.55 and abs(obs_r[25]) < 0.35 and obs_r[27] >= 0.0:
         v_cmd = 0.0
     return v_cmd, w_cmd
+
+
+def cpsa_follower_controller(sim: MultiRobotUnicycleSim, rid: str) -> tuple[float, float]:
+    """Huang Jun CPS-A* + deterministic pure-pursuit trajectory follower."""
+    rb = sim.robots[rid]
+    _, _, wx, wy = _preferred_velocity(sim, rid, speed=0.95)
+    err = wrap_pi(math.atan2(wy - rb.y, wx - rb.x) - rb.theta)
+    v_cmd = 0.95 if abs(err) < 0.55 else (0.35 if abs(err) < 1.15 else 0.10)
+    w_cmd = clip_val(2.2 * err, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+    return v_cmd, w_cmd
+
+
+def tpg_adg_controller(sim: MultiRobotUnicycleSim, rid: str) -> tuple[float, float]:
+    """TPG/ADG execution-dependency graph follower (respects Type-2 passing order)."""
+    rb = sim.robots[rid]
+    _, _, wx, wy = _preferred_velocity(sim, rid, speed=0.95)
+    err = wrap_pi(math.atan2(wy - rb.y, wx - rb.x) - rb.theta)
+    v_cmd = 0.95 if abs(err) < 0.55 else (0.35 if abs(err) < 1.15 else 0.10)
+    w_cmd = clip_val(2.2 * err, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+    # Explicit TPG Type-2 edge check: yield if an earlier-scheduled peer has not cleared shared node
+    res_view = sim.get_reservation_view()
+    ego_up = rb.route_nodes[rb.route_idx : rb.route_idx + 3]
+    for other_id, segs in res_view.items():
+        if other_id == rid or not segs:
+            continue
+        o_rb = sim.robots.get(other_id)
+        if o_rb is None or o_rb.phase == "idle":
+            continue
+        for nd_o, t_en, t_ex, _ in segs:
+            if nd_o in ego_up and (t_en * sim.mmap.macro_step_s) < (sim.t_s + 2.5):
+                if math.hypot(o_rb.x - rb.x, o_rb.y - rb.y) < 3.6 and o_rb.route_idx <= len(o_rb.route_nodes):
+                    v_cmd = min(v_cmd, 0.20)
+                    break
+    return v_cmd, w_cmd
+
+
+def mawpf_kin_controller(sim: MultiRobotUnicycleSim, rid: str) -> tuple[float, float]:
+    """MAWPF-adapted kinodynamic follower (turn-in-place deceleration + accel/decel profile)."""
+    rb = sim.robots[rid]
+    _, _, wx, wy = _preferred_velocity(sim, rid, speed=1.05)
+    err = wrap_pi(math.atan2(wy - rb.y, wx - rb.x) - rb.theta)
+    # Explicit MAWPF turn-time & accel-decel shaping before junction turns
+    if abs(err) > 0.45:
+        v_cmd = 0.25 if abs(err) < 0.95 else 0.05
+    else:
+        v_cmd = 1.05
+    w_cmd = clip_val(2.4 * err, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+    obs_vis = sim.get_perceived_circles(rid)
+    for o in obs_vis:
+        d_surf = math.hypot(o.x - rb.x, o.y - rb.y) - sim.fp.radius_m - o.radius
+        if d_surf < 1.2:
+            v_cmd = min(v_cmd, max(0.0, 0.55 * d_surf))
+    return v_cmd, w_cmd

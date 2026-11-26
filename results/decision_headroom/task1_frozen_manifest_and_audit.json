@@ -1,0 +1,189 @@
+{
+  "frozen_manifest": {
+    "observed_dev_and_audit_seeds": {
+      "gate1_seeds": [
+        5001,
+        5002,
+        5003
+      ],
+      "dev_factorial_seeds": [
+        6001,
+        6002,
+        6003
+      ],
+      "observed_confirmation_seeds": [
+        7001,
+        7002,
+        7003,
+        7004,
+        7005,
+        7006
+      ],
+      "reserved_unseen_blind_seeds": [
+        8001,
+        8002,
+        8003,
+        8004,
+        8005,
+        8006,
+        8007,
+        8008,
+        8009,
+        8010
+      ]
+    },
+    "files": [
+      {
+        "path": "experiments/res_guided_avoidance/geometry_and_shield.py",
+        "bytes": 14166,
+        "sha256": "cd4bd6bd37fd9196f88839ade90f76926e4b7044f9b772f4f51dd363ff057911"
+      },
+      {
+        "path": "experiments/res_guided_avoidance/metric_world.py",
+        "bytes": 61712,
+        "sha256": "aee2586ee3a17a7cab1e0dbabcc79ee6fd1a2dac0427ef9d929da61e12a46d75"
+      },
+      {
+        "path": "experiments/res_guided_avoidance/motion_primitives.py",
+        "bytes": 4962,
+        "sha256": "eabca935b21e3e3c4cf4db1865ada39d2e132c8720c669a355aae5c25930cee1"
+      },
+      {
+        "path": "experiments/res_guided_avoidance/reservation_features.py",
+        "bytes": 11684,
+        "sha256": "a248b6fa65691820fad419177d48c7b0f788a5352e7d8929791a501da17a19c8"
+      },
+      {
+        "path": "experiments/res_guided_avoidance/ramp_ppo.py",
+        "bytes": 14637,
+        "sha256": "e67c09f62beb51a258a29a6c603275a37e69acb897581dcac03088d615cabc99"
+      },
+      {
+        "path": "out/ramp_robust/robust_ramp_report.json",
+        "bytes": 7758,
+        "sha256": "f93c4a26e644a9791e4fa9535d5d6171e12d4c8389b35b1944f1ee395af2b7f7"
+      },
+      {
+        "path": "out/ramp_robust/factorial_and_blind_per_episode.csv",
+        "bytes": 30179,
+        "sha256": "94b2f1bd61409b846c4948e156119167783648d31dd8c1589d4b02b9042ab219"
+      },
+      {
+        "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_s42.npz",
+        "bytes": 89903,
+        "sha256": "59776284a5b7de7cf68850629932fe787272870e795eb04c185af9ffc8be0196"
+      },
+      {
+        "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_robust_s42.npz",
+        "bytes": 89886,
+        "sha256": "40c0b146be58a2c7f8efb696440303a5c0eaa8464bfb1eba8dda5e932190fea2"
+      },
+      {
+        "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_s43.npz",
+        "bytes": 89871,
+        "sha256": "96e99dff0db20cd0c1ddb38a11d7e338a0c7f76bf2f80481ae10ffb414f5b9b4"
+      },
+      {
+        "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_robust_s43.npz",
+        "bytes": 89869,
+        "sha256": "b18f96935555116fcbfbab106eb74579bdabecb134da47dc634fa22d9b461710"
+      },
+      {
+        "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_s44.npz",
+        "bytes": 89918,
+        "sha256": "c083f31dd429e67f71622cdafb82a1156a5490fb71224e4df38e9a90796d3c85"
+      },
+      {
+        "path": "amr_sched/checkpoints/ramp/r5_ramp_ppo_robust_s44.npz",
+        "bytes": 89866,
+        "sha256": "adb8144e0c873db28d5ccb7082a51229763c60cb153ef68310b47666bd1695b6"
+      }
+    ]
+  },
+  "event_vs_substep_audit": [
+    {
+      "case": "Workshop_8R_R5_Orig_s6001",
+      "zero_collisions": false,
+      "independent_collision_events": 1,
+      "collision_substep_ticks": 3059,
+      "wall_peer_intr_substeps": [
+        0,
+        3059,
+        0
+      ],
+      "completed_tasks": 2
+    },
+    {
+      "case": "Noise0.12_R5_Orig_s6001",
+      "zero_collisions": false,
+      "independent_collision_events": 1,
+      "collision_substep_ticks": 416,
+      "wall_peer_intr_substeps": [
+        0,
+        416,
+        0
+      ],
+      "completed_tasks": 7
+    },
+    {
+      "case": "Noise0.12_R5_Robust_s6001",
+      "zero_collisions": true,
+      "independent_collision_events": 0,
+      "collision_substep_ticks": 0,
+      "wall_peer_intr_substeps": [
+        0,
+        0,
+        0
+      ],
+      "completed_tasks": 4
+    },
+    {
+      "case": "Workshop_8R_R1_Robust_s6001",
+      "zero_collisions": true,
+      "independent_collision_events": 0,
+      "collision_substep_ticks": 0,
+      "wall_peer_intr_substeps": [
+        0,
+        0,
+        0
+      ],
+      "completed_tasks": 1
+    }
+  ],
+  "workshop_4r_t_min_check": {
+    "tasks": [
+      {
+        "task_id": 0,
+        "dist_m": 174.0,
+        "release_s": 0.0,
+        "t_lb_vmax_1.35": 129.89,
+        "t_lb_cruise_0.95": 184.16
+      },
+      {
+        "task_id": 1,
+        "dist_m": 232.0,
+        "release_s": 0.0,
+        "t_lb_vmax_1.35": 172.85,
+        "t_lb_cruise_0.95": 245.21
+      },
+      {
+        "task_id": 2,
+        "dist_m": 207.0,
+        "release_s": 1.34,
+        "t_lb_vmax_1.35": 155.67,
+        "t_lb_cruise_0.95": 220.23
+      },
+      {
+        "task_id": 3,
+        "dist_m": 214.0,
+        "release_s": 1.74,
+        "t_lb_vmax_1.35": 161.26,
+        "t_lb_cruise_0.95": 228.0
+      }
+    ],
+    "max_t_lb_vmax_1.35": 172.85,
+    "max_t_lb_cruise_0.95": 245.21,
+    "gate0_original_horizon_s": 130.0,
+    "gate0_actual_4task_makespan_s": 252.25
+  }
+}

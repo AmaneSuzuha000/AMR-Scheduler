@@ -284,19 +284,22 @@ class BrakingInvariantShield:
         obstacles: Sequence[CircleState],
         wall_fn,
         ref_heading_err_fn=None,
+        obs_pos_std_m: float = 0.0,
+        obs_vel_std_mps: float = 0.0,
     ) -> float:
         px, py, pth, pv, pw = x, y, theta, v, omega
         worst = 9.0
         dv_max = self.max_dv_dt * self.dt
         dw_max = self.max_dw_dt * self.dt
+        has_unc = (obs_pos_std_m > 0.0) or (obs_vel_std_mps > 0.0)
         for s in range(1, self.horizon_steps + 1):
             tgt_v = vt if s == 1 else 0.0
             if s <= 2:
                 tgt_w = wt
-            elif ref_heading_err_fn is not None:
+            elif not obstacles and ref_heading_err_fn is not None:
                 tgt_w = clip_val(1.6 * ref_heading_err_fn(px, py, pth), -self.max_omega, self.max_omega)
             else:
-                tgt_w = clip_val(-1.6 * pth, -self.max_omega, self.max_omega)
+                tgt_w = 0.0
             pv = clip_val(pv + clip_val(tgt_v - pv, -dv_max, dv_max), 0.0, self.max_v)
             pw = clip_val(pw + clip_val(tgt_w - pw, -dw_max, dw_max), -self.max_omega, self.max_omega)
             px += pv * math.cos(pth) * self.dt
@@ -312,7 +315,11 @@ class BrakingInvariantShield:
                     CircleState(o.x + o.vx * t_look, o.y + o.vy * t_look, o.vx, o.vy, o.radius)
                     for o in obstacles
                 ]
-                o_gap = obstacle_surface_clearance(px, py, pth, obs_pred, self.fp) - self.hard_min_clear_m
+                eps_t = 0.0
+                if has_unc:
+                    t_eff = min(t_look, 1.0)
+                    eps_t = 1.96 * math.hypot(obs_pos_std_m, t_eff * obs_vel_std_mps)
+                o_gap = obstacle_surface_clearance(px, py, pth, obs_pred, self.fp) - self.hard_min_clear_m - eps_t
                 if o_gap < worst:
                     worst = o_gap
         return worst
@@ -331,6 +338,8 @@ class BrakingInvariantShield:
         wall_fn,
         center_w: float = 0.0,
         ref_heading_err_fn=None,
+        obs_pos_std_m: float = 0.0,
+        obs_vel_std_mps: float = 0.0,
     ) -> ShieldOutput:
         v_req = clip_val(v_cmd, 0.0, self.max_v)
         w_req = clip_val(omega_cmd, -self.max_omega, self.max_omega)
@@ -338,6 +347,7 @@ class BrakingInvariantShield:
         m_req = self.evaluate_margin(
             x=x, y=y, theta=theta, v=v, omega=omega, vt=v_req, wt=w_req,
             obstacles=obstacles, wall_fn=wall_fn, ref_heading_err_fn=ref_heading_err_fn,
+            obs_pos_std_m=obs_pos_std_m, obs_vel_std_mps=obs_vel_std_mps,
         )
         if m_req >= 0.0:
             return ShieldOutput(v_req, w_req, intervened=False, infeasible=False, pred_min_clear_m=m_req)
@@ -352,8 +362,8 @@ class BrakingInvariantShield:
         w_cands = [
             w_req,
             center_w,
-            0.0,
             repulse_w,
+            0.0,
             clip_val(w_req + 0.55, -self.max_omega, self.max_omega),
             clip_val(w_req - 0.55, -self.max_omega, self.max_omega),
             clip_val(w_req + 1.10, -self.max_omega, self.max_omega),
@@ -376,6 +386,7 @@ class BrakingInvariantShield:
                 m = self.evaluate_margin(
                     x=x, y=y, theta=theta, v=v, omega=omega, vt=vt, wt=wt,
                     obstacles=obstacles, wall_fn=wall_fn, ref_heading_err_fn=ref_heading_err_fn,
+                    obs_pos_std_m=obs_pos_std_m, obs_vel_std_mps=obs_vel_std_mps,
                 )
                 if m >= 0.0:
                     return ShieldOutput(vt, wt, intervened=True, infeasible=False, pred_min_clear_m=m)

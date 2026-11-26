@@ -161,3 +161,21 @@ def test_p3_continuous_baselines_run_safely() -> None:
         res = sim.run_episode(fn, controller_name=name)
         assert res.zero_collisions is True, f"{name} collided: {res}"
 
+
+def test_snapshot_clone_bitwise_identical() -> None:
+    from experiments.res_guided_avoidance.gate1_headroom_audit import m2_res_margin_selector
+
+    om = build_occluded_junction_map(cell_m=2.6)
+    sim = MultiRobotUnicycleSim(om, n_robots=6, n_tasks=10, horizon_s=40.0, seed=6001, obs_noise_pos_m=0.12, obs_noise_vel_mps=0.20, robust_safety=True)
+    for _ in range(25):
+        sim.step(m2_res_margin_selector, controller_name="R1_Robust")
+    cl = sim.clone_snapshot()
+    for _ in range(20):
+        sim.step(m2_res_margin_selector, controller_name="R1_Robust")
+        cl.step(m2_res_margin_selector, controller_name="R1_Robust")
+    for rid in sim.robot_ids:
+        ra, rb = sim.robots[rid], cl.robots[rid]
+        assert abs(ra.x - rb.x) < 1e-12 and abs(ra.y - rb.y) < 1e-12 and abs(ra.theta - rb.theta) < 1e-12
+        assert abs(ra.v - rb.v) < 1e-12 and ra.phase == rb.phase
+    assert sim.completed_tasks == cl.completed_tasks and sim.shield_interventions == cl.shield_interventions
+

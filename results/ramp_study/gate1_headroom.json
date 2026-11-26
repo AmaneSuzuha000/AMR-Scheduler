@@ -1,0 +1,123 @@
+{
+  "summary": {
+    "M0_Perception": {
+      "zero_col_pct": 100.0,
+      "completed_avg": 3.78,
+      "makespan_avg_s": 76.67,
+      "wait_ratio_avg": 0.2703,
+      "shield_interv_avg": 78.9,
+      "ctrl_ms_avg": 4.062
+    },
+    "M1_SpatialIntent": {
+      "zero_col_pct": 100.0,
+      "completed_avg": 3.0,
+      "makespan_avg_s": 76.67,
+      "wait_ratio_avg": 0.2543,
+      "shield_interv_avg": 46.7,
+      "ctrl_ms_avg": 0.983
+    },
+    "M2_ResMargin": {
+      "zero_col_pct": 100.0,
+      "completed_avg": 4.22,
+      "makespan_avg_s": 76.67,
+      "wait_ratio_avg": 0.2115,
+      "shield_interv_avg": 83.1,
+      "ctrl_ms_avg": 0.479
+    },
+    "M3_Physics_Lookahead_Greedy": {
+      "zero_col_pct": 100.0,
+      "completed_avg": 2.89,
+      "makespan_avg_s": 76.67,
+      "wait_ratio_avg": 0.4689,
+      "shield_interv_avg": 82.4,
+      "ctrl_ms_avg": 0.499
+    },
+    "M3_True_Oracle": {
+      "zero_col_pct": 100.0,
+      "completed_avg": 2.56,
+      "makespan_avg_s": 76.67,
+      "wait_ratio_avg": 0.4301,
+      "shield_interv_avg": 61.0,
+      "ctrl_ms_avg": 0.51
+    }
+  },
+  "paired_instance_deltas": [
+    {
+      "map": "Occluded_Junction_2.6m",
+      "seed": 5001,
+      "m2_minus_m1_comp": -1,
+      "m2_minus_m1_wait": 0.096,
+      "oracle_minus_m1_comp": 1,
+      "oracle_minus_m1_wait": 0.1609
+    },
+    {
+      "map": "Occluded_Junction_2.6m",
+      "seed": 5002,
+      "m2_minus_m1_comp": 1,
+      "m2_minus_m1_wait": -0.0337,
+      "oracle_minus_m1_comp": 1,
+      "oracle_minus_m1_wait": -0.1711
+    },
+    {
+      "map": "Occluded_Junction_2.6m",
+      "seed": 5003,
+      "m2_minus_m1_comp": 2,
+      "m2_minus_m1_wait": -0.027,
+      "oracle_minus_m1_comp": -3,
+      "oracle_minus_m1_wait": 0.4485
+    },
+    {
+      "map": "Map_A_Metric_2.6m",
+      "seed": 5001,
+      "m2_minus_m1_comp": 3,
+      "m2_minus_m1_wait": -0.0297,
+      "oracle_minus_m1_comp": -1,
+      "oracle_minus_m1_wait": 0.261
+    },
+    {
+      "map": "Map_A_Metric_2.6m",
+      "seed": 5002,
+      "m2_minus_m1_comp": 1,
+      "m2_minus_m1_wait": 0.0513,
+      "oracle_minus_m1_comp": 0,
+      "oracle_minus_m1_wait": 0.2566
+    },
+    {
+      "map": "Map_A_Metric_2.6m",
+      "seed": 5003,
+      "m2_minus_m1_comp": 0,
+      "m2_minus_m1_wait": -0.3091,
+      "oracle_minus_m1_comp": -1,
+      "oracle_minus_m1_wait": -0.0795
+    },
+    {
+      "map": "Map_B_Metric_2.6m",
+      "seed": 5001,
+      "m2_minus_m1_comp": 3,
+      "m2_minus_m1_wait": -0.1517,
+      "oracle_minus_m1_comp": -1,
+      "oracle_minus_m1_wait": 0.2653
+    },
+    {
+      "map": "Map_B_Metric_2.6m",
+      "seed": 5002,
+      "m2_minus_m1_comp": 2,
+      "m2_minus_m1_wait": 0.0121,
+      "oracle_minus_m1_comp": 1,
+      "oracle_minus_m1_wait": 0.2446
+    },
+    {
+      "map": "Map_B_Metric_2.6m",
+      "seed": 5003,
+      "m2_minus_m1_comp": 0,
+      "m2_minus_m1_wait": 0.0064,
+      "oracle_minus_m1_comp": -1,
+      "oracle_minus_m1_wait": 0.1954
+    }
+  ],
+  "m2_vs_m1_wait_gain_pct": 16.83,
+  "m2_vs_m1_comp_gain_pct": 40.67,
+  "m3_true_oracle_vs_m1_wait_gain_pct": -69.13,
+  "m3_true_oracle_vs_m1_comp_gain_pct": -14.67,
+  "gate1_headroom_pass": true
+}

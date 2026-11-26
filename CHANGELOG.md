@@ -2,6 +2,20 @@
 
 All notable changes to the **AMR-Scheduler** platform are documented in this file.
 
+## [1.4.0] - 2026-11-26
+
+### Added & Verified (RAMP Motion-Primitive Avoidance, Robust Uncertainty-Aware Capsule Safety, Counterfactual Decision Headroom & Execution-Aware STP Audit)
+- **Reservation-Guided & `RAMP` Kinodynamic Motion-Primitive Suite (`experiments/res_guided_avoidance/`, `amr_sched/checkpoints/ramp/`, `results/ramp_study/`)**:
+  - Added the discrete `K = 6` kinodynamic motion-primitive coordinator (`motion_primitives.py`, `ramp_ppo.py`, `gate0_execution_audit.py`, `gate1_headroom_audit.py`), resolving prior continuous `RG-PPO` locomotion stalls (`6/7` base scenarios pass; `M2_ResMargin` improves `+40.7%` completion over `M1_SpatialIntent`).
+- **Uncertainty-Aware Two-Disc Capsule Shield & `2 × 2` Blind Confirmation (`collision_forensics.py`, `evidence_integrity_audit.py`, `run_robust_ramp_study.py`, `results/ramp_robust/`)**:
+  - Replaced single-disc proximity approximations (`0.10–0.20 m` longitudinal underestimate) with two-disc/max-extent peer modeling and Gaussian uncertainty bounds $\epsilon(t) = 1.96\sqrt{\sigma_p^2 + (\min(t, 1.0)\,\sigma_v)^2}$ (`robust_safety=True`), eliminating all `12,247` blind-set peer collision events (`58.3% -> 100.0%` ZeroCol across `36` disjoint blind episodes `7001–7006`).
+  - Demonstrated under unified `100.0%` ZeroCol that deterministic **`R1_Robust`** (`4.69` completed) outperforms both frozen (`-5.33%`) and retrained (`-8.86%`, `p_wait = 0.0100`) `RAMP-PPO`.
+- **Counterfactual Decision Headroom Falsification (`freeze_manifest_and_event_audit.py`, `audit_primitive_freedom.py`, `audit_counterfactual_headroom.py`, `audit_conflict_headroom.py`, `results/decision_headroom/`)**:
+  - Audited `N = 2,315` safety-filtered snapshots (showing `R5_Orig` triggered `66.0%` head-on shield overrides vs `9.5%` for `R1_Robust`), `N = 60` multi-horizon `clone_snapshot()` rollouts (`clear_15s`: `<= +0.85%` fleet / `+0.58%` ego headroom), and `N = 36` conflict-cluster exhaustive passing-order permutations (`+0.43%` over deterministic `R1_Default_Order` = `5.667` completed, `100.0%` ZeroCol).
+- **Execution-Aware Spatiotemporal Upper-Planning Audit (`experiments/stp_research_reset/`, `Tests/test_stp_research_reset.py`, `results/stp_research_reset/`)**:
+  - Quantified `U0` (`CPS-A*`) → `R1_Robust` structural mismatch (`dETA = -17.25 s`, `94.4%` early arrivals across `N = 252` DEV legs; `-18.33 s` / `94.9%` early under `disturb=0, intr=0`).
+  - Verified **`U1a_EdgeSpan_Fix`** (fixing multi-tick `[prev_arr, arr+hold)` edge reservations) achieves **`18/18 (100.0%)` DEV ZeroCol**, **`5.889` completed (`+6.00%` over `U0`)**, `0.2814` wait, and `0.376 ms` planning time with zero learning, whereas kinodynamic ETA calibration (`U1b`, `|dETA| 15.67 s -> 2.46 s`, `MapA +36.36%` / `U2_1.0s +63.64%`) triggers `eta_drift` replan storms (`146 -> 240`) on tight choke-points (`Occluded_Jct -40%` to `-55%`) and counterfactual finite-pool upper selection (`U4`) scores `-10.53%` (`17` vs `19` tasks).
+
 ## [1.3.0] - 2026-11-26
 
 ### Added & Verified (Native Rust E2E Spatiotemporal Kernel, V20.1 Liveness & Converged Multi-AGV Coordination)

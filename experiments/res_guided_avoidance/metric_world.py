@@ -14,6 +14,7 @@ physically in continuous space with `M_sub = 5` swept collision checks.
 from __future__ import annotations
 
 from collections import deque
+import copy
 from dataclasses import dataclass, field
 import math
 import random
@@ -395,6 +396,8 @@ class RobotContinuousState:
     route_idx: int = 0
     speed_factor: float = 1.0
     eta_drift_ticks: int = 0
+    last_plan_fail_tick: int = -100
+    prev_rem_dist_m: float = 0.0
 
 
 @dataclass
@@ -468,6 +471,12 @@ class MultiRobotUnicycleSim:
         disturb_slow_prob: float = 0.08,
         n_intruders: int = 2,
         occluded_los: bool = True,
+        use_right_of_way: bool = True,
+        start_sep_m: float = 2.2,
+        diag_clean_shield: bool = False,
+        diag_clean_actor: bool = False,
+        diag_joint_action_check: bool = False,
+        robust_safety: bool = False,
     ) -> None:
         self.mmap = metric_map
         self.n_robots = int(n_robots)
@@ -483,6 +492,13 @@ class MultiRobotUnicycleSim:
         self.disturb_slow_prob = float(disturb_slow_prob)
         self.n_intruders = int(n_intruders)
         self.occluded_los = bool(occluded_los)
+        self.use_right_of_way = bool(use_right_of_way)
+        self.start_sep_m = float(start_sep_m)
+        self.diag_clean_shield = bool(diag_clean_shield)
+        self.diag_clean_actor = bool(diag_clean_actor)
+        self.diag_joint_action_check = bool(diag_joint_action_check)
+        self.robust_safety = bool(robust_safety)
+        self._force_clean_obs: bool = False
 
         self.rng = np.random.default_rng(self.seed)
         self.py_rng = random.Random(self.seed)
@@ -494,10 +510,10 @@ class MultiRobotUnicycleSim:
             dt=DT_MICRO,
         )
 
-        # Background Rust CPS-A* + ReservationTable
+        # Background Rust CPS-A* + ReservationTable (calibrated to 0.85 m/s effective cruise speed)
         self.cfg = CPSAStarConfig(mode="lifelong", beta=0.5, gamma=4.0)
         self.planner = RustCPSAStarGraphPlanner(
-            self.mmap.network, self.cfg, max_speed=1.0, dt=self.mmap.macro_step_s
+            self.mmap.network, self.cfg, max_speed=0.85, dt=self.mmap.macro_step_s
         )
         self.res_table = RustReservationTable.fast()
         self.field = self.planner.create_field()
@@ -523,6 +539,11 @@ class MultiRobotUnicycleSim:
         self.wall_collisions = 0
         self.peer_collisions = 0
         self.intruder_collisions = 0
+        self.independent_collision_events = 0
+        self._active_col_keys: set[tuple[str, str, str]] = set()
+        self.row_priority_ranks: dict[str, int] = {}
+        self._active_pts: dict[str, Any] = {}
+        self._phys_locks: dict[str, tuple[str, int, int]] = {}
         self.shield_interventions = 0
         self.shield_infeasible_count = 0
         self.replans = 0
@@ -557,6 +578,11 @@ class MultiRobotUnicycleSim:
         self.wall_collisions = 0
         self.peer_collisions = 0
         self.intruder_collisions = 0
+        self.independent_collision_events = 0
+        self._active_col_keys: set[tuple[str, str, str]] = set()
+        self.row_priority_ranks: dict[str, int] = {}
+        self._active_pts: dict[str, Any] = {}
+        self._phys_locks: dict[str, tuple[str, int, int]] = {}
         self.shield_interventions = 0
         self.shield_infeasible_count = 0
         self.replans = 0
@@ -581,7 +607,7 @@ class MultiRobotUnicycleSim:
             chosen_nid = candidates[idx % len(candidates)]
             for cand in candidates:
                 nc = self.mmap.network.node(cand)
-                if all(math.hypot(nc.x - px, nc.y - py) >= 1.8 for px, py in placed):
+                if all(math.hypot(nc.x - px, nc.y - py) >= self.start_sep_m for px, py in placed):
                     chosen_nid = cand
                     break
             nd = self.mmap.network.node(chosen_nid)
@@ -604,6 +630,7 @@ class MultiRobotUnicycleSim:
             )
             self.robot_ids.append(rid)
             self.res_table.reserve_node(chosen_nid, Interval(0, 2), rid)
+            self._phys_locks[rid] = (chosen_nid, 0, 2)
             self._prev_v[rid] = 0.0
             self._prev_a[rid] = 0.0
 
@@ -678,7 +705,9 @@ class MultiRobotUnicycleSim:
         rb.cur_node = start_node
         self.res_table.release_all(rid)
         self.field.remove_agv(rid)
-        self.res_table.reserve_node(start_node, Interval(t_tick, t_tick + 1), rid)
+        self._active_pts.pop(rid, None)
+        self.res_table.reserve_node(start_node, Interval(t_tick, t_tick + 2), rid)
+        self._phys_locks[rid] = (start_node, t_tick, t_tick + 2)
         pl, _ = self.planner.plan_leg(
             start_node,
             goal_node,
@@ -691,25 +720,55 @@ class MultiRobotUnicycleSim:
         )
         self.replans += 1
         if pl is None or not pl.nodes:
+            # Retry with delayed departure (+2 ticks) in case a peer just claimed the exit node
+            pl, _ = self.planner.plan_leg(
+                start_node,
+                goal_node,
+                t_tick + 2,
+                self.res_table,
+                self.field,
+                rid,
+                min(self.plan_horizon_ticks, t_tick + 92),
+                goal_park_steps=1,
+            )
+        if pl is None or not pl.nodes:
+            # Topological fallback with empty reservation table so robot is never stranded;
+            # physical separation is enforced by right-of-way gate + BrakingInvariantShield.
+            empty_rt = RustReservationTable.fast()
+            pl, _ = self.planner.plan_leg(
+                start_node,
+                goal_node,
+                t_tick,
+                empty_rt,
+                self.field,
+                rid,
+                max(self.plan_horizon_ticks, t_tick + 140),
+                goal_park_steps=1,
+            )
+        if pl is None or not pl.nodes:
             self.res_table.reserve_node(start_node, Interval(t_tick, t_tick + 3), rid)
             rb.route_nodes = [start_node]
             rb.route_times = [t_tick]
             rb.route_idx = 0
+            rb.last_plan_fail_tick = t_tick
+            rb.prev_rem_dist_m = 0.0
             return False
 
         pts = expand_planned_to_step_positions(start_node, t_tick, pl)
         self.planner.reserve_step_points_indexed(self.res_table, rid, pts, park_until=None)
         self.field.add_agv_path(rid, pts)
-        # Compress repeated wait nodes into route waypoints + expected arrival ticks
-        w_nodes: list[str] = []
-        w_times: list[int] = []
+        self._active_pts[rid] = list(pts)
+        # Prepend start_node so polyline projection always covers [start_node -> first_hop]
+        w_nodes: list[str] = [start_node]
+        w_times: list[int] = [t_tick]
         for nd_id, step_t in zip(pl.nodes, pl.arrival_steps):
-            if not w_nodes or w_nodes[-1] != nd_id:
+            if w_nodes[-1] != nd_id:
                 w_nodes.append(nd_id)
                 w_times.append(int(step_t))
         rb.route_nodes = w_nodes
         rb.route_times = w_times
         rb.route_idx = 0
+        rb.prev_rem_dist_m = self.remaining_route_dist_m(rb)
         return True
 
     def _refresh_res_views(self) -> None:
@@ -750,7 +809,7 @@ class MultiRobotUnicycleSim:
                 continue
             tgt_id = rb.cur_task.pickup if rb.phase == "to_pickup" else rb.cur_task.dropoff
             tgt = self.mmap.network.node(tgt_id)
-            if math.hypot(rb.x - tgt.x, rb.y - tgt.y) <= 0.70:
+            if math.hypot(rb.x - tgt.x, rb.y - tgt.y) <= 0.85:
                 if rb.phase == "to_pickup":
                     rb.service_rem_s = rb.cur_task.service_s
                     rb.phase = "to_dropoff"
@@ -788,16 +847,56 @@ class MultiRobotUnicycleSim:
             if used_tasks:
                 self.ready = [tk for tk in self.ready if tk.task_id not in used_tasks]
 
-        # EALR-style ETA drift detection: replan robots whose progress drifted behind reservation
+        # Yield / clear-bay move for idle robots sitting on an active peer's route or pickup/dropoff bay
+        active_route_nodes: set[str] = set()
+        for rid_a in self.robot_ids:
+            rb_a = self.robots[rid_a]
+            if rb_a.phase != "idle" and rb_a.route_nodes:
+                active_route_nodes.update(rb_a.route_nodes[rb_a.route_idx :])
+        occupied_nodes = {self.robots[r].cur_node for r in self.robot_ids}
+        bay_nodes = set(self.mmap.pickup_nodes) | set(self.mmap.dropoff_nodes)
+        for rid_i in self.robot_ids:
+            rb_i = self.robots[rid_i]
+            if rb_i.phase == "idle" and rb_i.service_rem_s <= 0.0 and len(rb_i.route_nodes) <= 1:
+                if rb_i.cur_node in active_route_nodes or (self.mmap.start_pool and rb_i.cur_node in bay_nodes and rb_i.cur_node not in self.mmap.start_pool):
+                    cands_p = [
+                        n for n in (self.mmap.start_pool or ())
+                        if n not in active_route_nodes and n not in occupied_nodes and n != rb_i.cur_node
+                    ]
+                    if not cands_p:
+                        cands_p = [
+                            e.dst for e in self.mmap.network.out_edges(rb_i.cur_node)
+                            if e.dst not in active_route_nodes and e.dst not in occupied_nodes
+                        ]
+                    if cands_p:
+                        cands_p.sort(key=lambda nid: math.hypot(
+                            self.mmap.network.node(nid).x - rb_i.x,
+                            self.mmap.network.node(nid).y - rb_i.y,
+                        ))
+                        self._plan_robot(rid_i, cands_p[0], t_tick)
+
+        # Protect physical current node occupancy for all robots before any replans
+        for rid_p in self.robot_ids:
+            rb_p = self.robots[rid_p]
+            phys_nd = self._nearest_node(rb_p.x, rb_p.y)
+            rb_p.cur_node = phys_nd
+            self.res_table.reserve_node(phys_nd, Interval(t_tick, t_tick + 2), rid_p)
+            self._phys_locks[rid_p] = (phys_nd, t_tick, t_tick + 2)
+
+        # Retry failed plans + EALR-style ETA drift detection
         for rid in self.robot_ids:
             rb = self.robots[rid]
             if rb.phase == "idle" or rb.cur_task is None or rb.service_rem_s > 0.0:
                 continue
+            goal = rb.cur_task.pickup if rb.phase == "to_pickup" else rb.cur_task.dropoff
+            if len(rb.route_nodes) <= 1 and rb.cur_node != goal:
+                if (t_tick - rb.last_plan_fail_tick) >= 2:
+                    self._plan_robot(rid, goal, t_tick)
+                continue
             if rb.route_idx + 1 < len(rb.route_times):
                 exp_t = rb.route_times[rb.route_idx + 1]
-                if t_tick > exp_t + 2:
+                if t_tick > exp_t + 3:
                     rb.eta_drift_ticks += 1
-                    goal = rb.cur_task.pickup if rb.phase == "to_pickup" else rb.cur_task.dropoff
                     self._plan_robot(rid, goal, t_tick)
 
         # Random mild speed perturbation injection
@@ -832,8 +931,86 @@ class MultiRobotUnicycleSim:
         cur_nd = self.mmap.network.node(rb.route_nodes[-1] if rb.route_nodes else rb.cur_node)
         return float(cur_nd.x), float(cur_nd.y)
 
-    def get_perceived_circles(self, rid: str) -> list[CircleState]:
+    def remaining_route_dist_m(self, rb: RobotContinuousState) -> float:
+        """Monotonic remaining arc-length along planned route polyline (m)."""
+        if not rb.route_nodes or rb.route_idx >= len(rb.route_nodes):
+            return 0.0
+        idx = min(rb.route_idx, len(rb.route_nodes) - 1)
+        if idx + 1 >= len(rb.route_nodes):
+            nd = self.mmap.network.node(rb.route_nodes[-1])
+            return float(math.hypot(nd.x - rb.x, nd.y - rb.y))
+        u_nd = self.mmap.network.node(rb.route_nodes[idx])
+        v_nd = self.mmap.network.node(rb.route_nodes[idx + 1])
+        dx, dy = v_nd.x - u_nd.x, v_nd.y - u_nd.y
+        seg_len = math.hypot(dx, dy)
+        if seg_len > 1e-6:
+            t_proj = clip_val(((rb.x - u_nd.x) * dx + (rb.y - u_nd.y) * dy) / (seg_len * seg_len), 0.0, 1.0)
+            rem = (1.0 - t_proj) * seg_len
+        else:
+            rem = math.hypot(v_nd.x - rb.x, v_nd.y - rb.y)
+        for k in range(idx + 1, len(rb.route_nodes) - 1):
+            a_nd = self.mmap.network.node(rb.route_nodes[k])
+            b_nd = self.mmap.network.node(rb.route_nodes[k + 1])
+            rem += math.hypot(b_nd.x - a_nd.x, b_nd.y - a_nd.y)
+        return float(rem)
+
+    def apply_right_of_way_gate(self, rid: str, v_req: float, w_req: float) -> tuple[float, float]:
+        """Deterministic TPG/ADG-lite right-of-way coordinator for shared conflict zones."""
+        if not self.use_right_of_way:
+            return v_req, w_req
+        ego = self.robots[rid]
+        if ego.phase == "idle" or not ego.route_nodes:
+            return v_req, w_req
+        ego_prio = 2 if ego.phase == "to_dropoff" else 1
+        ego_upcoming = ego.route_nodes[ego.route_idx : ego.route_idx + 3]
+
+        for other_id in self.robot_ids:
+            if other_id == rid:
+                continue
+            other = self.robots[other_id]
+            if other.phase == "idle" and len(other.route_nodes) <= 1:
+                continue
+            d_pair = math.hypot(other.x - ego.x, other.y - ego.y)
+            if d_pair > 4.2:
+                continue
+            other_prio = 2 if other.phase == "to_dropoff" else 1
+            other_upcoming = other.route_nodes[other.route_idx : other.route_idx + 3] if other.route_nodes else [other.cur_node]
+
+            shared = [nd for nd in ego_upcoming if nd in other_upcoming]
+            if shared:
+                c_nd = self.mmap.network.node(shared[0])
+                d_ego = math.hypot(c_nd.x - ego.x, c_nd.y - ego.y)
+                d_oth = math.hypot(c_nd.x - other.x, c_nd.y - other.y)
+                # Robot already inside/closer to conflict zone has NON-REVOCABLE priority;
+                # otherwise consult explicit passing-order rank override if set, else task phase / ID tiebreak.
+                if d_oth < 0.90 and d_ego >= 0.90:
+                    other_has_prio = True
+                elif d_ego < 0.90 and d_oth >= 0.90:
+                    other_has_prio = False
+                elif rid in self.row_priority_ranks and other_id in self.row_priority_ranks and self.row_priority_ranks[rid] != self.row_priority_ranks[other_id]:
+                    other_has_prio = self.row_priority_ranks[other_id] < self.row_priority_ranks[rid]
+                else:
+                    other_has_prio = (
+                        (d_oth < d_ego - 0.45)
+                        or (abs(d_oth - d_ego) <= 0.45 and (other_prio, rid) > (ego_prio, other_id))
+                    )
+                if other_has_prio and 0.9 < d_ego < 3.4:
+                    return min(v_req, 0.15), w_req
+            elif d_pair < 3.0:
+                # Head-on in narrow lane: check opposing heading
+                cos_hdg = math.cos(ego.theta - other.theta)
+                if cos_hdg < -0.45:
+                    if rid in self.row_priority_ranks and other_id in self.row_priority_ranks and self.row_priority_ranks[rid] != self.row_priority_ranks[other_id]:
+                        other_has_prio = self.row_priority_ranks[other_id] < self.row_priority_ranks[rid]
+                    else:
+                        other_has_prio = (other_prio, rid) > (ego_prio, other_id)
+                    if other_has_prio:
+                        return min(v_req, 0.10), w_req
+        return v_req, w_req
+
+    def get_perceived_circles(self, rid: str, *, clean: bool = False) -> list[CircleState]:
         """Return peer robots + dynamic intruders visible to `rid` (respecting LOS occlusion & noise)."""
+        use_clean = bool(clean or self._force_clean_obs)
         ego = self.robots[rid]
         out: list[CircleState] = []
         for other_id in self.robot_ids:
@@ -844,19 +1021,32 @@ class MultiRobotUnicycleSim:
                 continue
             if self.occluded_los and not self.mmap.has_line_of_sight(ego.x, ego.y, o.x, o.y):
                 continue
-            nx = float(self.rng.normal(0.0, self.obs_noise_pos_m)) if self.obs_noise_pos_m > 0 else 0.0
-            ny = float(self.rng.normal(0.0, self.obs_noise_pos_m)) if self.obs_noise_pos_m > 0 else 0.0
-            nvx = float(self.rng.normal(0.0, self.obs_noise_vel_mps)) if self.obs_noise_vel_mps > 0 else 0.0
-            nvy = float(self.rng.normal(0.0, self.obs_noise_vel_mps)) if self.obs_noise_vel_mps > 0 else 0.0
-            out.append(
-                CircleState(
-                    x=o.x + nx,
-                    y=o.y + ny,
-                    vx=o.v * math.cos(o.theta) + nvx,
-                    vy=o.v * math.sin(o.theta) + nvy,
-                    radius=self.fp.max_extent_m,
+            nx = float(self.rng.normal(0.0, self.obs_noise_pos_m)) if (self.obs_noise_pos_m > 0 and not use_clean) else 0.0
+            ny = float(self.rng.normal(0.0, self.obs_noise_pos_m)) if (self.obs_noise_pos_m > 0 and not use_clean) else 0.0
+            nvx = float(self.rng.normal(0.0, self.obs_noise_vel_mps)) if (self.obs_noise_vel_mps > 0 and not use_clean) else 0.0
+            nvy = float(self.rng.normal(0.0, self.obs_noise_vel_mps)) if (self.obs_noise_vel_mps > 0 and not use_clean) else 0.0
+            ox_hat = o.x + nx
+            oy_hat = o.y + ny
+            ovx_hat = o.v * math.cos(o.theta) + nvx
+            ovy_hat = o.v * math.sin(o.theta) + nvy
+            if self.robust_safety and self.fp.mode == "capsule":
+                spd_hat = math.hypot(ovx_hat, ovy_hat)
+                if spd_hat > 0.35 and self.obs_noise_vel_mps <= 0.05:
+                    ux_h, uy_h = ovx_hat / spd_hat, ovy_hat / spd_hat
+                    out.append(CircleState(x=ox_hat + self.fp.half_offset_m * ux_h, y=oy_hat + self.fp.half_offset_m * uy_h, vx=ovx_hat, vy=ovy_hat, radius=self.fp.radius_m))
+                    out.append(CircleState(x=ox_hat - self.fp.half_offset_m * ux_h, y=oy_hat - self.fp.half_offset_m * uy_h, vx=ovx_hat, vy=ovy_hat, radius=self.fp.radius_m))
+                else:
+                    out.append(CircleState(x=ox_hat, y=oy_hat, vx=ovx_hat, vy=ovy_hat, radius=self.fp.max_extent_m))
+            else:
+                out.append(
+                    CircleState(
+                        x=ox_hat,
+                        y=oy_hat,
+                        vx=ovx_hat,
+                        vy=ovy_hat,
+                        radius=self.fp.radius_m + 0.05,
+                    )
                 )
-            )
         for intr in self.intruders:
             if math.hypot(intr.x - ego.x, intr.y - ego.y) > 9.0:
                 continue
@@ -890,13 +1080,28 @@ class MultiRobotUnicycleSim:
         t0 = time.perf_counter()
         for rid in self.robot_ids:
             rb = self.robots[rid]
-            if rb.service_rem_s > 0.0 or rb.phase == "idle":
+            if rb.service_rem_s > 0.0 or (rb.phase == "idle" and len(rb.route_nodes) <= 1):
                 cmds[rid] = (0.0, 0.0)
                 continue
-            v_req, w_req = controller_fn(self, rid)
+            if rb.phase == "idle" and rb.route_idx + 1 >= len(rb.route_nodes):
+                end_nd = self.mmap.network.node(rb.route_nodes[-1])
+                if math.hypot(rb.x - end_nd.x, rb.y - end_nd.y) <= 0.65:
+                    rb.route_nodes = [rb.route_nodes[-1]]
+                    rb.route_times = [self.macro_tick]
+                    rb.route_idx = 0
+                    cmds[rid] = (0.0, 0.0)
+                    continue
+            if self.diag_clean_actor:
+                self._force_clean_obs = True
+            try:
+                v_req, w_req = controller_fn(self, rid)
+            finally:
+                self._force_clean_obs = False
+            if self.use_right_of_way:
+                v_req, w_req = self.apply_right_of_way_gate(rid, v_req, w_req)
             if self.use_shield:
                 wx, wy = self._advance_route_cursor(rb)
-                obs_vis = self.get_perceived_circles(rid)
+                obs_vis = self.get_perceived_circles(rid, clean=self.diag_clean_shield)
                 sh_out = self.shield.filter(
                     x=rb.x,
                     y=rb.y,
@@ -909,13 +1114,72 @@ class MultiRobotUnicycleSim:
                     wall_fn=lambda px, py, pth: self.mmap.wall_clearance(px, py, pth, self.fp),
                     center_w=clip_val(1.6 * wrap_pi(math.atan2(wy - rb.y, wx - rb.x) - rb.theta), -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS),
                     ref_heading_err_fn=lambda px, py, pth, _wx=wx, _wy=wy: wrap_pi(math.atan2(_wy - py, _wx - px) - pth),
+                    obs_pos_std_m=(self.obs_noise_pos_m if self.robust_safety else 0.0),
+                    obs_vel_std_mps=(self.obs_noise_vel_mps if self.robust_safety else 0.0),
                 )
                 if sh_out.intervened:
                     self.shield_interventions += 1
                 if sh_out.infeasible:
                     self.shield_infeasible_count += 1
                 v_req, w_req = sh_out.v_cmd, sh_out.omega_cmd
+                # Minimal Robust Safety (Task 2): noisy perceived 2-step simultaneous-motion guard (ZERO ground truth)
+                if self.robust_safety and v_req > 0.05 and obs_vis:
+                    dv_r = MAX_DV_DT * DT_MICRO
+                    dw_r = MAX_DW_DT * DT_MICRO
+                    rx, ry, rth, rv, rw = rb.x, rb.y, rb.theta, rb.v, rb.omega
+                    fwd_obs = [
+                        o for o in obs_vis
+                        if ((o.x - rb.x) * math.cos(rb.theta) + (o.y - rb.y) * math.sin(rb.theta)) > -0.25
+                        and math.hypot(o.x - rb.x, o.y - rb.y) < 3.2
+                    ]
+                    if fwd_obs:
+                        for s_j in (1, 2):
+                            rv = clip_val(rv + clip_val(v_req - rv, -dv_r, dv_r), 0.0, MAX_V_MPS)
+                            rw = clip_val(rw + clip_val(w_req - rw, -dw_r, dw_r), -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+                            rx += rv * math.cos(rth) * DT_MICRO
+                            ry += rv * math.sin(rth) * DT_MICRO
+                            rth = wrap_pi(rth + rw * DT_MICRO)
+                            t_j = s_j * DT_MICRO
+                            eps_j = 1.96 * math.hypot(self.obs_noise_pos_m, min(t_j, 1.0) * self.obs_noise_vel_mps) if (self.obs_noise_pos_m > 0 or self.obs_noise_vel_mps > 0) else 0.0
+                            obs_j = [CircleState(o.x + o.vx * t_j, o.y + o.vy * t_j, o.vx, o.vy, o.radius) for o in fwd_obs]
+                            if obstacle_surface_clearance(rx, ry, rth, obs_j, self.fp) < (0.18 + eps_j):
+                                v_req, w_req = 0.0, 0.0
+                                break
             cmds[rid] = (v_req, w_req)
+        if self.diag_joint_action_check:
+            dv_j = MAX_DV_DT * DT_MICRO
+            dw_j = MAX_DW_DT * DT_MICRO
+            for i_a in range(len(self.robot_ids)):
+                ra_id = self.robot_ids[i_a]
+                ra = self.robots[ra_id]
+                for i_b in range(i_a + 1, len(self.robot_ids)):
+                    rb_id = self.robot_ids[i_b]
+                    rb_o = self.robots[rb_id]
+                    if math.hypot(ra.x - rb_o.x, ra.y - rb_o.y) > 3.2:
+                        continue
+                    # Simulate 4-step simultaneous execution of current cmds for pair (ra, rb_o)
+                    xa, ya, tha, va, wa = ra.x, ra.y, ra.theta, ra.v, ra.omega
+                    xb, yb, thb, vb, wb = rb_o.x, rb_o.y, rb_o.theta, rb_o.v, rb_o.omega
+                    vca, wca = cmds[ra_id]
+                    vcb, wcb = cmds[rb_id]
+                    min_pc = 9.0
+                    for _ in range(6):
+                        va = clip_val(va + clip_val(vca - va, -dv_j, dv_j), 0.0, MAX_V_MPS)
+                        wa = clip_val(wa + clip_val(wca - wa, -dw_j, dw_j), -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+                        vb = clip_val(vb + clip_val(vcb - vb, -dv_j, dv_j), 0.0, MAX_V_MPS)
+                        wb = clip_val(wb + clip_val(wcb - wb, -dw_j, dw_j), -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+                        xa += va * math.cos(tha) * DT_MICRO
+                        ya += va * math.sin(tha) * DT_MICRO
+                        tha = wrap_pi(tha + wa * DT_MICRO)
+                        xb += vb * math.cos(thb) * DT_MICRO
+                        yb += vb * math.sin(thb) * DT_MICRO
+                        thb = wrap_pi(thb + wb * DT_MICRO)
+                        min_pc = min(min_pc, pair_robot_clearance(xa, ya, tha, self.fp, xb, yb, thb, self.fp))
+                    if min_pc < 0.18:
+                        # Yield lower-priority robot (both if already nearly touching)
+                        cmds[rb_id] = (0.0, 0.0)
+                        if min_pc < 0.08:
+                            cmds[ra_id] = (0.0, 0.0)
         self._ctrl_ms_samples.append(((time.perf_counter() - t0) * 1000.0) / max(1, self.n_robots))
 
         # Record start poses for swept M_sub = 5 collision check
@@ -964,6 +1228,7 @@ class MultiRobotUnicycleSim:
                 intr.step(DT_MICRO)
 
         # Swept continuous-time collision check across ALL robots, walls, and intruders
+        step_col_keys: set[str] = set()
         for k in range(1, SUBSTEPS_DEFAULT + 1):
             al = k / float(SUBSTEPS_DEFAULT)
             interp_robots: dict[str, tuple[float, float, float]] = {}
@@ -989,10 +1254,12 @@ class MultiRobotUnicycleSim:
                 w_c = self.mmap.wall_clearance(rx, ry, rth, self.fp)
                 if w_c <= 0.0:
                     self.wall_collisions += 1
+                    step_col_keys.add(f"W:{rid}")
                 if interp_intruders:
                     o_c = obstacle_surface_clearance(rx, ry, rth, interp_intruders, self.fp)
                     if o_c <= 0.0:
                         self.intruder_collisions += 1
+                        step_col_keys.add(f"I:{rid}")
                     self._min_clear_samples.append(min(w_c, o_c))
                 else:
                     self._min_clear_samples.append(w_c)
@@ -1006,12 +1273,96 @@ class MultiRobotUnicycleSim:
                     pc = pair_robot_clearance(x1, y1, th1, self.fp, x2, y2, th2, self.fp)
                     if pc <= 0.0:
                         self.peer_collisions += 1
+                        step_col_keys.add(f"P:{r1}:{r2}")
                     self._min_clear_samples.append(pc)
+        for ck in step_col_keys:
+            if ck not in self._active_col_keys:
+                self.independent_collision_events += 1
+        self._active_col_keys = step_col_keys
 
         self.micro_step += 1
         self.t_s = round(self.micro_step * DT_MICRO, 4)
         done = (self.completed_tasks >= self.n_tasks) or (self.t_s >= self.horizon_s)
         return done
+
+    def clone_snapshot(self) -> "MultiRobotUnicycleSim":
+        """Exact bitwise-faithful snapshot clone including RNG states and reservations."""
+        cl = MultiRobotUnicycleSim.__new__(MultiRobotUnicycleSim)
+        cl.mmap = self.mmap
+        cl.n_robots = self.n_robots
+        cl.n_tasks = self.n_tasks
+        cl.horizon_s = self.horizon_s
+        cl.seed = self.seed
+        cl.fp = self.fp
+        cl.use_shield = self.use_shield
+        cl.obs_noise_pos_m = self.obs_noise_pos_m
+        cl.obs_noise_vel_mps = self.obs_noise_vel_mps
+        cl.reservation_lag_s = self.reservation_lag_s
+        cl.reservation_dropout = self.reservation_dropout
+        cl.disturb_slow_prob = self.disturb_slow_prob
+        cl.n_intruders = self.n_intruders
+        cl.occluded_los = self.occluded_los
+        cl.use_right_of_way = self.use_right_of_way
+        cl.start_sep_m = self.start_sep_m
+        cl.diag_clean_shield = self.diag_clean_shield
+        cl.diag_clean_actor = self.diag_clean_actor
+        cl.diag_joint_action_check = self.diag_joint_action_check
+        cl.robust_safety = self.robust_safety
+        cl._force_clean_obs = self._force_clean_obs
+
+        cl.rng = np.random.default_rng(self.seed)
+        cl.rng.bit_generator.state = copy.deepcopy(self.rng.bit_generator.state)
+        cl.py_rng = random.Random(self.seed)
+        cl.py_rng.setstate(copy.deepcopy(self.py_rng.getstate()))
+
+        cl.shield = self.shield
+        cl.cfg = self.cfg
+        cl.planner = self.planner
+        cl.macro_steps_per_tick = self.macro_steps_per_tick
+        cl.plan_horizon_ticks = self.plan_horizon_ticks
+
+        cl.robots = {rid: copy.deepcopy(rb) for rid, rb in self.robots.items()}
+        cl.robot_ids = list(self.robot_ids)
+        cl.intruders = [copy.deepcopy(intr) for intr in self.intruders]
+        cl.pending = deque(copy.deepcopy(tk) for tk in self.pending)
+        cl.ready = [copy.deepcopy(tk) for tk in self.ready]
+        cl.completed_tasks = self.completed_tasks
+        cl.t_s = self.t_s
+        cl.micro_step = self.micro_step
+        cl.macro_tick = self.macro_tick
+
+        cl._res_history = copy.deepcopy(self._res_history)
+        cl._current_res_view = copy.deepcopy(self._current_res_view)
+        cl._lagged_res_view = copy.deepcopy(self._lagged_res_view)
+
+        cl.wall_collisions = self.wall_collisions
+        cl.peer_collisions = self.peer_collisions
+        cl.intruder_collisions = self.intruder_collisions
+        cl.independent_collision_events = self.independent_collision_events
+        cl._active_col_keys = set(self._active_col_keys)
+        cl.row_priority_ranks = dict(self.row_priority_ranks)
+        cl.shield_interventions = self.shield_interventions
+        cl.shield_infeasible_count = self.shield_infeasible_count
+        cl.replans = self.replans
+        cl._wait_steps = self._wait_steps
+        cl._total_robot_steps = self._total_robot_steps
+        cl._jerk_sum = self._jerk_sum
+        cl._prev_v = dict(self._prev_v)
+        cl._prev_a = dict(self._prev_a)
+        cl._min_clear_samples = list(self._min_clear_samples)
+        cl._ctrl_ms_samples = list(self._ctrl_ms_samples)
+
+        # Rebuild Rust reservation table & field cleanly from current robot routes
+        cl._active_pts = {rid: list(pts) for rid, pts in self._active_pts.items()}
+        cl._phys_locks = dict(self._phys_locks)
+        cl.res_table = RustReservationTable.fast()
+        cl.field = cl.planner.create_field()
+        for rid, pts in cl._active_pts.items():
+            cl.planner.reserve_step_points_indexed(cl.res_table, rid, pts, park_until=None)
+            cl.field.add_agv_path(rid, pts)
+        for rid, (nd_l, t0_l, t1_l) in cl._phys_locks.items():
+            cl.res_table.reserve_node(nd_l, Interval(t0_l, t1_l), rid)
+        return cl
 
     def run_episode(
         self,

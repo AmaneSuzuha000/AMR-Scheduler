@@ -1,0 +1,14 @@
+{
+  "phase": "Decision-Headroom-Audit",
+  "verdict": "BRANCH_C_STOP_RL_FOR_THIS_LAYER",
+  "route_a_ramp_primitive_rl": {
+    "decision": "NO-GO",
+    "reason": "Fleet counterfactual headroom <= +1.10% across all horizons (clear_15s: +0.58% ego, +0.85% fleet), K_safe collapses to 1-2 in 31.9% of snapshots (44.4% in Congestion_Wait, 35.7% in HeadOn), and H2 confirmed (R5_Orig 66.0% unsafe override in HeadOn vs R1_Robust 13.0%)."
+  },
+  "route_b_stcp_conflict_order_rl": {
+    "decision": "NO-GO",
+    "reason": "Exhaustive safe permutation oracle headroom over best deterministic rule is +0.43% across N=36 conflicts (only 5.6% >= 3%, 0.0% in Workshop_8R and MapB_12R); R1_Default_Order (5.667 comp) beats Orig_Res_Order (4.933), FCFS (5.200), SPT_Clear (5.000), and Queue_Downstream_Det (4.933); Task 5 literature audit shows severe novelty overlap with BTPG-max (AAAI 2026), SJRL (2026), and K-ARC (RA-L 2025)."
+  },
+  "positive_verified_contribution": "Deterministic R1_Robust (CPS-A* reservation time-margin m_ij(z) + K=6 kinodynamic primitives + capsule two-disc uncertainty-aware safety filter + non-revocable phase/proximity ROW) already captures >99% of realizable local clearing/fleet performance at 100.0% empirical ZeroCol on all tested suites.",
+  "blind_seeds_8001_8010_status": "UNTOUCHED_PRESERVED"
+}

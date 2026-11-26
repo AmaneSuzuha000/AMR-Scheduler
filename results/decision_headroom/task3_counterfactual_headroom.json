@@ -1,0 +1,96 @@
+{
+  "n_snapshots": 60,
+  "by_horizon": {
+    "0.5s": {
+      "n_snapshots": 60,
+      "mean_delta_sel": 0.0194,
+      "median_delta_sel": 0.0,
+      "mean_rel_gain_pct": 2.89,
+      "pct_delta_gt_0.05": 20.0,
+      "pct_gain_ge_3pct": 16.7,
+      "mean_cov_loss": 0.0013,
+      "mean_delta_fleet": 0.0193,
+      "mean_fleet_rel_gain_pct": 0.98,
+      "fleet_pct_gain_ge_3pct": 13.3,
+      "mean_cov_loss_fleet": 0.0014
+    },
+    "2.0s": {
+      "n_snapshots": 60,
+      "mean_delta_sel": 0.0289,
+      "median_delta_sel": 0.0,
+      "mean_rel_gain_pct": 2.86,
+      "pct_delta_gt_0.05": 25.0,
+      "pct_gain_ge_3pct": 21.7,
+      "mean_cov_loss": 0.0,
+      "mean_delta_fleet": 0.0268,
+      "mean_fleet_rel_gain_pct": 0.32,
+      "fleet_pct_gain_ge_3pct": 0.0,
+      "mean_cov_loss_fleet": 0.003
+    },
+    "5.0s": {
+      "n_snapshots": 60,
+      "mean_delta_sel": 0.0865,
+      "median_delta_sel": 0.0,
+      "mean_rel_gain_pct": 3.04,
+      "pct_delta_gt_0.05": 23.3,
+      "pct_gain_ge_3pct": 18.3,
+      "mean_cov_loss": 0.0,
+      "mean_delta_fleet": 0.1134,
+      "mean_fleet_rel_gain_pct": 0.81,
+      "fleet_pct_gain_ge_3pct": 6.7,
+      "mean_cov_loss_fleet": 0.0
+    },
+    "10.0s": {
+      "n_snapshots": 60,
+      "mean_delta_sel": 0.4275,
+      "median_delta_sel": 0.0,
+      "mean_rel_gain_pct": 2.31,
+      "pct_delta_gt_0.05": 33.3,
+      "pct_gain_ge_3pct": 11.7,
+      "mean_cov_loss": 0.0092,
+      "mean_delta_fleet": 0.4263,
+      "mean_fleet_rel_gain_pct": 1.1,
+      "fleet_pct_gain_ge_3pct": 3.3,
+      "mean_cov_loss_fleet": 0.0093
+    },
+    "clear_15s": {
+      "n_snapshots": 60,
+      "mean_delta_sel": 0.1737,
+      "median_delta_sel": 0.0,
+      "mean_rel_gain_pct": 0.58,
+      "pct_delta_gt_0.05": 36.7,
+      "pct_gain_ge_3pct": 1.7,
+      "mean_cov_loss": 0.0158,
+      "mean_delta_fleet": 0.4229,
+      "mean_fleet_rel_gain_pct": 0.85,
+      "fleet_pct_gain_ge_3pct": 3.3,
+      "mean_cov_loss_fleet": 0.0118
+    }
+  },
+  "by_regime": {
+    "Congestion_Wait": {
+      "count": 4,
+      "H_2s_rel_gain_pct": 0.02,
+      "H_5s_rel_gain_pct": 0.0,
+      "H_clear_rel_gain_pct": 0.14
+    },
+    "HeadOn": {
+      "count": 5,
+      "H_2s_rel_gain_pct": 0.0,
+      "H_5s_rel_gain_pct": 0.24,
+      "H_clear_rel_gain_pct": 0.35
+    },
+    "Junction_Conflict": {
+      "count": 9,
+      "H_2s_rel_gain_pct": 9.64,
+      "H_5s_rel_gain_pct": 11.38,
+      "H_clear_rel_gain_pct": 1.55
+    },
+    "Nominal_Cruise": {
+      "count": 42,
+      "H_2s_rel_gain_pct": 2.02,
+      "H_5s_rel_gain_pct": 1.88,
+      "H_clear_rel_gain_pct": 0.44
+    }
+  }
+}

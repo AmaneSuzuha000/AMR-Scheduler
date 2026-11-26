@@ -1,0 +1,61 @@
+{
+  "protocol": "Execution-Aware-STP-Audit",
+  "overall_rl_verdict": "NO-GO",
+  "ea_stp_rl_candidate_selection_verdict": "NO-GO",
+  "u1a_engineering_fix_verdict": "GO_RETAIN_AS_STRONGEST_BASELINE",
+  "conditional_non_rl_pivot": "SEQUENCE_AND_SELECTIVE_REPLAN_OR_CLOSE_SERIES",
+  "gate_checks": {
+    "freeze_integrity_passed": true,
+    "blind_8001_8010_untouched": true,
+    "zero_new_rl_training_enforced": true,
+    "headroom_threshold_pct": 3.0,
+    "u4_oracle_vs_best_det_pct": -10.53,
+    "u4_oracle_vs_u1b_pct": 0.0,
+    "u4_oracle_vs_u0_pct": -10.53,
+    "headroom_gate_passed": false,
+    "novelty_gate_passed": false
+  },
+  "key_evidence": {
+    "task1_historical": {
+      "manifest_matches": "13/13",
+      "drift_count": 0,
+      "r1_robust_blind_7001_7006_zerocol": "36/36 (100.0%)",
+      "r1_robust_blind_7001_7006_comp": 4.69,
+      "r1_robust_dev_6001_6003_zerocol": "17/18 (94.4%, 3 wall ticks in Occluded_Jct_Compound s=6001, 0 peer/intruder)"
+    },
+    "task2_mismatch": {
+      "main_dev_n_legs": 252,
+      "main_dev_deta_mean_s": -17.25,
+      "main_dev_early_pct": 94.4,
+      "main_dev_late_pct": 0.8,
+      "pure_struct_n_legs": 214,
+      "pure_struct_deta_mean_s": -18.33,
+      "pure_struct_early_pct": 94.9,
+      "workshop_comp_mean": 0.33,
+      "workshop_eta_drift_pct": 71.0
+    },
+    "task3_full_dev_18ep": {
+      "U0_Orig_CPSA": {"zerocol": "17/18", "comp_mean": 5.556, "wait_mean": 0.3227, "abs_deta_s": 15.672, "drift": 174},
+      "U0_Buf1_Macro": {"zerocol": "18/18", "comp_mean": 5.333, "wait_mean": 0.2961, "abs_deta_s": 16.468, "drift": 153},
+      "U1a_EdgeSpan_Fix": {"zerocol": "18/18", "comp_mean": 5.889, "wait_mean": 0.2814, "abs_deta_s": 16.795, "drift": 146},
+      "U1b_KinoTime_CPSA": {"zerocol": "17/18", "comp_mean": 5.333, "wait_mean": 0.2699, "abs_deta_s": 2.461, "drift": 200},
+      "U2_FixedBuf_1.0s": {"zerocol": "17/18", "comp_mean": 4.278, "wait_mean": 0.3304, "abs_deta_s": 2.406, "drift": 230},
+      "U2_FixedBuf_2.0s": {"zerocol": "18/18", "comp_mean": 4.167, "wait_mean": 0.3450, "abs_deta_s": 3.242, "drift": 239},
+      "U3_StateDep_Buf": {"zerocol": "18/18", "comp_mean": 4.667, "wait_mean": 0.3118, "abs_deta_s": 2.764, "drift": 240}
+    },
+    "task3_u4_seed6001_slice": {
+      "best_det_comp_sum": 19,
+      "u1b_comp_sum": 17,
+      "u4_oracle_comp_sum": 17,
+      "decision_count": 112,
+      "differed_from_u1b": 54,
+      "differed_from_u3": 91
+    }
+  },
+  "recommendations": [
+    "Retain U1a_EdgeSpan_Fix + R1_Robust as the frozen deterministic reference stack (18/18 DEV ZeroCol, +6.00% over U0, 0.376 ms/plan).",
+    "Do NOT train RL to select upper-level (route_weight, temporal_buffer) candidates: Counterfactual Oracle U4 is -10.53% below best deterministic and +0.00% vs U1b, with zero novelty gap vs SJRL/GGO/Online-GGO/Cost-of-Executability.",
+    "Do NOT pursue uniform temporal reservation buffers (U2): while beneficial on dense multi-route grids (MapA +63.64%), they degrade choke-point corridors (Occluded_Jct -44% to -55%) and open grids (MapB -14% to -17%).",
+    "If the team wishes to continue STP research without forced RL, replace strict timestamp reservations with precedence/passing-order reservations (PPSS / BTPG style) + slack-gated selective replanning (Should-I-Replan ICRA 2026) and add HARR-style dead-end bay staging for Workshop."
+  ]
+}

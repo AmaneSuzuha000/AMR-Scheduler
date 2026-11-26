@@ -18,7 +18,17 @@
 
 ## Overview
 
-**AMR-Scheduler** (`v1.3.0`) is the open-source code and digital-twin companion repository for **`CoRe-Sched`** (*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*), a dual-engine learning-and-optimization platform for dynamic production–multi-AMR rescheduling and congestion-aware traffic coordination in discrete-workstation, narrow-aisle railway maintenance workshops and high-density MovingAI warehouses.
+**AMR-Scheduler** (`v1.4.0`) is a long-term **multi-robot research infrastructure and digital-twin platform** uniting two complementary research tracks over shared maps, spatiotemporal planning kernels, physical execution models, and evaluation suites:
+
+- **Track A — Spatiotemporal Planning & Physical Motion Execution (`Layers 2–3`, active focus)**:
+  - **Layer 3 · Multi-Robot Traffic Coordination**: Congestion-aware `CPS-A*`, `EALR`, multi-tick edge-span corrected planning (`U1a_EdgeSpan_Fix`), and right-of-way arbitration.
+  - **Layer 2 · Local Physical Motion Planning**: Deterministic reservation-margin primitive coordinator **`R1_Robust`**, `K=6` kinodynamic motion primitives, two-disc swept capsule geometry, and Gaussian uncertainty `BrakingInvariantShield`.
+  - **Layer 1 · Physical Execution & Sensing**: ROS 2 / Nav2 / Gazebo digital twin and SCOUT Mini CAN chassis control.
+- **Track B — Production–Multi-AMR Joint Rescheduling (`Layers 4–5`, frozen validated `CoRe-Sched` stack)**:
+  - **Layer 5 · Joint Production–Resource Optimization**: Operation–bay–crew–transport coupling (`V18`, `V19`, `V20_1`, `RGRO`).
+  - **Layer 4 · Dynamic Transport Task Scheduling**: Commitment-aware `CVCR-IR (Seq-Diff)`, `AHG-RL` heterogeneous constructor, and dispatching allocators.
+
+> **Architectural Repositioning & Multi-Fidelity Roadmap**: Prior `CoRe-Sched` (`v1.0–v1.3`) work focused on Layers 4–5 atop simplified transport approximations. Current active work freezes the Layer 4–5 stack as a validated benchmark while hardening **Layers 2–3** (continuous kinematics, swept geometry, physical right-of-way, execution-aware ETA calibration). Future integration will connect both tracks via a **Multi-Fidelity Execution Interface** (fast discrete simulator for large-scale search/training paired with high-fidelity `CPS-A* + R1_Robust` validation; cross-fidelity integration and paired re-evaluation remain planned future work).
 
 <p align="center">
   <img src="results/figures/fig1_core_sched_overview.png" alt="CoRe-Sched Dual-Engine Closed-Loop Overview" width="96%" />
@@ -31,9 +41,9 @@
   - **Online Contextual Selection, Guarded Dual-Arm Probe, Stage-2 `CausalRepairCone` & Oscillation Arbiter**: Combines `Contextual LinUCB` ($\phi(s_t) \in [0, 1]^6$), fleet-guarded dual-arm probing ($|\mathcal{R}| \ge 4$), $J_A$-aligned candidate ranking, bounded Stage-2 Regret-2 `CausalRepairCone` over `FastJAWKittingSurrogate`, active-loading (`_load_end`) + edge safety guards, and symmetric `p4_choke_robust` surgical oscillation wakeups.
 - **Incremental Optimization Engine (`CVCR-IR`)** (`amr_sched/cvcr/evaluator.py`, `crates/`):
   - **Sequence-Differenced Incremental Reservation Cache (`CVCR-IR (Seq-Diff)`) + Tightened Footprint-Aware SLA Guard**: Computes exact per-AMR effective task sequences, reuses unchanged AMRs' routes and Rust half-open interval reservations in-place (`median |ΔJ| = 0.00`), re-routes only $\Delta\mathcal{R}$ via native Rust `SpaceTime A* / SIPP` (`41 us` single-agent search), and bounds pooled wall-clock tail latency strictly below `23 ms` (`18.55 ms / 22.62 ms` Pooled P99 `< 35 ms`).
-- **Native Rust E2E Kernel & Continuous Kinematic Shield (`v1.3.0`)** (`crates/`, `amr_sched/planners/rust_spacetime_astar.py`, `experiments/track_r_cpsa/`, `experiments/cps_astar_routing/`):
+- **Native Rust E2E Kernel, Robust Capsule Shield & Execution-Aware STP (`v1.3.0–v1.4.0`)** (`crates/`, `amr_sched/planners/rust_spacetime_astar.py`, `experiments/{track_r_cpsa, cps_astar_routing, res_guided_avoidance, stp_research_reset}/`):
   - Zero-copy native Rust `SlotCongestionField`, `plan_cps_indexed`, lazy `RustBatchSippPlanner`, and zero-shadow `RustReservationTable.fast()` delivering **`11.71×–14.40×`** end-to-end speedup across `80–200`-AGV MovingAI `Warehouse_40x40` benchmarks (`26/26` Rust kernel tests passing).
-  - Converged hierarchical coordination stack unifying EJOR 2026 dispatch (`Wu et al., EJOR 2026`), cleanroom `CPS-A*` congestion-aware routing (`Guo & Huang`, [`pengguo-hub/CPSAStar-TRC`](https://github.com/pengguo-hub/CPSAStar-TRC)), DFL blocker selection + overload-aware tuning (`Route A`), commitment-preserving execution-delay repair (`EALR v2/v3`), and 2D continuous unicycle corridor PPO + recursive TTC safety shield (`Route B`, `0` physical collisions).
+  - Converged hierarchical coordination stack unifying EJOR 2026 dispatch (`Wu et al., EJOR 2026`), cleanroom `CPS-A*` congestion-aware routing (`Guo & Huang`, [`pengguo-hub/CPSAStar-TRC`](https://github.com/pengguo-hub/CPSAStar-TRC)), DFL blocker selection + overload-aware tuning, execution-delay local repair (`EALR v2/v3`), two-disc uncertainty-aware capsule safety (`R1_Robust`, `100.0%` ZeroCol across `36` disjoint blind episodes), and multi-tick edge-span corrected `CPS-A*` (`U1a_EdgeSpan_Fix`).
 - **Execution Layer (*Atomic Transaction Commit*) & Dual-Layer Digital Twin** (`amr_sched/cvcr/`, `tools/`, `RAWSimO.Live/`):
   - Enforces epoch freshness, irrevocable `LOCKED` commitment protection, `_load_end` / valid-edge checks, and atomic fallback-to-`KEEP` across discrete simulation (`AMRReschedulingEnv`), ROS 2 / Nav2 / Gazebo physical closed-loop execution (`PhysicalCVCRCoordinator` + `PDG 2.0` liveness), and the C# WPF digital twin.
   - **Unified Policy Registry (24 Registered Policies)** (`amr_sched/baselines/policy_registry.py`): Includes `core_sched` / `CoRe-Sched` (`V19_ADAPTIVE_RL`), `V20_NAJS`, `V20_1_NAJS` (`PDG 2.0`), `AHG-RL` ablations, internal CVCR optimizers (`V18_EA_JOINT`, `rule_v10`), architecture-faithful domain-adapted 2025–2026 direct joint production–AGV competitors (`IJPR25_DFJSPT_HMARL`, `ASC26_MA_TRANS`, `FGCS26_REN_GNN`, `SPGA_AMR`), static offline references (`COR26-Ref` CP-SAT master relaxation + path verification solver, `EJOR26-Erdogan`), and broader 2025–2026 baselines (`IJCAI26_PGMPO`, `EJOR26_Wu_GRU_Attn`, `TII26_E2G_MoE`, `ICRA26_Kitting_HGNN`, `RAL26_DetourDelta`, `JAIR26_DyMAB`, `MIT26_TAPFPC_LNS`, `BALANS_IJCAI25`).
@@ -82,6 +92,12 @@ Executed sequentially in uncontended single-process wall-clock runs under strict
   <img src="results/figures/gazebo_overview.png" alt="1:25 Gazebo Wheelset Workshop Digital Twin" width="48%" />
   <img src="results/figures/layout.png" alt="Workshop Topology & Station Layout" width="48%" />
 </p>
+
+### 2. Execution-Aware Physical Coordination & Counterfactual Falsification (`v1.4.0`)
+
+- **Uncertainty-Aware Two-Disc Capsule Shield (`R1_Robust`)** ([`results/ramp_robust/robust_ramp_report.md`](results/ramp_robust/robust_ramp_report.md)): Fixing the single-disc proximity underestimate (`0.10–0.20 m`) and horizon Gaussian bounds ($\epsilon(t) = 1.96\sqrt{\sigma_p^2 + (\min(t, 1.0)\,\sigma_v)^2}$) eliminates all `12,247` blind-set peer collision ticks (`58.3% → 100.0%` ZeroCol across `36` episodes `7001–7006`), where deterministic **`R1_Robust`** (`4.69` completed) outperforms frozen (`-5.33%`) and retrained (`-8.86%`) `RAMP-PPO`.
+- **Counterfactual Decision Headroom Closure** ([`results/decision_headroom/decision_headroom_report.md`](results/decision_headroom/decision_headroom_report.md)): Across `N = 60` `clone_snapshot()` rollouts (`<= +0.85%` fleet `clear_15s`) and `N = 36` exhaustive passing-order permutations (`+0.43%` over `R1_Default_Order` = `5.667` completed, `100.0%` ZeroCol), neither primitive-level nor local passing-order RL exceeds deterministic safety-bounded rules.
+- **Execution-Aware Upper-Planning Audit (`U1a_EdgeSpan_Fix`)** ([`results/stp_research_reset/upper_level_headroom_report.md`](results/stp_research_reset/upper_level_headroom_report.md)): Quantifies systematic `CPS-A*` early-arrival drift (`-17.25 s`, `94.4%` early across `N = 252` DEV legs); fixing multi-tick edge-span reservations (`U1a_EdgeSpan_Fix`) lifts DEV ZeroCol from `17/18` to **`18/18 (100.0%)`** and completion **`+6.00%`** (`5.889` vs `5.556`, `0.376 ms/plan`), while finite-pool counterfactual selection (`U4`) reaches `-10.53%` (`17` vs `19` tasks).
 
 ---
 
