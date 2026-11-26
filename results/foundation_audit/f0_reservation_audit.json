@@ -1,0 +1,1359 @@
+{
+  "repo_scan": {
+    "hits": {
+      "expand_planned_to_step_positions": [
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 6,
+          "snippet": "`experiments/track_r_cpsa/cpsa_pure_runner.py:expand_planned_to_step_positions`."
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 11,
+          "snippet": "reproduced mid-corridor blind spot when using `expand_planned_to_step_positions`."
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 48,
+          "snippet": "from experiments.track_r_cpsa.cpsa_pure_runner import expand_planned_to_step_positions"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 57,
+          "snippet": "\"expand_planned_to_step_positions\": re.compile(r\"expand_planned_to_step_positions\"),"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 90,
+          "snippet": "expand_in_core = [h for h in hits[\"expand_planned_to_step_positions\"] if h[\"area\"] in core_areas]"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 102,
+          "snippet": "{h[\"file\"] for h in hits[\"expand_planned_to_step_positions\"]}"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 357,
+          "snippet": "# 5. Reproducing the Workshop metric_world U0 blind-spot bug from `expand_planned_to_step_positions`"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 366,
+          "snippet": "pts_buggy = expand_planned_to_step_positions(u, 0, macro_path_a)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 376,
+          "snippet": "# Under `expand_planned_to_step_positions`, R1 only reserves edge [16, 17), so [0, 15) completely misses it."
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 384,
+          "snippet": "cap2_corridor_net, rt_buggy_fast, \"R1\", expand_planned_to_step_positions(u, 2, p_slow), park_until=None"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 475,
+          "snippet": "f\"- **`expand_planned_to_step_positions` callers in `amr_sched/`, `crates/`, `tools/`**: `{scan['summary']['expand_planned_in_core_count']}`"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 480,
+          "snippet": "\"### All `expand_planned_to_step_positions` Callers in Repo\","
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 519,
+          "snippet": "\"### Reproduced Track A `expand_planned_to_step_positions` Blind Spot on Workshop Corridor\","
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 522,
+          "snippet": "f\"- Buggy `pts` from `expand_planned_to_step_positions`: `{bug['buggy_pts_from_expand']}`\","
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/res_guided_avoidance/metric_world.py",
+          "line": 50,
+          "snippet": "from experiments.track_r_cpsa.cpsa_pure_runner import expand_planned_to_step_positions, shortest_dist_steps"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/res_guided_avoidance/metric_world.py",
+          "line": 757,
+          "snippet": "pts = expand_planned_to_step_positions(start_node, t_tick, pl)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/audit_env.py",
+          "line": 43,
+          "snippet": "expand_planned_to_step_positions,"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 65,
+          "snippet": "def expand_planned_to_step_positions("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 247,
+          "snippet": "pts = expand_planned_to_step_positions(st, 0, planned)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 273,
+          "snippet": "pts = expand_planned_to_step_positions(st, 0, planned)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 318,
+          "snippet": "pts_aid = expand_planned_to_step_positions(st, 0, planned_chk)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 344,
+          "snippet": "pts_aid = expand_planned_to_step_positions(st, 0, planned_chk)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 655,
+          "snippet": "pts = expand_planned_to_step_positions(pos[aid], t, planned)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 696,
+          "snippet": "pts_a = expand_planned_to_step_positions(pos[aid], t, p_chk)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/execution_delay_sim.py",
+          "line": 31,
+          "snippet": "expand_planned_to_step_positions,"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/execution_delay_sim.py",
+          "line": 350,
+          "snippet": "pts = expand_planned_to_step_positions(pos[aid], start_step_eff, planned)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/local_reservation_repair.py",
+          "line": 32,
+          "snippet": "expand_planned_to_step_positions,"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/local_reservation_repair.py",
+          "line": 618,
+          "snippet": "tail_pts = expand_planned_to_step_positions(a_node, a_step, planned)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/local_reservation_repair.py",
+          "line": 646,
+          "snippet": "tail_pts = expand_planned_to_step_positions(a_node, a_step, p_retry)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/local_reservation_repair.py",
+          "line": 692,
+          "snippet": "tail_pts = expand_planned_to_step_positions(a_node, a_step, p_cone)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/local_reservation_repair.py",
+          "line": 733,
+          "snippet": "tail_pts = expand_planned_to_step_positions(a_node, a_step, p_sid)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 39,
+          "snippet": "expand_planned_to_step_positions,"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 169,
+          "snippet": "pts = expand_planned_to_step_positions(st, 0, pl)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 190,
+          "snippet": "pts = expand_planned_to_step_positions(st, 0, planned)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 239,
+          "snippet": "pts_aid = expand_planned_to_step_positions(st, 0, p_chk)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/rust_sipp_accel.py",
+          "line": 23,
+          "snippet": "expand_planned_to_step_positions,"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/rust_sipp_accel.py",
+          "line": 272,
+          "snippet": "pts1 = expand_planned_to_step_positions(pos[aid_x], t, p1)"
+        }
+      ],
+      "arr_i_minus_1": [
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 5,
+          "snippet": "1. Exact isolation of the Track R / Track A `dep_t = arr_i - 1` assumption in"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 7,
+          "snippet": "2. Zero presence of `arr_i - 1` edge truncation in Track B (`amr_sched/`, `crates/`,"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 474,
+          "snippet": "f\"- **`arr_i - 1` occurrences in `amr_sched/`, `crates/`, `tools/`**: `{scan['summary']['arr_i_minus_1_in_core_count']}`\","
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 476,
+          "snippet": "f\"- **Exact bug root location**: `experiments/track_r_cpsa/cpsa_pure_runner.py:77` (`dep_t = arr_i - 1`, documented explicitly for unit-step"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 548,
+          "snippet": "print(f\"core expand_planned={scan['summary']['expand_planned_in_core_count']}, core arr_i-1={scan['summary']['arr_i_minus_1_in_core_count']}"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/audit_env.py",
+          "line": 118,
+          "snippet": "\"\"\"Reserve accurate multi-step node AND edge occupancy `[dep_t, arr_t + buf)` without `arr_i - 1` bug.\"\"\""
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/upper_planners.py",
+          "line": 102,
+          "snippet": "occ[nd].append((max(cur_t, arr_i - 1), arr_i + max(1, div // 2) + int(bt)))"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 76,
+          "snippet": "# In unit-step grid graphs (move takes 1 step), dep_t = arr_i - 1; waits happen on cur_n"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/cpsa_pure_runner.py",
+          "line": 77,
+          "snippet": "dep_t = arr_i - 1"
+        }
+      ],
+      "_reserve_exact_span": [
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 47,
+          "snippet": "from experiments.stp_research_reset.audit_env import _reserve_exact_span"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 59,
+          "snippet": "\"_reserve_exact_span\": re.compile(r\"_reserve_exact_span\"),"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 390,
+          "snippet": "_reserve_exact_span(rt_fixed, mmap, \"R1\", u, 0, macro_path_a, buffer_ticks=0, sub_tick_div=1, park_until=None)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 477,
+          "snippet": "\"- **`experiments/stp_research_reset/upper_planners.py:102` classification**: only used inside soft heuristic `_build_occupancy_counts()` (`"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 525,
+          "snippet": "f\"- Opposing query mid-corridor conflict detected (fixed `_reserve_exact_span`): `{bug['fixed_mid_corridor_conflicts_detected']}` -> `R2 arr"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/audit_env.py",
+          "line": 106,
+          "snippet": "def _reserve_exact_span("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/audit_env.py",
+          "line": 336,
+          "snippet": "pts = _reserve_exact_span("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/audit_env.py",
+          "line": 649,
+          "snippet": "pts = _reserve_exact_span("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/upper_planners.py",
+          "line": 17,
+          "snippet": "from experiments.stp_research_reset.audit_env import ExecutionAuditSim, _reserve_exact_span"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/stp_research_reset/upper_planners.py",
+          "line": 445,
+          "snippet": "pts = _reserve_exact_span("
+        }
+      ],
+      "reserve_step_points_indexed": [
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/planners/rust_spacetime_astar.py",
+          "line": 659,
+          "snippet": "def reserve_step_points_indexed("
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/planners/rust_spacetime_astar.py",
+          "line": 1105,
+          "snippet": "def reserve_step_points_indexed("
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/planners/rust_spacetime_astar.py",
+          "line": 1114,
+          "snippet": "return self._planner.reserve_step_points_indexed("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 60,
+          "snippet": "\"reserve_step_points_indexed\": re.compile(r\"reserve_step_points_indexed\"),"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 241,
+          "snippet": "# 2. RustSpaceTimeAStar opposing check (using amr_sched core reserve_step_points_indexed cleanly)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 263,
+          "snippet": "rust_planner.reserve_step_points_indexed(net, rt_rs, \"R1\", chain_pts, edge_segs)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 367,
+          "snippet": "macro_planner.reserve_step_points_indexed(mmap.network, rt_buggy, \"R1\", pts_buggy, park_until=None)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 383,
+          "snippet": "macro_planner.reserve_step_points_indexed("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/res_guided_avoidance/metric_world.py",
+          "line": 758,
+          "snippet": "self.planner.reserve_step_points_indexed(self.res_table, rid, pts, park_until=None)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/res_guided_avoidance/metric_world.py",
+          "line": 1361,
+          "snippet": "cl.planner.reserve_step_points_indexed(cl.res_table, rid, pts, park_until=None)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/local_reservation_repair.py",
+          "line": 48,
+          "snippet": "reserve_fn = getattr(planner, \"reserve_step_points_indexed\", None)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 170,
+          "snippet": "planner.reserve_step_points_indexed(res_table, aid, pts, park_until=horizon)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 191,
+          "snippet": "planner.reserve_step_points_indexed(res_table, aid, pts, park_until=horizon)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 236,
+          "snippet": "planner.reserve_step_points_indexed(res_table, blocker_j, saved_j, park_until=horizon)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+          "line": 240,
+          "snippet": "planner.reserve_step_points_indexed(res_table, aid, pts_aid, park_until=horizon)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/rust_sipp_accel.py",
+          "line": 284,
+          "snippet": "planner.reserve_step_points_indexed(grid.network, res_table, aid, pts, park_until=park_end)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/rust_sipp_accel.py",
+          "line": 305,
+          "snippet": "planner.reserve_step_points_indexed(grid.network, res_table, aid, pts_a, park_until=park_a)"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/rust_sipp_accel.py",
+          "line": 313,
+          "snippet": "planner.reserve_step_points_indexed("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/tune_converged_policies.py",
+          "line": 301,
+          "snippet": "planner.reserve_step_points_indexed(res, aid, pts, segs, park_until=min(horizon, pts[-1][1] + 2))"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/tune_converged_policies.py",
+          "line": 357,
+          "snippet": "planner.reserve_step_points_indexed(res, aid_f, pts_a, segs_a, park_until=min(horizon, arr_a + 2))"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/track_r_cpsa/workshop_bridge_eval.py",
+          "line": 609,
+          "snippet": "reserve_fn = getattr(planner, \"reserve_step_points_indexed\", None) if planner is not None else None"
+        }
+      ],
+      "_reserve_hop": [
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/p4_belief_choke.py",
+          "line": 805,
+          "snippet": "\"min_reserve_hops\": len(hops_byp),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/p4_belief_choke.py",
+          "line": 868,
+          "snippet": "\"min_reserve_hops\": len(hops_l),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/p4_belief_choke.py",
+          "line": 914,
+          "snippet": "\"min_reserve_hops\": len(full_y_hops),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/pdg_liveness.py",
+          "line": 1061,
+          "snippet": "\"min_reserve_hops\": len(hops),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/transaction.py",
+          "line": 624,
+          "snippet": "min_res_hops = int(rep.get(\"min_reserve_hops\", 0))"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/transaction.py",
+          "line": 631,
+          "snippet": "self.simulator._reserve_hop(agv_lr, h_lr)"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/transaction.py",
+          "line": 772,
+          "snippet": "if orig_job is not None and agv_lr is not None and hasattr(self.simulator, \"_reserve_hop\"):"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/transaction.py",
+          "line": 774,
+          "snippet": "self.simulator._reserve_hop(agv_lr, h_orig)"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/v17_event_smdp.py",
+          "line": 291,
+          "snippet": "\"min_reserve_hops\": len(hops),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/v17_window_protection.py",
+          "line": 478,
+          "snippet": "\"min_reserve_hops\": len(l_hops),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/v17_window_protection.py",
+          "line": 491,
+          "snippet": "\"min_reserve_hops\": len(l_hops1),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/v17_window_protection.py",
+          "line": 506,
+          "snippet": "\"min_reserve_hops\": len(y_hops),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/v17_window_protection.py",
+          "line": 518,
+          "snippet": "\"min_reserve_hops\": len(y_hops1),"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/simulation.py",
+          "line": 1187,
+          "snippet": "self._reserve_hop(agv, h)"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/simulation.py",
+          "line": 1191,
+          "snippet": "def _reserve_hop(self, agv: Agv, hop: Hop) -> None:"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/simulation.py",
+          "line": 1220,
+          "snippet": "self._reserve_hop(agv, h)"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/simulation.py",
+          "line": 2165,
+          "snippet": "self._reserve_hop(agv, hop)"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/simulation.py",
+          "line": 2677,
+          "snippet": "self._reserve_hop(agv, hop)"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/workshop.py",
+          "line": 110,
+          "snippet": "仿真层的 _reserve_hop 会把两个方向一起登记、_can_enter 取两个方向的最小容量，"
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/workshop.py",
+          "line": 430,
+          "snippet": "# 预约层是按结构判断的：只要一条通道存在反向边，_reserve_hop 就把两个方向"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 61,
+          "snippet": "\"_reserve_hop\": re.compile(r\"_reserve_hop\"),"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 478,
+          "snippet": "f\"- **Why `amr_sched` Track B was immune**: `Simulator._reserve_hop` (`amr_sched/simulation.py:1191`), `Simulator._commit_move` (`1395`), `S"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/v20_1_closure/pdg2_escape.py",
+          "line": 143,
+          "snippet": "\"min_reserve_hops\": len(hops),"
+        }
+      ],
+      "_commit_move": [
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/simulation.py",
+          "line": 1367,
+          "snippet": "def _commit_move(self, agv: Agv, src: str, dst: str, t: int,"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 62,
+          "snippet": "\"_commit_move\": re.compile(r\"def _commit_move\\b\"),"
+        }
+      ],
+      "_reserve_path_steps": [
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/evaluator.py",
+          "line": 432,
+          "snippet": "def _reserve_path_steps("
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/evaluator.py",
+          "line": 825,
+          "snippet": "self._reserve_path_steps("
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/evaluator.py",
+          "line": 873,
+          "snippet": "self._reserve_path_steps("
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/evaluator.py",
+          "line": 899,
+          "snippet": "self._reserve_path_steps("
+        },
+        {
+          "area": "amr_sched",
+          "file": "amr_sched/cvcr/evaluator.py",
+          "line": 920,
+          "snippet": "self._reserve_path_steps("
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 63,
+          "snippet": "\"_reserve_path_steps\": re.compile(r\"_reserve_path_steps\"),"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 337,
+          "snippet": "ev._reserve_path_steps("
+        }
+      ],
+      "collect_undirected_edge_conflicts_into": [
+        {
+          "area": "crates",
+          "file": "crates/reservation_core/src/table.rs",
+          "line": 278,
+          "snippet": "pub fn collect_undirected_edge_conflicts_into("
+        },
+        {
+          "area": "crates",
+          "file": "crates/spacetime_planner/src/astar.rs",
+          "line": 623,
+          "snippet": "reservations.collect_undirected_edge_conflicts_into(p0, p1, edge_span, Some(agv_id), &mut blocker_map);"
+        },
+        {
+          "area": "crates",
+          "file": "crates/spacetime_planner/src/sipp.rs",
+          "line": 330,
+          "snippet": "reservations.collect_undirected_edge_conflicts_into(p0, p1, sp, Some(agv_id), &mut bmap);"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 64,
+          "snippet": "\"collect_undirected_edge_conflicts_into\": re.compile(r\"collect_undirected_edge_conflicts_into\"),"
+        },
+        {
+          "area": "experiments",
+          "file": "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+          "line": 478,
+          "snippet": "f\"- **Why `amr_sched` Track B was immune**: `Simulator._reserve_hop` (`amr_sched/simulation.py:1191`), `Simulator._commit_move` (`1395`), `S"
+        }
+      ]
+    },
+    "summary": {
+      "expand_planned_in_core_count": 0,
+      "arr_i_minus_1_in_core_count": 0,
+      "expand_planned_callers": [
+        "experiments/foundation_audit/f0_reservation_semantics_audit.py",
+        "experiments/res_guided_avoidance/metric_world.py",
+        "experiments/stp_research_reset/audit_env.py",
+        "experiments/track_r_cpsa/cpsa_pure_runner.py",
+        "experiments/track_r_cpsa/execution_delay_sim.py",
+        "experiments/track_r_cpsa/local_reservation_repair.py",
+        "experiments/track_r_cpsa/route_a_lpr_ablation.py",
+        "experiments/track_r_cpsa/rust_sipp_accel.py"
+      ],
+      "arr_i_minus_1_locations": {
+        "experiments/foundation_audit/f0_reservation_semantics_audit.py": [
+          5,
+          7,
+          474,
+          476,
+          548
+        ],
+        "experiments/stp_research_reset/audit_env.py": [
+          118
+        ],
+        "experiments/stp_research_reset/upper_planners.py": [
+          102
+        ],
+        "experiments/track_r_cpsa/cpsa_pure_runner.py": [
+          76,
+          77
+        ]
+      }
+    }
+  },
+  "workshop_topology": {
+    "scene_id": "rail_freight_workshop_v1",
+    "node_count": 62,
+    "directed_edge_count": 144,
+    "undirected_corridor_count": 66,
+    "multi_cap_nodes_count": 38,
+    "multi_cap_nodes": [
+      {
+        "node_id": "J_N_105",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_N_125",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_N_25",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_N_45",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_N_65",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_N_85",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_105",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_125",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_136",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_25",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_45",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_65",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_8",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "J_S_85",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_ASSEMBLY",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_BODY",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_BOGIE",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_BRAKE",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_BUFFER_IN",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_BUFFER_OUT",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_COUPLER",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_DISASSEMBLY",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_DOOR",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_PARK",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_STORE",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "Q_WHEELSET",
+        "kind": "buffer",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_ASSEMBLY",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_BODY",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_BOGIE",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_BRAKE",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_BUFFER_IN",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_BUFFER_OUT",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_COUPLER",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_DISASSEMBLY",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_DOOR",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_PARK",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_STORE",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      },
+      {
+        "node_id": "R_WHEELSET",
+        "kind": "aisle",
+        "raw_capacity": 2,
+        "point_capacity": 1
+      }
+    ],
+    "multi_cap_edges_count": 0,
+    "multi_cap_edges": [],
+    "corridors_20_to_30m_count": 16,
+    "corridors_20_to_30m": [
+      {
+        "u": "J_N_105",
+        "v": "J_S_105",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_125",
+        "v": "J_S_125",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_25",
+        "v": "J_S_25",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_45",
+        "v": "J_S_45",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_65",
+        "v": "J_S_65",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_85",
+        "v": "J_S_85",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_105",
+        "v": "J_N_125",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_N_105",
+        "v": "J_N_85",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_N_25",
+        "v": "J_N_45",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_N_45",
+        "v": "J_N_65",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_N_65",
+        "v": "J_N_85",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_S_105",
+        "v": "J_S_125",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_S_105",
+        "v": "J_S_85",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_S_25",
+        "v": "J_S_45",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_S_45",
+        "v": "J_S_65",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      },
+      {
+        "u": "J_S_65",
+        "v": "J_S_85",
+        "length_m": 20.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 20,
+        "steps_macro2_v1": 10
+      }
+    ],
+    "top5_longest_corridors": [
+      {
+        "u": "J_N_105",
+        "v": "J_S_105",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_125",
+        "v": "J_S_125",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_25",
+        "v": "J_S_25",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_45",
+        "v": "J_S_45",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      },
+      {
+        "u": "J_N_65",
+        "v": "J_S_65",
+        "length_m": 30.0,
+        "speed_limit": 1.0,
+        "raw_cap_uv": 1,
+        "raw_cap_vu": 1,
+        "steps_dt1_v1": 30,
+        "steps_macro2_v1": 15
+      }
+    ]
+  },
+  "corridor_checks": {
+    "corridor_tested": {
+      "u": "J_N_105",
+      "v": "J_S_105",
+      "length_m": 30.0,
+      "speed_limit": 1.0,
+      "raw_cap_uv": 1,
+      "raw_cap_vu": 1,
+      "steps_dt1_v1": 30,
+      "steps_macro2_v1": 15
+    },
+    "span_dt1_ticks": 30,
+    "spacetime_astar_python": {
+      "r1_arr_v": 32,
+      "r2_arr_u": 62,
+      "stagger_ok": true
+    },
+    "rust_spacetime_astar": {
+      "available": true,
+      "r2_arr_u": 62,
+      "stagger_ok": true
+    },
+    "simulator_isolated_corridor": {
+      "res_window_0": {
+        "completed_tasks": 2,
+        "collision_events": 0,
+        "finished_step": 97,
+        "simultaneous_corridor_ticks": 0
+      },
+      "res_window_1": {
+        "completed_tasks": 2,
+        "collision_events": 0,
+        "finished_step": 70,
+        "simultaneous_corridor_ticks": 0
+      }
+    },
+    "simulator_full_workshop_point_net": {
+      "completed_tasks": 2,
+      "collision_events": 0,
+      "finished_step": 101
+    },
+    "cvcr_evaluator": {
+      "r1_route": [
+        [
+          "S_U",
+          0
+        ],
+        [
+          "J_N_105",
+          2
+        ],
+        [
+          "J_S_105",
+          32
+        ],
+        [
+          "S_V",
+          34
+        ]
+      ],
+      "r2_route": [
+        [
+          "S_V",
+          0
+        ],
+        [
+          "J_S_105",
+          2
+        ],
+        [
+          "J_S_105",
+          32
+        ],
+        [
+          "J_N_105",
+          62
+        ],
+        [
+          "S_U",
+          64
+        ]
+      ],
+      "mid_corridor_conflicts_detected": [
+        "R1"
+      ],
+      "stagger_ok": true
+    },
+    "track_a_expand_bug_repro": {
+      "macro_step_s": 2.0,
+      "actual_macro_ticks_u_to_v": 15,
+      "buggy_pts_from_expand": [
+        [
+          "J_N_105",
+          0
+        ],
+        [
+          "J_N_105",
+          1
+        ],
+        [
+          "J_N_105",
+          2
+        ],
+        [
+          "J_N_105",
+          3
+        ],
+        [
+          "J_N_105",
+          4
+        ],
+        [
+          "J_N_105",
+          5
+        ],
+        [
+          "J_N_105",
+          6
+        ],
+        [
+          "J_N_105",
+          7
+        ],
+        [
+          "J_N_105",
+          8
+        ],
+        [
+          "J_N_105",
+          9
+        ],
+        [
+          "J_N_105",
+          10
+        ],
+        [
+          "J_N_105",
+          11
+        ],
+        [
+          "J_N_105",
+          12
+        ],
+        [
+          "J_N_105",
+          13
+        ],
+        [
+          "J_N_105",
+          14
+        ],
+        [
+          "J_S_105",
+          15
+        ]
+      ],
+      "blind_spot_ticks": 14,
+      "blind_spot_pct": 93.33,
+      "buggy_mid_corridor_conflicts_detected": [],
+      "buggy_r2_arr_u": 15,
+      "fixed_mid_corridor_conflicts_detected": [
+        "R1"
+      ],
+      "fixed_r2_arr_u": 32
+    }
+  }
+}
