@@ -28,6 +28,14 @@ import torch.nn as nn
 
 from amr_sched.cvcr.physical_bridge import CorridorObstacleReport, Nav2RobotTelemetry
 from amr_sched.network import Network
+from experiments.res_guided_avoidance.geometry_and_shield import (
+    BrakingInvariantShield,
+    CircleState,
+    FootprintConfig,
+    corridor_wall_clearance,
+    obstacle_surface_clearance,
+    swept_corridor_collision,
+)
 from experiments.rgro.dfl_critic import DFLAdvantageEnsemble
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -151,9 +159,28 @@ def build_corridor_scenario(name: str, seed: int) -> CorridorScenarioSpec:
 class UnicycleCorridorEnv:
     """2D continuous differential-drive robot navigating a global CPS-A* corridor segment."""
 
-    def __init__(self, spec: CorridorScenarioSpec, *, obs_noise_std: float = 0.02, seed: int = 0) -> None:
+    def __init__(
+        self,
+        spec: CorridorScenarioSpec,
+        *,
+        obs_noise_std: float = 0.02,
+        seed: int = 0,
+        footprint: FootprintConfig = FootprintConfig(mode="disc", radius_m=ROBOT_RADIUS_M),
+    ) -> None:
         self.spec = spec
         self.obs_noise_std = float(obs_noise_std)
+        self.footprint = footprint
+        self.shield = BrakingInvariantShield(
+            footprint=footprint,
+            hard_min_clear_m=HARD_MIN_CLEAR_M,
+            wall_min_clear_m=0.04,
+            horizon_steps=14,
+            dt=DT_MICRO,
+            max_v=MAX_V_MPS,
+            max_omega=MAX_OMEGA_RADPS,
+            max_dv_dt=MAX_DV_DT,
+            max_dw_dt=MAX_DW_DT,
+        )
         self.rng = np.random.default_rng(int(seed))
         self.obstacles: list[DynamicObstacle] = []
         self.x = 0.0
@@ -169,7 +196,10 @@ class UnicycleCorridorEnv:
         if spec is not None:
             self.spec = spec
         self.obstacles = [
-            DynamicObstacle(o.x, o.y, o.vx, o.vy, o.radius, o.x_lo, o.x_hi, o.y_lo, o.y_hi)
+            DynamicObstacle(
+                o.x, o.y, o.vx, o.vy, o.radius, o.x_lo, o.x_hi, o.y_lo, o.y_hi,
+                stop_at_y_bound=o.stop_at_y_bound,
+            )
             for o in self.spec.obstacles
         ]
         self.x = 0.0
@@ -181,12 +211,15 @@ class UnicycleCorridorEnv:
         self.max_steps = int(round((self.spec.length_m / max(0.3, self.spec.nominal_v_mps) + 12.0) / DT_MICRO))
         return self.observe()
 
-    def _surface_clearance(self, rx: float, ry: float) -> tuple[float, float, list[tuple[float, DynamicObstacle]]]:
+    def _surface_clearance(self, rx: float, ry: float, rth: Optional[float] = None) -> tuple[float, float, list[tuple[float, DynamicObstacle]]]:
         """Return (min_obstacle_surface_clearance, wall_surface_clearance, sorted_obstacles)."""
-        wall_clear = (self.spec.half_width_m - abs(ry)) - ROBOT_RADIUS_M
+        th = self.theta if rth is None else rth
+        wall_clear = corridor_wall_clearance(rx, ry, th, self.spec.half_width_m, self.footprint)
         items: list[tuple[float, DynamicObstacle]] = []
         for o in self.obstacles:
-            d_surf = math.hypot(o.x - rx, o.y - ry) - (ROBOT_RADIUS_M + o.radius)
+            d_surf = obstacle_surface_clearance(
+                rx, ry, th, (CircleState(o.x, o.y, o.vx, o.vy, o.radius),), self.footprint
+            )
             items.append((d_surf, o))
         items.sort(key=lambda t: t[0])
         min_obs = items[0][0] if items else 9.0
@@ -262,51 +295,24 @@ class UnicycleCorridorEnv:
         return feats
 
     def apply_safety_shield(self, v_cmd: float, omega_cmd: float) -> tuple[float, float, bool]:
-        """MPC-style recursive-feasibility braking & clearance safety barrier filter."""
-        v_req = _clip(v_cmd, 0.0, MAX_V_MPS)
-        w_req = _clip(omega_cmd, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+        """Unified-geometry inductive braking-invariant safety barrier filter."""
         hw = float(self.spec.half_width_m)
-
-        # Evaluate candidate control at s=1..2 followed by corridor-aligned emergency brake
-        def _eval_pair_margin(vt: float, wt: float) -> float:
-            px, py, pth, pv, pw = self.x, self.y, self.theta, self.v, self.omega
-            worst = 9.0
-            for s in range(1, 10):
-                tgt_v = vt if s == 1 else 0.0
-                tgt_w = wt if s <= 2 else _clip(-1.6 * pth, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
-                pv = _clip(pv + _clip(tgt_v - pv, -MAX_DV_DT * DT_MICRO, MAX_DV_DT * DT_MICRO), 0.0, MAX_V_MPS)
-                pw = _clip(pw + _clip(tgt_w - pw, -MAX_DW_DT * DT_MICRO, MAX_DW_DT * DT_MICRO), -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
-                px += pv * math.cos(pth) * DT_MICRO
-                py += pv * math.sin(pth) * DT_MICRO
-                pth = _wrap_pi(pth + pw * DT_MICRO)
-                wall_gap = (hw - 0.14) - abs(py)
-                worst = min(worst, wall_gap)
-                t_look = s * DT_MICRO
-                for o in self.obstacles:
-                    ox = _clip(o.x + o.vx * t_look, o.x_lo, o.x_hi)
-                    oy = _clip(o.y + o.vy * t_look, o.y_lo, o.y_hi)
-                    d_surf = math.hypot(ox - px, oy - py) - (ROBOT_RADIUS_M + o.radius)
-                    worst = min(worst, d_surf - HARD_MIN_CLEAR_M)
-            return worst
-
-        if _eval_pair_margin(v_req, w_req) >= 0.0:
-            return v_req, w_req, False
-
-        # Fallback: evaluate braking + lateral evasion candidates, picking strictly safe or max-margin recovery
         center_w = _clip(-1.4 * self.y - 0.6 * self.theta, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
-        w_cands = [w_req, center_w, _clip(w_req + 0.75, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS), _clip(w_req - 0.75, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS), MAX_OMEGA_RADPS, -MAX_OMEGA_RADPS]
-        best_m = -1e9
-        best_pair = (0.0, center_w)
-        for v_scale in (0.75, 0.45, 0.20, 0.0):
-            vt = v_req * v_scale if v_scale > 0 else 0.0
-            for wt in w_cands:
-                m = _eval_pair_margin(vt, wt)
-                if m >= 0.0:
-                    return vt, wt, True
-                if m > best_m:
-                    best_m = m
-                    best_pair = (vt, wt)
-        return best_pair[0], best_pair[1], True
+        obs_c = [CircleState(o.x, o.y, o.vx, o.vy, o.radius) for o in self.obstacles]
+        out = self.shield.filter(
+            x=self.x,
+            y=self.y,
+            theta=self.theta,
+            v=self.v,
+            omega=self.omega,
+            v_cmd=v_cmd,
+            omega_cmd=omega_cmd,
+            obstacles=obs_c,
+            wall_fn=lambda px, py, pth: corridor_wall_clearance(px, py, pth, hw, self.footprint),
+            center_w=center_w,
+        )
+        self._last_shield_infeasible = bool(out.infeasible)
+        return out.v_cmd, out.omega_cmd, out.intervened
 
     def step(
         self,
@@ -316,6 +322,7 @@ class UnicycleCorridorEnv:
         use_shield: bool = True,
     ) -> tuple[np.ndarray, float, bool, dict[str, Any]]:
         shielded = False
+        self._last_shield_infeasible = False
         if use_shield:
             v_cmd, omega_cmd, shielded = self.apply_safety_shield(v_cmd, omega_cmd)
 
@@ -324,16 +331,20 @@ class UnicycleCorridorEnv:
         self.v = _clip(self.v + dv, 0.0, MAX_V_MPS)
         self.omega = _clip(self.omega + dw, -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
 
-        prev_x = self.x
+        prev_x, prev_y, prev_th = self.x, self.y, self.theta
+        obs_start = [CircleState(o.x, o.y, o.vx, o.vy, o.radius) for o in self.obstacles]
         self.x += self.v * math.cos(self.theta) * DT_MICRO
         self.y += self.v * math.sin(self.theta) * DT_MICRO
         self.theta = _wrap_pi(self.theta + self.omega * DT_MICRO)
         for o in self.obstacles:
             o.step(DT_MICRO)
+        obs_end = [CircleState(o.x, o.y, o.vx, o.vy, o.radius) for o in self.obstacles]
         self.t_step += 1
 
-        min_obs, wall_clear, _ = self._surface_clearance(self.x, self.y)
-        collided = (min_obs <= 0.0) or (abs(self.y) > self.spec.half_width_m - 0.10)
+        collided, min_obs, wall_clear = swept_corridor_collision(
+            prev_x, prev_y, prev_th, self.x, self.y, self.theta,
+            self.spec.half_width_m, obs_start, obs_end, self.footprint,
+        )
         reached = self.x >= self.spec.length_m
         timeout = self.t_step >= self.max_steps
         done = reached or timeout
@@ -359,6 +370,7 @@ class UnicycleCorridorEnv:
             "reached": reached,
             "collided": collided,
             "shielded": shielded,
+            "shield_infeasible": bool(self._last_shield_infeasible),
             "min_obs_clear_m": float(min_obs),
             "wall_clear_m": float(wall_clear),
             "v": float(self.v),
@@ -387,6 +399,16 @@ class _PPOActorCritic(nn.Module):
 
     def forward_mean(self, x: torch.Tensor) -> torch.Tensor:
         return torch.tanh(self.actor(x))
+
+    def forward_raw_mean(self, x: torch.Tensor) -> torch.Tensor:
+        """Unconstrained pre-tanh Gaussian mean (atanh-consistent with squashed actions)."""
+        return torch.clamp(self.actor(x), -4.0, 4.0)
+
+    @staticmethod
+    def squashed_log_prob(dist: torch.distributions.Normal, u_raw: torch.Tensor) -> torch.Tensor:
+        """Exact tanh-squashed Gaussian log-probability with Jacobian determinant correction."""
+        a = torch.tanh(u_raw)
+        return (dist.log_prob(u_raw) - torch.log(torch.clamp(1.0 - a * a, min=1e-6))).sum(-1)
 
 
 class NumpyRouteBPPO:
@@ -425,69 +447,71 @@ def _rigid_follower_cmd(env: UnicycleCorridorEnv) -> tuple[float, float]:
 def train_route_b_ppo(
     out_npz: Path = CKPT_PATH,
     *,
-    n_iters: int = 44,
+    n_iters: int = 24,
     rollout_steps: int = 1024,
     seed: int = 42,
+    warmstart_bc: bool = True,
+    bc_only: bool = False,
 ) -> dict[str, Any]:
-    """Train continuous 2D unicycle avoidance PPO and export pure-NumPy checkpoint."""
+    """Train continuous 2D unicycle avoidance via Squashed-Gaussian PPO and export pure-NumPy checkpoint."""
     torch.manual_seed(int(seed))
     rng = np.random.default_rng(int(seed))
     model = _PPOActorCritic()
-    opt = torch.optim.Adam(model.parameters(), lr=8e-4)
-
-    # Behavior-cloning warm start checking largest wall-to-obstacle free gap side
-    bc_obs: list[np.ndarray] = []
-    bc_act: list[np.ndarray] = []
+    t0 = time.perf_counter()
     scenarios = ("Bypass_MainAisle_3.0m", "Crossing_Narrow_2.2m", "HeadOn_Yield_2.2m")
-    for k in range(24):
-        spec = build_corridor_scenario(scenarios[k % len(scenarios)], seed=100 + k)
-        env = UnicycleCorridorEnv(spec, obs_noise_std=0.02, seed=100 + k)
-        ob = env.reset()
-        for _ in range(env.max_steps):
-            vc, wc = _rigid_follower_cmd(env)
-            _, _, obs_sorted = env._surface_clearance(env.x, env.y)
-            obs_fwd = sorted(obs_sorted, key=lambda pair: (0 if (pair[1].x - env.x) >= -0.35 else 1, pair[0]))
-            if obs_fwd:
-                d_surf_o, o = obs_fwd[0]
-                dx = o.x - env.x
-                if -0.25 <= dx <= 6.8:
-                    hw_safe = env.spec.half_width_m - 0.20
-                    gap_pos = hw_safe - (o.y + o.radius)
-                    gap_neg = (o.y - o.radius) - (-hw_safe)
-                    y_plus = _clip(o.y + o.radius + ROBOT_RADIUS_M + 0.28, -hw_safe, hw_safe)
-                    y_minus = _clip(o.y - o.radius - ROBOT_RADIUS_M - 0.28, -hw_safe, hw_safe)
-                    if abs(o.vy) > 0.25 and abs(o.y) < 1.10 and dx < 3.6:
-                        vc = 0.08
-                        target_y = 0.0
-                    else:
-                        target_y = y_plus if gap_pos >= gap_neg else y_minus
-                    look_dx = max(1.2, min(1.8, dx + 0.6))
-                    wc = _clip(3.2 * _wrap_pi(math.atan2(target_y - env.y, look_dx) - env.theta), -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
-                    if d_surf_o < 0.70 and abs(o.vx) < 0.05 and abs(env.y - target_y) > 0.18:
-                        vc = 0.65
-                    elif d_surf_o < 0.50 and abs(o.vy) < 0.20:
-                        vc = min(vc, 0.45)
-            mu0 = (vc - 0.08) / (MAX_V_MPS - 0.08) * 2.0 - 1.0
-            mu1 = wc / MAX_OMEGA_RADPS
-            bc_obs.append(ob)
-            bc_act.append(np.array([_clip(mu0, -0.95, 0.95), _clip(mu1, -0.95, 0.95)], dtype=np.float32))
-            ob, _, done, _ = env.step(vc, wc, use_shield=True)
-            if done:
-                break
 
-    X_bc = torch.from_numpy(np.asarray(bc_obs, dtype=np.float32))
-    Y_bc = torch.from_numpy(np.asarray(bc_act, dtype=np.float32))
-    bc_weights = torch.where(torch.abs(Y_bc[:, 1]) > 0.10, 6.0, 1.0)
-    opt_bc = torch.optim.Adam(model.parameters(), lr=4e-3)
-    for ep_bc in range(520):
-        opt_bc.zero_grad()
-        pred = model.forward_mean(X_bc)
-        loss_bc = torch.mean(bc_weights[:, None] * (pred - Y_bc) ** 2)
-        loss_bc.backward()
-        opt_bc.step()
-        if ep_bc in (260, 400):
-            for g in opt_bc.param_groups:
-                g["lr"] *= 0.45
+    if warmstart_bc or bc_only:
+        bc_obs: list[np.ndarray] = []
+        bc_act: list[np.ndarray] = []
+        for k in range(24):
+            spec = build_corridor_scenario(scenarios[k % len(scenarios)], seed=100 + k)
+            env = UnicycleCorridorEnv(spec, obs_noise_std=0.02, seed=100 + k)
+            ob = env.reset()
+            for _ in range(env.max_steps):
+                vc, wc = _rigid_follower_cmd(env)
+                _, _, obs_sorted = env._surface_clearance(env.x, env.y)
+                obs_fwd = sorted(obs_sorted, key=lambda pair: (0 if (pair[1].x - env.x) >= -0.35 else 1, pair[0]))
+                if obs_fwd:
+                    d_surf_o, o = obs_fwd[0]
+                    dx = o.x - env.x
+                    if -0.25 <= dx <= 6.8:
+                        hw_safe = env.spec.half_width_m - ROBOT_RADIUS_M - 0.05
+                        gap_pos = hw_safe - (o.y + o.radius)
+                        gap_neg = (o.y - o.radius) - (-hw_safe)
+                        y_plus = _clip(o.y + o.radius + ROBOT_RADIUS_M + 0.12, -hw_safe, hw_safe)
+                        y_minus = _clip(o.y - o.radius - ROBOT_RADIUS_M - 0.12, -hw_safe, hw_safe)
+                        if abs(o.vy) > 0.25 and abs(o.y) < 1.10 and dx < 3.6:
+                            vc = 0.08
+                            target_y = 0.0
+                        else:
+                            target_y = y_plus if gap_pos >= gap_neg else y_minus
+                        look_dx = max(1.2, min(1.8, dx + 0.6))
+                        wc = _clip(3.2 * _wrap_pi(math.atan2(target_y - env.y, look_dx) - env.theta), -MAX_OMEGA_RADPS, MAX_OMEGA_RADPS)
+                        if d_surf_o < 0.70 and abs(o.vx) < 0.05 and abs(env.y - target_y) > 0.18:
+                            vc = 0.65
+                        elif d_surf_o < 0.50 and abs(o.vy) < 0.20:
+                            vc = min(vc, 0.45)
+                mu0 = (vc - 0.08) / (MAX_V_MPS - 0.08) * 2.0 - 1.0
+                mu1 = wc / MAX_OMEGA_RADPS
+                bc_obs.append(ob)
+                bc_act.append(np.array([_clip(mu0, -0.95, 0.95), _clip(mu1, -0.95, 0.95)], dtype=np.float32))
+                ob, _, done, _ = env.step(vc, wc, use_shield=True)
+                if done:
+                    break
+
+        X_bc = torch.from_numpy(np.asarray(bc_obs, dtype=np.float32))
+        Y_bc = torch.from_numpy(np.asarray(bc_act, dtype=np.float32))
+        bc_weights = torch.where(torch.abs(Y_bc[:, 1]) > 0.10, 6.0, 1.0)
+        opt_bc = torch.optim.Adam(model.parameters(), lr=4e-3)
+        for ep_bc in range(520):
+            opt_bc.zero_grad()
+            pred = model.forward_mean(X_bc)
+            loss_bc = torch.mean(bc_weights[:, None] * (pred - Y_bc) ** 2)
+            loss_bc.backward()
+            opt_bc.step()
+            if ep_bc in (260, 400):
+                for g in opt_bc.param_groups:
+                    g["lr"] *= 0.45
 
     def _eval_det_score(cur_model: _PPOActorCritic) -> float:
         cur_w = {k: v.detach().cpu().numpy().astype(np.float32) for k, v in cur_model.state_dict().items()}
@@ -514,17 +538,15 @@ def train_route_b_ppo(
     best_score = _eval_det_score(model)
     best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
 
-    # Fine-tune deterministically with conservative LR, KL guard & best-validation snapshot
-    opt = torch.optim.Adam(model.parameters(), lr=5e-5)
-    n_iters = min(int(n_iters), 20)
-    t0 = time.perf_counter()
+    opt = torch.optim.Adam(model.parameters(), lr=8e-5 if warmstart_bc else 3e-4)
     gamma, gae_lam = 0.99, 0.95
     clip_eps = 0.18
     mean_ret_hist: list[float] = []
+    max_lp_consistency_err = 0.0
 
-    for it in range(int(n_iters)):
+    for it in range(0 if bc_only else int(n_iters)):
         obs_buf: list[np.ndarray] = []
-        act_buf: list[np.ndarray] = []
+        u_raw_buf: list[np.ndarray] = []
         logp_buf: list[float] = []
         rew_buf: list[float] = []
         val_buf: list[float] = []
@@ -539,19 +561,20 @@ def train_route_b_ppo(
         for step_idx in range(int(rollout_steps)):
             with torch.no_grad():
                 ob_t = torch.from_numpy(ob[None, :])
-                mu = model.forward_mean(ob_t)
+                mu_raw = model.forward_raw_mean(ob_t)
                 std = torch.exp(torch.clamp(model.log_std, -2.2, -0.7))
-                dist = torch.distributions.Normal(mu, std)
-                a_raw = dist.sample()
-                logp = float(dist.log_prob(a_raw).sum(-1).item())
+                dist = torch.distributions.Normal(mu_raw, std)
+                u_raw = dist.sample()
+                a_squashed = torch.tanh(u_raw)
+                logp = float(_PPOActorCritic.squashed_log_prob(dist, u_raw).item())
                 val = float(model.critic(ob_t).squeeze().item())
-            a_np = np.clip(a_raw[0].numpy(), -1.0, 1.0)
+            a_np = a_squashed[0].numpy()
             v_cmd = (0.5 * (float(a_np[0]) + 1.0)) * (MAX_V_MPS - 0.08) + 0.08
             w_cmd = float(a_np[1]) * MAX_OMEGA_RADPS
             nxt, rew, done, _ = env.step(v_cmd, w_cmd, use_shield=True)
 
             obs_buf.append(ob)
-            act_buf.append(a_np.astype(np.float32))
+            u_raw_buf.append(u_raw[0].numpy().astype(np.float32))
             logp_buf.append(logp)
             rew_buf.append(rew)
             val_buf.append(val)
@@ -580,19 +603,25 @@ def train_route_b_ppo(
         adv = (adv - adv.mean()) / (adv.std() + 1e-6)
 
         X_tr = torch.from_numpy(np.asarray(obs_buf, dtype=np.float32))
-        A_tr = torch.from_numpy(np.asarray(act_buf, dtype=np.float32))
+        U_tr = torch.from_numpy(np.asarray(u_raw_buf, dtype=np.float32))
         LP_old = torch.from_numpy(np.asarray(logp_buf, dtype=np.float32))
         ADV_t = torch.from_numpy(adv)
         RET_t = torch.from_numpy(ret)
+
+        with torch.no_grad():
+            mu_chk = model.forward_raw_mean(X_tr)
+            std_chk = torch.exp(torch.clamp(model.log_std, -2.2, -0.7))
+            lp_chk = _PPOActorCritic.squashed_log_prob(torch.distributions.Normal(mu_chk, std_chk), U_tr)
+            max_lp_consistency_err = max(max_lp_consistency_err, float((lp_chk - LP_old).abs().max().item()))
 
         for _ in range(3):
             perm = rng.permutation(T)
             for s0 in range(0, T, 256):
                 mb = perm[s0 : s0 + 256]
-                mu = model.forward_mean(X_tr[mb])
+                mu_raw = model.forward_raw_mean(X_tr[mb])
                 std = torch.exp(torch.clamp(model.log_std, -2.2, -0.7))
-                dist = torch.distributions.Normal(mu, std)
-                lp = dist.log_prob(A_tr[mb]).sum(-1)
+                dist = torch.distributions.Normal(mu_raw, std)
+                lp = _PPOActorCritic.squashed_log_prob(dist, U_tr[mb])
                 approx_kl = float((LP_old[mb] - lp).mean().item())
                 if approx_kl > 0.03:
                     break
@@ -624,7 +653,10 @@ def train_route_b_ppo(
         "domain": "route_b_2d_kinematic_corridor",
         "robot_radius_m": ROBOT_RADIUS_M,
         "dt_micro_s": DT_MICRO,
-        "n_iters": n_iters,
+        "n_iters": 0 if bc_only else int(n_iters),
+        "warmstart_bc": bool(warmstart_bc),
+        "bc_only": bool(bc_only),
+        "max_lp_consistency_err": round(max_lp_consistency_err, 8),
         "mean_return_init": round(mean_ret_hist[0], 2) if mean_ret_hist else 0.0,
         "mean_return_final": round(mean_ret_hist[-1], 2) if mean_ret_hist else 0.0,
         "best_val_score": round(final_eval, 2),
