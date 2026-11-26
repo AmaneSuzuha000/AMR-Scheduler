@@ -83,6 +83,8 @@ class PhysicalCoordinationStepReport:
     propose_ms: float = 0.0
     e2e_ms: float = 0.0
     eval_objective: Optional[float] = None
+    pdg_alert: bool = False
+    liveness_class: str = "NORMAL_WAITING"
     actions_log: list[dict[str, Any]] = field(default_factory=list)
 
 
@@ -168,6 +170,15 @@ class PhysicalCVCRCoordinator:
                 prior_scale=max(6.0, float(self.default_obstacle_horizon_steps)),
                 enable_voi_probe=self.policy_method.startswith("V16_"),
             )
+        self._pdg_monitor: Optional[Any] = None
+        if self.policy_method == "V20_1_NAJS":
+            from amr_sched.cvcr.pdg_liveness import PDG2SCCLivenessMonitor
+
+            self._pdg_monitor = PDG2SCCLivenessMonitor()
+        elif self.policy_method == "V20_NAJS":
+            from amr_sched.cvcr.pdg_liveness import PDGLivenessTracker
+
+            self._pdg_monitor = PDGLivenessTracker()
 
     def set_recovery_backends(self, backends: Optional[dict[str, Any]]) -> None:
         """Bind native ROS 2 / Nav2 recovery adapters (`resume_execution`/`replan_execution`) per robot."""
@@ -484,6 +495,18 @@ class PhysicalCVCRCoordinator:
             self.tracker.set_op_priorities(getattr(sim, "_op_priorities", None))
             self.tracker.step(tick)
 
+        pdg_alert = False
+        liveness_class = "NORMAL_WAITING"
+        if self._pdg_monitor is not None:
+            pdg_st = self._pdg_monitor.observe_sim(sim, self.tracker, cur_tick=tick)
+            pdg_alert = bool(pdg_st.get("pdg_alert", False))
+            liveness_class = str(pdg_st.get("liveness_class", "NORMAL_WAITING"))
+            if self._external_proposer is not None:
+                if hasattr(self._external_proposer, "set_pdg2_context"):
+                    self._external_proposer.set_pdg2_context(pdg_st if pdg_alert else None, sim_ref=sim if pdg_alert else None)
+                elif hasattr(self._external_proposer, "set_pdg_state"):
+                    self._external_proposer.set_pdg_state(pdg_st if pdg_alert else None)
+
         closed_now, reopened_now = self.sync_corridor_obstacles(now_wall, blocked_corridors)
         fb = self.build_execution_feedback(
             now_wall,
@@ -501,6 +524,8 @@ class PhysicalCVCRCoordinator:
             else None
         )
         trig, trig_reason = self._should_trigger(tick, fb, closed_now, reopened_now, force_replan)
+        if not trig and pdg_alert and (tick - self.last_replan_tick) >= 12:
+            trig, trig_reason = True, f"pdg_liveness_{liveness_class.lower()}"
 
         rcpt_ok = False
         rcpt_reasons: list[str] = []
@@ -592,6 +617,8 @@ class PhysicalCVCRCoordinator:
             propose_ms=round(propose_ms, 3),
             e2e_ms=round(e2e_ms, 3),
             eval_objective=(round(eval_obj, 3) if eval_obj is not None else None),
+            pdg_alert=pdg_alert,
+            liveness_class=liveness_class,
         )
         self.history.append(rep)
         return rep

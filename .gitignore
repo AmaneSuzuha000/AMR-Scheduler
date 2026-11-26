@@ -181,3 +181,5 @@ simulation/wheelset_workshop/worlds/camera_*.world
 # Runtime & benchmark output directories
 out/
 _scratch/
+scratch/
+*.pyd

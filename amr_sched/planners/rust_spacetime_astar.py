@@ -15,7 +15,7 @@ from typing import Any
 
 from amr_sched.network import Network
 from amr_sched.planners.base import PathPlanner, PlannedPath
-from amr_sched.reservation import ReservationTable
+from amr_sched.reservation import Interval, ReservationTable
 from amr_sched.rust_reservation import RustReservationTable, _find_library, _LIB as _RES_LIB
 
 
@@ -164,37 +164,241 @@ if _PLANNER_LIB_PATH and _RES_LIB is not None:
                 ctypes.POINTER(ctypes.c_uint32),
             ]
             _PLANNER_LIB.planner_batch_plan_sipp_indexed.restype = ctypes.c_size_t
+
+        if hasattr(_PLANNER_LIB, "spacetime_planner_plan_cps_indexed"):
+            _PLANNER_LIB.planner_graph_set_dt.argtypes = [ctypes.c_void_p, ctypes.c_double]
+            _PLANNER_LIB.planner_graph_set_dt.restype = None
+
+            _PLANNER_LIB.planner_graph_set_node_coords_indexed.argtypes = [
+                ctypes.c_void_p, ctypes.c_uint16, ctypes.c_double, ctypes.c_double
+            ]
+            _PLANNER_LIB.planner_graph_set_node_coords_indexed.restype = ctypes.c_bool
+
+            _PLANNER_LIB.planner_graph_add_edge_ex.argtypes = [
+                ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p,
+                ctypes.c_uint32, ctypes.c_double, ctypes.c_size_t, ctypes.c_size_t
+            ]
+            _PLANNER_LIB.planner_graph_add_edge_ex.restype = ctypes.c_bool
+
+            _PLANNER_LIB.planner_slot_field_create.argtypes = [
+                ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32,
+                ctypes.c_double, ctypes.c_double, ctypes.c_uint32, ctypes.c_uint32,
+                ctypes.c_uint32, ctypes.c_int32, ctypes.c_int32
+            ]
+            _PLANNER_LIB.planner_slot_field_create.restype = ctypes.c_void_p
+            _PLANNER_LIB.planner_slot_field_destroy.argtypes = [ctypes.c_void_p]
+            _PLANNER_LIB.planner_slot_field_clone.argtypes = [ctypes.c_void_p]
+            _PLANNER_LIB.planner_slot_field_clone.restype = ctypes.c_void_p
+            _PLANNER_LIB.planner_slot_field_restore_from.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+            _PLANNER_LIB.planner_slot_field_restore_from.restype = ctypes.c_bool
+            _PLANNER_LIB.planner_slot_field_clear.argtypes = [ctypes.c_void_p]
+            _PLANNER_LIB.planner_slot_field_remove_agv.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+            _PLANNER_LIB.planner_slot_field_add_points_indexed.argtypes = [
+                ctypes.c_void_p, ctypes.c_char_p, ctypes.POINTER(ctypes.c_uint16),
+                ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t, ctypes.c_int32
+            ]
+            _PLANNER_LIB.planner_slot_field_slot_phi_indexed.argtypes = [
+                ctypes.c_void_p, ctypes.c_uint16, ctypes.c_int32
+            ]
+            _PLANNER_LIB.planner_slot_field_slot_phi_indexed.restype = ctypes.c_double
+            _PLANNER_LIB.planner_slot_field_phi_indexed.argtypes = [
+                ctypes.c_void_p, ctypes.c_uint16, ctypes.c_int32
+            ]
+            _PLANNER_LIB.planner_slot_field_phi_indexed.restype = ctypes.c_double
+
+            _PLANNER_LIB.planner_reserve_points_with_park_indexed.argtypes = [
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_char_p,
+                ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t,
+                ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint16),
+                ctypes.POINTER(ctypes.c_int64), ctypes.POINTER(ctypes.c_int64), ctypes.c_size_t,
+                ctypes.c_uint16, ctypes.c_int64, ctypes.c_int64,
+            ]
+            _PLANNER_LIB.planner_reserve_points_with_park_indexed.restype = ctypes.c_size_t
+
+            _PLANNER_LIB.spacetime_planner_plan_cps_indexed.argtypes = [
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_char_p, ctypes.c_uint32,
+                ctypes.c_bool, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double,
+                ctypes.c_int64, ctypes.c_uint32, ctypes.c_uint16, ctypes.c_size_t, ctypes.c_bool,
+                ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint32), ctypes.c_size_t,
+                ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_size_t),
+                ctypes.c_char_p, ctypes.c_size_t,
+            ]
+            _PLANNER_LIB.spacetime_planner_plan_cps_indexed.restype = ctypes.c_int32
+
+            _PLANNER_LIB.sipp_planner_plan_indexed_ex.argtypes = [
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_char_p, ctypes.c_uint32,
+                ctypes.c_double, ctypes.c_double, ctypes.c_int64, ctypes.c_uint32,
+                ctypes.c_size_t, ctypes.c_bool,
+                ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint32), ctypes.c_size_t,
+                ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_size_t),
+                ctypes.c_char_p, ctypes.c_size_t,
+            ]
+            _PLANNER_LIB.sipp_planner_plan_indexed_ex.restype = ctypes.c_int32
+
+            _PLANNER_LIB.planner_batch_plan_sipp_indexed_ex.argtypes = [
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_size_t,
+                ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint16),
+                ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_uint32),
+                ctypes.POINTER(ctypes.c_char_p),
+                ctypes.c_double, ctypes.c_double, ctypes.c_uint32, ctypes.c_size_t,
+                ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint32),
+                ctypes.POINTER(ctypes.c_int32), ctypes.POINTER(ctypes.c_uint32),
+                ctypes.POINTER(ctypes.c_size_t),
+            ]
+            _PLANNER_LIB.planner_batch_plan_sipp_indexed_ex.restype = ctypes.c_size_t
     except Exception:
         _PLANNER_LIB = None
 
 
 _HAS_INDEXED_FFI = bool(_PLANNER_LIB is not None and hasattr(_PLANNER_LIB, "sipp_planner_plan_indexed"))
+_HAS_CPS_FFI = bool(_PLANNER_LIB is not None and hasattr(_PLANNER_LIB, "spacetime_planner_plan_cps_indexed"))
+
+
+class RustSlotField:
+    """Native Rust incremental Gaussian & slot congestion field matching `GraphCongestionField`."""
+
+    def __init__(
+        self,
+        graph_ptr: ctypes.c_void_p,
+        idx_map: dict[str, int],
+        *,
+        spatial_radius_L: int = 1,
+        temporal_radius_T: int = 1,
+        sigma_l: float = 2.0,
+        sigma_t: float = 2.0,
+        lookahead_ks: int = 1,
+        lookahead_kt: int = 3,
+        slot_delta: int = 3,
+        max_track_horizon: int = 220,
+        t_start: int = 0,
+    ) -> None:
+        if not _HAS_CPS_FFI:
+            raise RuntimeError("Extended CPS Rust FFI not loaded.")
+        self._graph_ptr = graph_ptr
+        self._idx_map = idx_map
+        self._ptr = _PLANNER_LIB.planner_slot_field_create(
+            graph_ptr,
+            int(spatial_radius_L),
+            int(temporal_radius_T),
+            float(sigma_l),
+            float(sigma_t),
+            int(lookahead_ks),
+            int(lookahead_kt),
+            int(slot_delta),
+            int(max_track_horizon),
+            int(t_start),
+        )
+        if not self._ptr:
+            raise RuntimeError("planner_slot_field_create failed.")
+
+    def __del__(self) -> None:
+        if hasattr(self, "_ptr") and self._ptr and _PLANNER_LIB:
+            _PLANNER_LIB.planner_slot_field_destroy(self._ptr)
+            self._ptr = None
+
+    def clear(self) -> None:
+        _PLANNER_LIB.planner_slot_field_clear(self._ptr)
+
+    def remove_agv(self, agv_id: str) -> None:
+        _PLANNER_LIB.planner_slot_field_remove_agv(self._ptr, agv_id.encode("utf-8"))
+
+    def add_agv_path(
+        self,
+        agv_id: str,
+        path: list[tuple[str, int]],
+        *,
+        horizon: int | None = None,
+    ) -> None:
+        if not path:
+            self.remove_agv(agv_id)
+            return
+        idx_map = self._idx_map
+        n_arr = (ctypes.c_uint16 * len(path))()
+        s_arr = (ctypes.c_int32 * len(path))()
+        cnt = 0
+        for nd, st in path:
+            ui = idx_map.get(nd)
+            if ui is not None:
+                n_arr[cnt] = ui
+                s_arr[cnt] = int(st)
+                cnt += 1
+        hz = int(horizon) if horizon is not None else -1
+        _PLANNER_LIB.planner_slot_field_add_points_indexed(
+            self._ptr, agv_id.encode("utf-8"), n_arr, s_arr, cnt, hz
+        )
+
+    def slot_Phi(self, node: str, step: int) -> float:
+        ui = self._idx_map.get(node)
+        if ui is None:
+            return 0.0
+        return float(_PLANNER_LIB.planner_slot_field_slot_phi_indexed(self._ptr, ui, int(step)))
+
+    def phi(self, node: str, step: int) -> float:
+        ui = self._idx_map.get(node)
+        if ui is None:
+            return 0.0
+        return float(_PLANNER_LIB.planner_slot_field_phi_indexed(self._ptr, ui, int(step)))
+
+    def clone(self) -> "RustSlotField":
+        cls = type(self)
+        inst = cls.__new__(cls)
+        inst._graph_ptr = self._graph_ptr
+        inst._idx_map = self._idx_map
+        inst._ptr = _PLANNER_LIB.planner_slot_field_clone(self._ptr)
+        if not inst._ptr:
+            raise RuntimeError("planner_slot_field_clone failed.")
+        return inst
+
+    def restore_from(self, other: "RustSlotField") -> bool:
+        return bool(_PLANNER_LIB.planner_slot_field_restore_from(self._ptr, other._ptr))
 
 
 def build_indexed_rust_graph(
     network: Network,
     steps_fn: Any,
+    *,
+    time_fn: Any = None,
+    dt_s: float = 1.0,
 ) -> tuple[ctypes.c_void_p, dict[str, int], list[str]]:
     """Construct a native `PlannerGraph` and parallel `node_id <-> u16` lookup tables."""
     g_ptr = _PLANNER_LIB.planner_graph_create()
+    use_ex = bool(_HAS_CPS_FFI and time_fn is not None)
+    if use_ex:
+        _PLANNER_LIB.planner_graph_set_dt(g_ptr, float(dt_s))
     idx_map: dict[str, int] = {}
     max_idx = -1
     for node in network.nodes.values():
         idx = int(_PLANNER_LIB.planner_graph_add_node(g_ptr, node.node_id.encode("utf-8"), node.capacity))
         idx_map[node.node_id] = idx
+        if _HAS_CPS_FFI:
+            _PLANNER_LIB.planner_graph_set_node_coords_indexed(g_ptr, idx, float(node.x), float(node.y))
         if idx > max_idx:
             max_idx = idx
     for (src, dst), edge in network.edges.items():
         steps = steps_fn(edge)
         phys_cap = min(edge.capacity, network.edge(dst, src).capacity) if network.has_edge(dst, src) else edge.capacity
-        _PLANNER_LIB.planner_graph_add_edge(
-            g_ptr,
-            src.encode("utf-8"),
-            dst.encode("utf-8"),
-            steps,
-            edge.capacity,
-            phys_cap,
-        )
+        if use_ex:
+            _PLANNER_LIB.planner_graph_add_edge_ex(
+                g_ptr,
+                src.encode("utf-8"),
+                dst.encode("utf-8"),
+                steps,
+                float(time_fn(edge)),
+                edge.capacity,
+                phys_cap,
+            )
+        else:
+            _PLANNER_LIB.planner_graph_add_edge(
+                g_ptr,
+                src.encode("utf-8"),
+                dst.encode("utf-8"),
+                steps,
+                edge.capacity,
+                phys_cap,
+            )
     names_by_idx = [""] * max(0, max_idx + 1)
     for nid, idx in idx_map.items():
         names_by_idx[idx] = nid
@@ -270,6 +474,9 @@ class RustSpaceTimeAStarPlanner(PathPlanner):
         self._buf_cap: int = 512
         self._out_nodes_buf = (ctypes.c_uint16 * 512)()
         self._out_arr_buf = (ctypes.c_uint32 * 512)()
+        self._blocker_buf = ctypes.create_string_buffer(2048)
+        self.last_expansions: int = 0
+        self._time_aware: bool = False
         self._applied_traffic_sig: tuple[Any, ...] = ()
         self._applied_guide_sig: tuple[Any, ...] = ()
 
@@ -284,9 +491,13 @@ class RustSpaceTimeAStarPlanner(PathPlanner):
             _PLANNER_LIB.planner_graph_destroy(self._cached_graph_ptr)
             self._cached_graph_ptr = None
 
-    def _get_or_build_graph(self, network: Network) -> ctypes.c_void_p:
+    def _get_or_build_graph(self, network: Network, *, time_aware: bool = False) -> ctypes.c_void_p:
         net_id = id(network)
-        if self._cached_graph_net_id == net_id and self._cached_graph_ptr is not None:
+        if (
+            self._cached_graph_net_id == net_id
+            and self._cached_graph_ptr is not None
+            and self._time_aware == bool(time_aware)
+        ):
             return self._cached_graph_ptr
 
         if self._cached_graph_ptr is not None:
@@ -296,14 +507,235 @@ class RustSpaceTimeAStarPlanner(PathPlanner):
         g_ptr, idx_map, names_by_idx = build_indexed_rust_graph(
             network,
             lambda e: self.steps_for(e.traversal_time(self.max_speed)),
+            time_fn=(lambda e: e.traversal_time(self.max_speed)) if time_aware else None,
+            dt_s=self.dt,
         )
         self._cached_graph_net_id = net_id
         self._cached_graph_ptr = g_ptr
         self._idx_map = idx_map
         self._names_by_idx = names_by_idx
+        self._time_aware = bool(time_aware)
         self._applied_traffic_sig = ()
         self._applied_guide_sig = ()
         return g_ptr
+
+    def create_slot_field(
+        self,
+        network: Network,
+        *,
+        spatial_radius_L: int = 1,
+        temporal_radius_T: int = 1,
+        sigma_l: float = 2.0,
+        sigma_t: float = 2.0,
+        lookahead_ks: int = 1,
+        lookahead_kt: int = 3,
+        slot_delta: int = 3,
+        max_track_horizon: int = 220,
+        t_start: int = 0,
+        time_aware: bool = True,
+    ) -> RustSlotField:
+        """Create a native `RustSlotField` sharing this planner's cached indexed graph."""
+        g_ptr = self._get_or_build_graph(network, time_aware=time_aware)
+        return RustSlotField(
+            g_ptr,
+            self._idx_map,
+            spatial_radius_L=spatial_radius_L,
+            temporal_radius_T=temporal_radius_T,
+            sigma_l=sigma_l,
+            sigma_t=sigma_t,
+            lookahead_ks=lookahead_ks,
+            lookahead_kt=lookahead_kt,
+            slot_delta=slot_delta,
+            max_track_horizon=max_track_horizon,
+            t_start=t_start,
+        )
+
+    def _parse_blockers(self) -> dict[str, int]:
+        raw = self._blocker_buf.value
+        if not raw:
+            return {}
+        out: dict[str, int] = {}
+        for line in raw.decode("utf-8", errors="ignore").splitlines():
+            if not line:
+                continue
+            aid, _, cnt_s = line.partition("\t")
+            if aid:
+                out[aid] = int(cnt_s) if cnt_s else 1
+        return out
+
+    def plan_leg(
+        self,
+        network: Network,
+        start: str,
+        goal: str,
+        start_step: int,
+        reservations: ReservationTable | RustReservationTable,
+        field: RustSlotField | None,
+        agv_id: str,
+        horizon: int,
+        *,
+        prev_arrival_node: str | None = None,
+        goal_park_until: int | None = None,
+        goal_park_steps: int = 0,
+        max_expansions_override: int | None = None,
+        mode_oneshot: bool = False,
+        alpha: float = 1.0,
+        beta: float = 0.5,
+        gamma: float = 5.0,
+        lookahead_omega: float = 50.0,
+        collect_blockers: bool = True,
+    ) -> tuple[PlannedPath | None, dict[str, int]]:
+        """Drop-in native CPS-A* / SIPP-Ex leg search returning `(PlannedPath | None, blocker_hits)`."""
+        if not _HAS_CPS_FFI:
+            p = self.plan(network, start, goal, start_step, reservations, agv_id, horizon)
+            self.last_expansions = 0
+            return p, {}
+
+        g_ptr = self._get_or_build_graph(network, time_aware=True)
+        r_ptr, _owned = extract_rust_reservation_ptr(reservations)
+        idx_map = self._idx_map
+        s_idx = idx_map.get(start)
+        g_idx = idx_map.get(goal)
+        if s_idx is None or g_idx is None:
+            self.last_expansions = 0
+            return None, {}
+
+        f_ptr = field._ptr if isinstance(field, RustSlotField) else None
+        p_idx = idx_map.get(prev_arrival_node, 0xFFFF) if prev_arrival_node else 0xFFFF
+        gpu = int(goal_park_until) if goal_park_until is not None else -1
+        m_exp = int(max_expansions_override) if max_expansions_override is not None else 0
+        agv_b = agv_id.encode("utf-8")
+        out_wait = ctypes.c_uint32(0)
+        out_exp = ctypes.c_size_t(0)
+        use_sipp = bool(getattr(self, "use_sipp", False))
+
+        while True:
+            self._blocker_buf[0] = b"\x00"
+            if use_sipp:
+                n_hops = int(
+                    _PLANNER_LIB.sipp_planner_plan_indexed_ex(
+                        self._planner, g_ptr, r_ptr, f_ptr,
+                        s_idx, g_idx, int(start_step), agv_b, int(horizon),
+                        float(alpha), float(gamma), gpu, int(goal_park_steps), m_exp,
+                        bool(collect_blockers),
+                        self._out_nodes_buf, self._out_arr_buf, self._buf_cap,
+                        ctypes.byref(out_wait), ctypes.byref(out_exp),
+                        self._blocker_buf, len(self._blocker_buf),
+                    )
+                )
+            else:
+                n_hops = int(
+                    _PLANNER_LIB.spacetime_planner_plan_cps_indexed(
+                        self._planner, g_ptr, r_ptr, f_ptr,
+                        s_idx, g_idx, int(start_step), agv_b, int(horizon),
+                        bool(mode_oneshot), float(alpha), float(beta), float(gamma),
+                        float(lookahead_omega), gpu, int(goal_park_steps),
+                        p_idx, m_exp, bool(collect_blockers),
+                        self._out_nodes_buf, self._out_arr_buf, self._buf_cap,
+                        ctypes.byref(out_wait), ctypes.byref(out_exp),
+                        self._blocker_buf, len(self._blocker_buf),
+                    )
+                )
+            if n_hops == -2:
+                self._buf_cap *= 2
+                self._out_nodes_buf = (ctypes.c_uint16 * self._buf_cap)()
+                self._out_arr_buf = (ctypes.c_uint32 * self._buf_cap)()
+                continue
+            break
+
+        self.last_expansions = int(out_exp.value)
+        hits = self._parse_blockers() if collect_blockers else {}
+        if n_hops < 0:
+            return None, hits
+        names = self._names_by_idx
+        nodes = [names[self._out_nodes_buf[i]] for i in range(n_hops)]
+        arrivals = [int(self._out_arr_buf[i]) for i in range(n_hops)]
+        return PlannedPath(
+            nodes=nodes,
+            arrival_steps=arrivals,
+            wait_steps=int(out_wait.value),
+        ), hits
+
+    def reserve_step_points_indexed(
+        self,
+        network: Network,
+        res_table: RustReservationTable,
+        agv_id: str,
+        node_pts: list[tuple[str, int]],
+        edge_segs: list[tuple[str, str, int, int]] | None = None,
+        *,
+        park_until: int | None = None,
+    ) -> bool:
+        """Reserve explicit step nodes, edge spans, and optional parking dwell in ONE FFI call."""
+        if not node_pts:
+            return True
+        if edge_segs is None:
+            inferred_edges: list[tuple[str, str, int, int]] = []
+            for i in range(len(node_pts) - 1):
+                u_n, u_t = node_pts[i]
+                v_n, v_t = node_pts[i + 1]
+                if u_n != v_n and v_t > u_t:
+                    inferred_edges.append((u_n, v_n, int(u_t), int(v_t)))
+            edge_segs = inferred_edges
+
+        last_n, last_t = node_pts[-1]
+        has_park = park_until is not None and int(park_until) > int(last_t) + 1
+        if not (_HAS_CPS_FFI and isinstance(res_table, RustReservationTable) and not res_table._track_shadow):
+            for nd, tk in node_pts:
+                res_table.reserve_node(nd, Interval(int(tk), int(tk) + 1), agv_id)
+            for u_n, v_n, dt, at in edge_segs:
+                if at > dt:
+                    res_table.reserve_edge(u_n, v_n, Interval(int(dt), int(at)), agv_id)
+            if has_park:
+                res_table.reserve_node(last_n, Interval(int(last_t) + 1, int(park_until)), agv_id)
+            return True
+
+        g_ptr = self._get_or_build_graph(network, time_aware=self._time_aware)
+        idx_map = self._idx_map
+        n_p = len(node_pts)
+        pt_n = (ctypes.c_uint16 * n_p)()
+        pt_s = (ctypes.c_int32 * n_p)()
+        valid_p = 0
+        for nd, tk in node_pts:
+            ui = idx_map.get(nd)
+            if ui is not None:
+                pt_n[valid_p] = ui
+                pt_s[valid_p] = int(tk)
+                valid_p += 1
+
+        n_e = len(edge_segs)
+        if n_e > 0:
+            e_u = (ctypes.c_uint16 * n_e)()
+            e_v = (ctypes.c_uint16 * n_e)()
+            e_st = (ctypes.c_int64 * n_e)()
+            e_en = (ctypes.c_int64 * n_e)()
+            valid_e = 0
+            for u_n, v_n, dt, at in edge_segs:
+                if at <= dt:
+                    continue
+                ui = idx_map.get(u_n)
+                vi = idx_map.get(v_n)
+                if ui is not None and vi is not None:
+                    e_u[valid_e] = ui
+                    e_v[valid_e] = vi
+                    e_st[valid_e] = int(dt)
+                    e_en[valid_e] = int(at)
+                    valid_e += 1
+        else:
+            e_u = e_v = ctypes.POINTER(ctypes.c_uint16)()
+            e_st = e_en = ctypes.POINTER(ctypes.c_int64)()
+            valid_e = 0
+
+        pk_idx = idx_map.get(last_n, 0xFFFF) if has_park else 0xFFFF
+        pk_st = int(last_t) + 1 if has_park else 0
+        pk_en = int(park_until) if has_park else 0
+        _PLANNER_LIB.planner_reserve_points_with_park_indexed(
+            g_ptr, res_table._ptr, agv_id.encode("utf-8"),
+            pt_n, pt_s, valid_p,
+            e_u, e_v, e_st, e_en, valid_e,
+            pk_idx, pk_st, pk_en,
+        )
+        return True
 
     def sync_traffic_weights(
         self,
@@ -625,3 +1057,99 @@ class RustSpaceTimeAStarPlanner(PathPlanner):
                         wait_steps=int(out_w[i]),
                     ))
         return res
+
+
+class RustCPSAStarGraphPlanner:
+    """1:1 drop-in native Rust replacement for `CPSAStarGraphPlanner` (`plan_leg` + `last_expansions`)."""
+
+    def __init__(
+        self,
+        network: Network,
+        cfg: Any,
+        *,
+        max_speed: float = 1.0,
+        dt: float = 1.0,
+        use_sipp: bool = False,
+    ) -> None:
+        self.network = network
+        self.cfg = cfg
+        self.max_speed = float(max_speed)
+        self.dt = float(dt)
+        self.use_sipp = bool(use_sipp)
+        self.last_expansions: int = 0
+        self._planner = RustSpaceTimeAStarPlanner(
+            max_speed=self.max_speed,
+            dt=self.dt,
+            max_expansions=max(1000, int(getattr(cfg, "max_expansions", 12_000))),
+            use_sipp=self.use_sipp,
+        )
+        # Warm indexed graph with continuous edge times matching `CPSAStarGraphPlanner._heuristic_table`
+        self._planner._get_or_build_graph(network, time_aware=True)
+
+    def create_field(self, *, max_track_horizon: int = 220, t_start: int = 0) -> RustSlotField:
+        f_cfg = getattr(self.cfg, "field", None)
+        return self._planner.create_slot_field(
+            self.network,
+            spatial_radius_L=int(getattr(f_cfg, "spatial_radius_L", 1)),
+            temporal_radius_T=int(getattr(f_cfg, "temporal_radius_T", 1)),
+            sigma_l=float(getattr(f_cfg, "sigma_l", 2.0)),
+            sigma_t=float(getattr(f_cfg, "sigma_t", 2.0)),
+            lookahead_ks=int(getattr(f_cfg, "lookahead_ks", 1)),
+            lookahead_kt=int(getattr(f_cfg, "lookahead_kt", 3)),
+            slot_delta=int(getattr(f_cfg, "slot_delta", 3)),
+            max_track_horizon=int(max_track_horizon),
+            t_start=int(t_start),
+            time_aware=True,
+        )
+
+    def reserve_step_points_indexed(
+        self,
+        res_table: RustReservationTable,
+        agv_id: str,
+        node_pts: list[tuple[str, int]],
+        edge_segs: list[tuple[str, str, int, int]] | None = None,
+        *,
+        park_until: int | None = None,
+    ) -> bool:
+        return self._planner.reserve_step_points_indexed(
+            self.network, res_table, agv_id, node_pts, edge_segs, park_until=park_until
+        )
+
+    def plan_leg(
+        self,
+        start: str,
+        goal: str,
+        start_step: int,
+        reservations: ReservationTable | RustReservationTable,
+        field: RustSlotField | None,
+        agv_id: str,
+        horizon: int,
+        *,
+        prev_arrival_node: str | None = None,
+        goal_park_until: int | None = None,
+        goal_park_steps: int = 0,
+        max_expansions_override: int | None = None,
+    ) -> tuple[PlannedPath | None, dict[str, int]]:
+        mode_oneshot = str(getattr(self.cfg, "mode", "lifelong")).lower() == "oneshot"
+        path, hits = self._planner.plan_leg(
+            self.network,
+            start,
+            goal,
+            start_step,
+            reservations,
+            field,
+            agv_id,
+            horizon,
+            prev_arrival_node=prev_arrival_node,
+            goal_park_until=goal_park_until,
+            goal_park_steps=goal_park_steps,
+            max_expansions_override=max_expansions_override,
+            mode_oneshot=mode_oneshot,
+            alpha=float(getattr(self.cfg, "alpha", 1.0)),
+            beta=float(getattr(self.cfg, "beta", 0.5)),
+            gamma=float(getattr(self.cfg, "gamma", 5.0)),
+            lookahead_omega=float(getattr(self.cfg, "lookahead_omega", 50.0)),
+            collect_blockers=True,
+        )
+        self.last_expansions = self._planner.last_expansions
+        return path, hits

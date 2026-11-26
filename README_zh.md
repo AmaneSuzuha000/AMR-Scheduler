@@ -18,7 +18,7 @@
 
 ## 项目概述
 
-**AMR-Scheduler**（`v1.2.1`）是 **`CoRe-Sched`**（*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*）框架的官方开源代码与数字孪生平台，面向**离散工位、多物料齐套汇合、狭窄单车道走廊**的铁路货车与轮对检修车间，实现毫秒级在线生产—多 AMR 联合重调度。
+**AMR-Scheduler**（`v1.3.0`）是 **`CoRe-Sched`**（*Commitment-aware Rescheduling for Production–Multi-AMR Coordination*）框架的官方开源代码与数字孪生平台，面向**离散工位、狭窄单车道走廊**的铁路货车与轮对检修车间及高密度多 AGV 仓库系统，实现毫秒级在线生产—多 AMR 联合重调度与拥堵感知交通协调。
 
 <p align="center">
   <img src="results/figures/fig1_core_sched_overview.png" alt="CoRe-Sched 双引擎闭环在线重调度架构" width="96%" />
@@ -31,8 +31,11 @@
   - **在线上下文切换 + 双臂探测 + 二阶段 `CausalRepairCone` + 对称振荡仲裁**：耦合 `Contextual LinUCB`（$\phi(s_t) \in [0, 1]^6$）、车队守卫反事实双臂探测（$|\mathcal{R}| \ge 4$）、精确 $J_A$ 评分器、基于 `FastJAWKittingSurrogate` 的 Regret-2 局部修复锥、活跃装货（`_load_end`）/有效边安全守卫与对称 `p4_choke_robust` 外科走廊振荡唤醒。
 - **承诺保持增量预约优化引擎（`CVCR-IR`）**（`amr_sched/cvcr/evaluator.py`, `crates/`）：
   - **序列差分增量预约缓存（`CVCR-IR (Seq-Diff)`）+ 紧缩 SLA 守卫**：按单车精确有效任务序列差分定位 $\Delta\mathcal{R}$，原位复用未变车辆的 Rust 半开区间预约与无冲突路径（`median |ΔJ| = 0.00`），将双队列盲测的汇总尾延迟 `Pooled P99` 严格控制在 `23 ms` 以内（`18.55 ms / 22.62 ms < 35 ms`）。
+- **原生 Rust 端到端时空规划内核与连续运动学安全护盾（`v1.3.0`）**（`crates/`, `amr_sched/planners/rust_spacetime_astar.py`, `experiments/track_r_cpsa/`, `experiments/cps_astar_routing/`）：
+  - 原位 `SlotCongestionField`、`plan_cps_indexed`、惰性 `RustBatchSippPlanner` 与零影子 `RustReservationTable.fast()` 在 `80–200` 车 MovingAI `Warehouse_40x40` 仓库测试中取得 **`11.71×–14.40×`** 端到端规划加速（`crates/` `26/26` 单元测试全过）；
+  - 分层交通协调栈融合 *EJOR 2026* 上层派车（Wu et al.）、纯净复现的 `CPS-A*` 拥堵感知路由（Guo & Huang，[`pengguo-hub/CPSAStar-TRC`](https://github.com/pengguo-hub/CPSAStar-TRC)，未打包第三方在审代码）、积压感知 DFL 阻塞者选择（`Route A`）、执行延误局部修复（`EALR v2/v3`）及 2D 连续运动学 PPO + 递归制动障碍护盾（`Route B`，`0` 物理碰撞）。
 - **原子事务提交执行层（*Atomic Transaction Commit*）与双层数字孪生**：
-  - 统一注册入口（共 **22** 个已注册策略）：涵盖 `core_sched` / `CoRe-Sched`（`V19_ADAPTIVE_RL`）、2025–2026 直接联合动态 FJSP–AGV 神经与元启发式基线（`IJPR25_DFJSPT_HMARL`、`ASC26_MA_TRANS`、`FGCS26_REN_GNN`、`SPGA_AMR`）、静态离线参照（`COR26-Ref` CP-SAT 主松弛 + 路径验证离线参考求解器、`EJOR26-Erdogan`）及更广泛的 2025–2026 顶会/顶刊基线。
+  - 统一注册入口（共 **24** 个已注册策略）：涵盖 `core_sched` / `CoRe-Sched`（`V19_ADAPTIVE_RL`）、`V20_NAJS`、`V20_1_NAJS`（`PDG 2.0`）、2025–2026 直接联合动态 FJSP–AGV 神经与元启发式基线（`IJPR25_DFJSPT_HMARL`、`ASC26_MA_TRANS`、`FGCS26_REN_GNN`、`SPGA_AMR`）、静态离线参照（`COR26-Ref` CP-SAT 主松弛 + 路径验证离线参考求解器、`EJOR26-Erdogan`）及更广泛的 2025–2026 顶会/顶刊基线。
 
 ---
 
@@ -103,11 +106,6 @@ python -B experiments/run_workshop_scaling_4axis.py
 python -B experiments/plot_v19_paper_figures.py
 
 # 4. 运行全套验证测试
-python -m pytest -q
-cargo test --manifest-path crates/Cargo.toml
-dotnet test Tests/RAWSimO.Live.Tests/RAWSimO.Live.Tests.csproj -c Release
-python tools/data_manifest.py --check
-```
 python -m pytest -q
 cargo test --manifest-path crates/Cargo.toml
 dotnet test Tests/RAWSimO.Live.Tests/RAWSimO.Live.Tests.csproj -c Release

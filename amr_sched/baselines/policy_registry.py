@@ -45,6 +45,7 @@ _V19_BC_CKPT = resolve_default_checkpoint("v19/v19_hetero_bc.pt")
 _V19_RL_CKPT = resolve_default_checkpoint("v19/v19_hetero_rl.pt")
 _V19_STAGED_RL_CKPT = resolve_default_checkpoint("v19/v19_staged_rl.pt")
 _V19_NO_PROD_COMM_CKPT = resolve_default_checkpoint("v19/v19_no_prod_comm.pt")
+_V20_CRITIC_CKPT = resolve_default_checkpoint("v20/v20_critic_weights.npz")
 _EJOR26_CKPT = resolve_default_checkpoint("baselines_2026/ejor26_wu_gru_attn.pt")
 _IJCAI26_CKPT = resolve_default_checkpoint("baselines_2026/ijcai26_choi_pgmpo.pt")
 _TII26_CKPT = resolve_default_checkpoint("baselines_2026/tii26_ma_e2g_moe.pt")
@@ -224,6 +225,20 @@ POLICY_SPECS: dict[str, PolicySpec] = {
         uses_external_proposer=True,
         checkpoint_path=_V19_RL_CKPT,
     ),
+    "V20_NAJS": PolicySpec(
+        name="V20_NAJS",
+        family="ours",
+        description="CoRe-Sched V20.0 (NAJS): Bidirectional V18<->V19 Joint Search + RobustRankAsinh Critic + PDG 1.0 Liveness",
+        uses_external_proposer=True,
+        checkpoint_path=_V20_CRITIC_CKPT,
+    ),
+    "V20_1_NAJS": PolicySpec(
+        name="V20_1_NAJS",
+        family="ours",
+        description="CoRe-Sched V20.1 (NAJS+PDG 2.0): Bidirectional V18<->V19 + PDG 2.0 (D1+D2+E1+E2) + Exit-Free Tarjan SCC + Persistent Tabu Memory",
+        uses_external_proposer=True,
+        checkpoint_path=_V20_CRITIC_CKPT,
+    ),
 }
 
 SUPPORTED_POLICIES: tuple[str, ...] = tuple(POLICY_SPECS.keys())
@@ -231,7 +246,7 @@ SUPPORTED_POLICIES: tuple[str, ...] = tuple(POLICY_SPECS.keys())
 DEFAULT_12_POLICIES: tuple[str, ...] = tuple(
     p
     for p in SUPPORTED_POLICIES
-    if p not in ("BALANS_IJCAI25", "IJPR25_DFJSPT_HMARL", "ASC26_MA_TRANS", "FGCS26_REN_GNN")
+    if p not in ("BALANS_IJCAI25", "IJPR25_DFJSPT_HMARL", "ASC26_MA_TRANS", "FGCS26_REN_GNN", "V20_NAJS", "V20_1_NAJS")
     and not p.startswith("V19_")
 )
 
@@ -298,6 +313,14 @@ _POLICY_ALIASES: dict[str, str] = {
     "core_sched": "V19_ADAPTIVE_RL",
     "core-sched": "V19_ADAPTIVE_RL",
     "coresched": "V19_ADAPTIVE_RL",
+    "v20": "V20_NAJS",
+    "v20.0": "V20_NAJS",
+    "v20_najs": "V20_NAJS",
+    "core_sched_v20": "V20_NAJS",
+    "v20_1": "V20_1_NAJS",
+    "v20.1": "V20_1_NAJS",
+    "v20_1_najs": "V20_1_NAJS",
+    "core_sched_v20_1": "V20_1_NAJS",
 }
 
 
@@ -550,6 +573,22 @@ def build_external_proposer(
         )
         proposer._ensure_nets()
         return proposer
+    if canon == "V20_NAJS":
+        from amr_sched.rl.v20_najs import build_v20_najs_proposer
+
+        return build_v20_najs_proposer(
+            seed=seed,
+            use_rust=use_rust,
+            critic_weights_path=_V20_CRITIC_CKPT,
+        )
+    if canon == "V20_1_NAJS":
+        from amr_sched.rl.v20_najs import build_v20_1_najs_proposer
+
+        return build_v20_1_najs_proposer(
+            seed=seed,
+            use_rust=use_rust,
+            critic_weights_path=_V20_CRITIC_CKPT,
+        )
     raise ValueError(f"Unhandled policy in build_external_proposer: {canon}")
 
 
@@ -724,6 +763,17 @@ def create_discrete_policy_env(
         expert_v10_portfolio=True,
         external_proposer=ext_proposer,
     )
+    if canon == "V20_NAJS":
+        from amr_sched.cvcr.pdg_liveness import PDGLivenessTracker
+
+        env._pdg_monitor = PDGLivenessTracker()
+    elif canon == "V20_1_NAJS":
+        from amr_sched.cvcr.pdg_liveness import PDG2SCCLivenessMonitor
+
+        env._pdg_monitor = PDG2SCCLivenessMonitor()
+    else:
+        env._pdg_monitor = None
+    env._raw_external_proposer = ext_proposer
     env._policy_checkpoint_sha256 = getattr(ext_proposer, "_checkpoint_sha256", None)
     env._policy_inference_backend = (
         ext_proposer._effective_backend()
@@ -895,6 +945,16 @@ def run_discrete_episode(
                 feats = env.get_expert_v12_obs(obs)
                 step_info = info
             act = ctrl.select_action(feats, step_info, sim=env.sim)
+            pdg_mon = getattr(env, "_pdg_monitor", None)
+            if pdg_mon is not None:
+                act = int(
+                    pdg_mon.observe_and_maybe_escalate(
+                        env,
+                        step_info,
+                        act,
+                        proposer=getattr(env, "_raw_external_proposer", None),
+                    )
+                )
             obs, _, tm, tr, info = env.step(act)
 
     wall_ms = (time.perf_counter() - wall_t0) * 1000.0
@@ -971,6 +1031,8 @@ def run_discrete_episode(
         "transaction_rejections": sum(not row["receipt_accepted"] for row in env.decision_logs),
         "expired_windows": int(env.total_window_expirations),
         "starvation_steps": int(env.tracker.starvation_steps),
+        "pdg_alerts": len(getattr(getattr(env, "_pdg_monitor", None), "alert_ticks", ())),
+        "pdg_escalations": len(getattr(getattr(env, "_pdg_monitor", None), "escalation_ticks", ())),
         "proposer_stats": dict(proposer_stats),
         "v18_funnel": funnel_totals,
         "scheduled_obstacles": obstacles,

@@ -4,7 +4,9 @@ pub mod astar;
 pub mod ffi;
 pub mod graph;
 pub mod sipp;
+pub mod slot_field;
 
-pub use astar::{IndexedPath, PlannedPath, SpacetimeAStarPlanner};
+pub use astar::{CpsSearchParams, CpsSearchResult, IndexedPath, PlannedPath, SpacetimeAStarPlanner};
 pub use graph::{PlannerEdge, PlannerGraph};
 pub use sipp::SippPlanner;
+pub use slot_field::{SlotCongestionField, SlotFieldConfig};

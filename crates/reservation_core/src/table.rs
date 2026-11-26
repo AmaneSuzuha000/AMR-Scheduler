@@ -228,6 +228,107 @@ impl ReservationTable {
         res
     }
 
+    /// Accumulates unique AGV IDs conflicting with `span` on `node` directly into `out` (+1 per call).
+    #[inline]
+    pub fn collect_node_conflicts_into(
+        &self,
+        node: &str,
+        span: Interval,
+        exclude_agv: Option<&str>,
+        out: &mut HashMap<String, u32>,
+    ) {
+        let mut seen: Vec<&str> = Vec::new();
+        if let Some(entries) = self.node_table.get(node) {
+            for entry in entries {
+                if entry.span.start >= span.end {
+                    break;
+                }
+                if let Some(ex) = exclude_agv {
+                    if entry.agv_id == ex {
+                        continue;
+                    }
+                }
+                if entry.span.overlaps(&span) {
+                    let agv = entry.agv_id.as_str();
+                    if !seen.contains(&agv) {
+                        seen.push(agv);
+                        *out.entry(entry.agv_id.clone()).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+        if let Some(owners) = self.pinned_nodes.get(node) {
+            for owner in owners {
+                if let Some(ex) = exclude_agv {
+                    if owner == ex {
+                        continue;
+                    }
+                }
+                let agv = owner.as_str();
+                if !seen.contains(&agv) {
+                    seen.push(agv);
+                    *out.entry(owner.clone()).or_insert(0) += 1;
+                }
+            }
+        }
+    }
+
+    /// Accumulates unique AGV IDs conflicting with `span` on undirected corridor `(p0, p1)` (+1 per call).
+    #[inline]
+    pub fn collect_undirected_edge_conflicts_into(
+        &self,
+        p0: &str,
+        p1: &str,
+        span: Interval,
+        exclude_agv: Option<&str>,
+        out: &mut HashMap<String, u32>,
+    ) {
+        let mut seen: Vec<&str> = Vec::new();
+        let dirs: [Option<(&str, &str)>; 2] = if p0 == p1 {
+            [Some((p0, p1)), None]
+        } else {
+            [Some((p0, p1)), Some((p1, p0))]
+        };
+        for dir_opt in dirs {
+            let Some((a, b)) = dir_opt else {
+                continue;
+            };
+            if let Some(entries) = self.edge_table.get(a).and_then(|m| m.get(b)) {
+                for entry in entries {
+                    if entry.span.start >= span.end {
+                        break;
+                    }
+                    if let Some(ex) = exclude_agv {
+                        if entry.agv_id == ex {
+                            continue;
+                        }
+                    }
+                    if entry.span.overlaps(&span) {
+                        let agv = entry.agv_id.as_str();
+                        if !seen.contains(&agv) {
+                            seen.push(agv);
+                            *out.entry(entry.agv_id.clone()).or_insert(0) += 1;
+                        }
+                    }
+                }
+            }
+            if let Some(owners) = self.pinned_edges.get(a).and_then(|m| m.get(b)) {
+                for owner in owners {
+                    if let Some(ex) = exclude_agv {
+                        if owner == ex {
+                            continue;
+                        }
+                    }
+                    let agv = owner.as_str();
+                    if !seen.contains(&agv) {
+                        seen.push(agv);
+                        *out.entry(owner.clone()).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+    }
+
     /// Checks whether node capacity constraint is satisfied over `span`.
     ///
     /// Semantics:

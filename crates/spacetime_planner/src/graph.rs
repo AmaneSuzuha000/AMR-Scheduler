@@ -8,6 +8,7 @@ use std::sync::{Arc, RwLock};
 pub struct PlannerEdge {
     pub dst: u16,
     pub traversal_steps: u32,
+    pub traversal_time_s: f64,
     pub capacity: usize,
     /// Physical channel capacity (considering bidirectional channel)
     pub physical_capacity: usize,
@@ -15,7 +16,7 @@ pub struct PlannerEdge {
     pub traffic_pen_q3: u32,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct PlannerGraph {
     /// Mapping from string node name to integer index
     node_to_idx: HashMap<String, u16>,
@@ -23,16 +24,48 @@ pub struct PlannerGraph {
     idx_to_node: Vec<String>,
     /// Node capacity by node index
     node_capacities: Vec<usize>,
+    /// Optional planar coordinates per node index (for turning penalties)
+    node_coords: Vec<(f64, f64)>,
+    has_coords: Vec<bool>,
     /// Outgoing edges per node
     outgoing: Vec<Vec<PlannerEdge>>,
     /// Incoming edges per node (for reverse Dijkstra)
     incoming: Vec<Vec<(u16, u32)>>,
+    /// Incoming continuous-time edges per node (for continuous reverse Dijkstra)
+    incoming_time: Vec<Vec<(u16, f64)>>,
+    /// Unique undirected adjacent neighbors per node
+    undirected_adj: Vec<Vec<u16>>,
+    /// Discrete time step scalar (seconds/tick) for continuous-time heuristic flooring
+    dt_s: f64,
     /// Cached reverse-Dijkstra shortest-path heuristic tables per goal index.
     h_cache: RwLock<Vec<Option<Arc<Vec<u32>>>>>,
+    /// Cached continuous reverse-Dijkstra shortest-time heuristic tables per goal index.
+    h_time_cache: RwLock<Vec<Option<Arc<Vec<f64>>>>>,
     /// Time cutoff step for LTM traffic penalties (0 = entire horizon).
     traffic_cutoff_step: u32,
     /// Per-AGV soft corridor guidance: agv_id -> (packed directed edge codes (u<<16)|v, off_guide_pen_q3)
     agv_guides: HashMap<String, (Vec<u32>, u32)>,
+}
+
+impl Default for PlannerGraph {
+    fn default() -> Self {
+        Self {
+            node_to_idx: HashMap::new(),
+            idx_to_node: Vec::new(),
+            node_capacities: Vec::new(),
+            node_coords: Vec::new(),
+            has_coords: Vec::new(),
+            outgoing: Vec::new(),
+            incoming: Vec::new(),
+            incoming_time: Vec::new(),
+            undirected_adj: Vec::new(),
+            dt_s: 1.0,
+            h_cache: RwLock::new(Vec::new()),
+            h_time_cache: RwLock::new(Vec::new()),
+            traffic_cutoff_step: 0,
+            agv_guides: HashMap::new(),
+        }
+    }
 }
 
 impl Clone for PlannerGraph {
@@ -42,13 +75,24 @@ impl Clone for PlannerGraph {
             .read()
             .map(|c| c.clone())
             .unwrap_or_default();
+        let t_cache = self
+            .h_time_cache
+            .read()
+            .map(|c| c.clone())
+            .unwrap_or_default();
         Self {
             node_to_idx: self.node_to_idx.clone(),
             idx_to_node: self.idx_to_node.clone(),
             node_capacities: self.node_capacities.clone(),
+            node_coords: self.node_coords.clone(),
+            has_coords: self.has_coords.clone(),
             outgoing: self.outgoing.clone(),
             incoming: self.incoming.clone(),
+            incoming_time: self.incoming_time.clone(),
+            undirected_adj: self.undirected_adj.clone(),
+            dt_s: self.dt_s,
             h_cache: RwLock::new(cache),
+            h_time_cache: RwLock::new(t_cache),
             traffic_cutoff_step: self.traffic_cutoff_step,
             agv_guides: self.agv_guides.clone(),
         }
@@ -58,6 +102,62 @@ impl Clone for PlannerGraph {
 impl PlannerGraph {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Sets the step duration `dt` (in seconds/step) used when flooring continuous heuristic times.
+    pub fn set_dt_s(&mut self, dt_s: f64) {
+        self.dt_s = dt_s.max(1e-6);
+    }
+
+    #[inline]
+    pub fn dt_s(&self) -> f64 {
+        self.dt_s
+    }
+
+    /// Sets `(x, y)` coordinates for an already-indexed node `u`.
+    pub fn set_node_coords_indexed(&mut self, u: u16, x: f64, y: f64) -> bool {
+        let ui = u as usize;
+        if ui >= self.node_coords.len() {
+            return false;
+        }
+        self.node_coords[ui] = (x, y);
+        self.has_coords[ui] = true;
+        true
+    }
+
+    #[inline]
+    pub fn undirected_adjacent(&self, u: u16) -> &[u16] {
+        &self.undirected_adj[u as usize]
+    }
+
+    /// Exact CPS-A* turning penalty (`1.0` if U-turn or cos_angle < 0.707, else `0.0`).
+    #[inline]
+    pub fn turn_penalty(&self, prev_idx: u16, cur_idx: u16, nxt_idx: u16) -> f64 {
+        if prev_idx == u16::MAX || prev_idx == cur_idx || cur_idx == nxt_idx {
+            return 0.0;
+        }
+        if nxt_idx == prev_idx {
+            return 1.0;
+        }
+        let (p, c, n) = (prev_idx as usize, cur_idx as usize, nxt_idx as usize);
+        if p >= self.has_coords.len() || c >= self.has_coords.len() || n >= self.has_coords.len() {
+            return 0.0;
+        }
+        if !self.has_coords[p] || !self.has_coords[c] || !self.has_coords[n] {
+            return 0.0;
+        }
+        let (x0, y0) = self.node_coords[p];
+        let (x1, y1) = self.node_coords[c];
+        let (x2, y2) = self.node_coords[n];
+        let (dx1, dy1) = (x1 - x0, y1 - y0);
+        let (dx2, dy2) = (x2 - x1, y2 - y1);
+        let l1 = dx1.hypot(dy1);
+        let l2 = dx2.hypot(dy2);
+        if l1 <= 1e-6 || l2 <= 1e-6 {
+            return 0.0;
+        }
+        let cos_ang = (dx1 * dx2 + dy1 * dy2) / (l1 * l2);
+        if cos_ang < 0.707 { 1.0 } else { 0.0 }
     }
 
     /// Adds a node if not already present, or updates its capacity if explicitly set.
@@ -70,10 +170,17 @@ impl PlannerGraph {
         self.node_to_idx.insert(name.to_string(), idx);
         self.idx_to_node.push(name.to_string());
         self.node_capacities.push(capacity);
+        self.node_coords.push((0.0, 0.0));
+        self.has_coords.push(false);
         self.outgoing.push(Vec::new());
         self.incoming.push(Vec::new());
+        self.incoming_time.push(Vec::new());
+        self.undirected_adj.push(Vec::new());
         if let Ok(mut cache) = self.h_cache.write() {
             cache.clear();
+        }
+        if let Ok(mut t_cache) = self.h_time_cache.write() {
+            t_cache.clear();
         }
         idx
     }
@@ -88,10 +195,17 @@ impl PlannerGraph {
         self.node_to_idx.insert(name.to_string(), idx);
         self.idx_to_node.push(name.to_string());
         self.node_capacities.push(default_capacity);
+        self.node_coords.push((0.0, 0.0));
+        self.has_coords.push(false);
         self.outgoing.push(Vec::new());
         self.incoming.push(Vec::new());
+        self.incoming_time.push(Vec::new());
+        self.undirected_adj.push(Vec::new());
         if let Ok(mut cache) = self.h_cache.write() {
             cache.clear();
+        }
+        if let Ok(mut t_cache) = self.h_time_cache.write() {
+            t_cache.clear();
         }
         idx
     }
@@ -117,11 +231,13 @@ impl PlannerGraph {
     }
 
     /// Adds a directed edge `src -> dst`.
-    pub fn add_edge(
+    /// Adds a directed edge with continuous traversal time (for admissible floored heuristics).
+    pub fn add_edge_with_time(
         &mut self,
         src: &str,
         dst: &str,
         traversal_steps: u32,
+        traversal_time_s: f64,
         capacity: usize,
         physical_capacity: usize,
     ) {
@@ -131,15 +247,46 @@ impl PlannerGraph {
         self.outgoing[u as usize].push(PlannerEdge {
             dst: v,
             traversal_steps,
+            traversal_time_s,
             capacity,
             physical_capacity,
             traffic_pen_q3: 0,
         });
 
         self.incoming[v as usize].push((u, traversal_steps));
+        self.incoming_time[v as usize].push((u, traversal_time_s.max(0.0)));
+        if u != v {
+            if !self.undirected_adj[u as usize].contains(&v) {
+                self.undirected_adj[u as usize].push(v);
+            }
+            if !self.undirected_adj[v as usize].contains(&u) {
+                self.undirected_adj[v as usize].push(u);
+            }
+        }
         if let Ok(mut cache) = self.h_cache.write() {
             cache.clear();
         }
+        if let Ok(mut t_cache) = self.h_time_cache.write() {
+            t_cache.clear();
+        }
+    }
+
+    pub fn add_edge(
+        &mut self,
+        src: &str,
+        dst: &str,
+        traversal_steps: u32,
+        capacity: usize,
+        physical_capacity: usize,
+    ) {
+        self.add_edge_with_time(
+            src,
+            dst,
+            traversal_steps,
+            traversal_steps as f64,
+            capacity,
+            physical_capacity,
+        );
     }
 
     /// Resets all online Lightweight Traffic Map edge penalties and window cutoff to 0.
@@ -366,6 +513,73 @@ impl PlannerGraph {
             }
         }
 
+        dist
+    }
+
+    /// Returns cached continuous-time reverse-Dijkstra heuristic vector from all nodes to `goal`.
+    pub fn get_heuristics_time_arc(&self, goal: u16) -> Arc<Vec<f64>> {
+        let g_idx = goal as usize;
+        if let Ok(cache) = self.h_time_cache.read() {
+            if let Some(Some(arc)) = cache.get(g_idx) {
+                return Arc::clone(arc);
+            }
+        }
+        let dist = Arc::new(self.compute_heuristics_time(goal));
+        if g_idx < self.node_count() {
+            if let Ok(mut cache) = self.h_time_cache.write() {
+                if cache.len() < self.node_count() {
+                    cache.resize(self.node_count(), None);
+                }
+                cache[g_idx] = Some(Arc::clone(&dist));
+            }
+        }
+        dist
+    }
+
+    /// Computes continuous shortest travel time (seconds) from all nodes to `goal`.
+    pub fn compute_heuristics_time(&self, goal: u16) -> Vec<f64> {
+        let n = self.node_count();
+        let mut dist = vec![f64::INFINITY; n];
+        if (goal as usize) >= n {
+            return dist;
+        }
+
+        #[derive(Copy, Clone, PartialEq)]
+        struct TState {
+            cost: f64,
+            node: u16,
+        }
+        impl Eq for TState {}
+        impl Ord for TState {
+            fn cmp(&self, other: &Self) -> Ordering {
+                other.cost.total_cmp(&self.cost)
+            }
+        }
+        impl PartialOrd for TState {
+            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+
+        let mut heap = BinaryHeap::new();
+        dist[goal as usize] = 0.0;
+        heap.push(TState { cost: 0.0, node: goal });
+
+        while let Some(TState { cost, node }) = heap.pop() {
+            if cost > dist[node as usize] + 1e-12 {
+                continue;
+            }
+            for &(prev, weight) in &self.incoming_time[node as usize] {
+                let next_cost = cost + weight;
+                if next_cost < dist[prev as usize] {
+                    dist[prev as usize] = next_cost;
+                    heap.push(TState {
+                        cost: next_cost,
+                        node: prev,
+                    });
+                }
+            }
+        }
         dist
     }
 }

@@ -2,7 +2,7 @@
 
 ## 1. System Overview
 
-**AMR-Scheduler** (`v1.2.1`) is a hybrid Python / Rust / C# / ROS 2 research and digital twin platform designed for multi-robot material delivery scheduling and coordination in discrete-workstation, batch-material, narrow-aisle railway freight car maintenance workshops.
+**AMR-Scheduler** (`v1.3.0`) is a hybrid Python / Rust / C# / ROS 2 research and digital twin platform designed for multi-robot material delivery scheduling and coordination in discrete-workstation, batch-material, narrow-aisle railway freight car maintenance workshops.
 
 ```mermaid
 flowchart TD

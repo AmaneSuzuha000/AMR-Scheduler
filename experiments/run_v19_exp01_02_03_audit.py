@@ -35,7 +35,7 @@ import torch.nn.functional as F
 torch.set_num_threads(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRATCH_MOD_DIR = ROOT / "_scratch"
+SCRATCH_MOD_DIR = ROOT / "experiments"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 if str(SCRATCH_MOD_DIR) not in sys.path:

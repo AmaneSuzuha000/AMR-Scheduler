@@ -2,6 +2,17 @@
 
 All notable changes to the **AMR-Scheduler** platform are documented in this file.
 
+## [1.3.0] - 2026-11-26
+
+### Added & Verified (Native Rust E2E Spatiotemporal Kernel, V20.1 Liveness & Converged Multi-AGV Coordination)
+- **Native Rust End-to-End Spatiotemporal Planning Kernel (`crates/reservation_core/src/table.rs`, `crates/spacetime_planner/src/{slot_field.rs, graph.rs, astar.rs, sipp.rs, ffi.rs}`, `amr_sched/planners/rust_spacetime_astar.py`, `amr_sched/rust_reservation.py`)**:
+  - Implemented native `SlotCongestionField`, `plan_cps_indexed`, lazy `RustBatchSippPlanner`, read-only `clone_fast()/restore_from()`, and zero-shadow `RustReservationTable.fast()`.
+  - Fixed dwell-state first-arrival timestamp reconstruction in `crates/spacetime_planner/src/astar.rs`, achieving exact single-leg expansion parity with Python reference search (`26/26` Rust tests pass) and `11.71×–14.40×` wall-clock speedup on `80–200` AGV MovingAI `Warehouse_40x40` benchmarks.
+- **`CoRe-Sched V20.1` (`PDG 2.0`), `RGRO` & `Decision-Focused Learning` (`amr_sched/cvcr/pdg_liveness.py`, `amr_sched/rl/v20_najs.py`, `experiments/{v20_audit, v20_1_closure, rgro, rgro_closure}/`)**:
+  - Registered `V20_NAJS` and `V20_1_NAJS` (`24` policies total in `policy_registry.py`) with per-op `D1/D2` starvation aging, Exit-Free Tarjan Wait-For SCC deadlock detection, and commitment-compatible `PersistentEscapeMemory`, plus quarantined `DFLAdvantageEnsemble` counterfactual critics.
+- **Converged Hierarchical Coordination, Overload Tuning & 2D Kinematic Safety Shield (`experiments/cps_astar_routing/`, `experiments/track_r_cpsa/`, `amr_sched/checkpoints/track_r/`, `Tests/test_cps_astar_routing.py`, `Tests/test_track_r_cpsa.py`)**:
+  - Cleanroom reproduction of `CPS-A*` One-Shot/Lifelong routing (`Guo & Huang`, `pengguo-hub/CPSAStar-TRC`) integrated with execution-delay local repair (`EALR v2/v3`), overload-aware `Wu EJOR'26` dispatch & learned-DFL LPR (`118.5/120` on `W_Stress1`, `5.3%` wasted rollback on `80T × 12AGV`), and `Route B` continuous 2D unicycle PPO + recursive TTC braking shield (`0` physical collisions).
+
 ## [1.2.1] - 2026-11-24
 
 ### Added & Verified (NCSR Optimization, VAL-72 Ablations & Dual 240-Ep Holdouts)

@@ -154,12 +154,14 @@ def _make_track2_physical_setup():
 
 def test_policy_registry_aliases_and_coverage():
     assert len(DEFAULT_12_POLICIES) == 12
-    assert len(SUPPORTED_POLICIES) == 22
+    assert len(SUPPORTED_POLICIES) == 24
     assert resolve_policy_name("v19_bc") == "V19_HETERO_BC"
     assert resolve_policy_name("v19_rl") == "V19_HETERO_RL"
     assert resolve_policy_name("v19_staged") == "V19_STAGED_RL"
     assert resolve_policy_name("v19_no_prod_comm") == "V19_NO_PROD_COMM"
     assert resolve_policy_name("v19_adaptive_rl") == "V19_ADAPTIVE_RL"
+    assert resolve_policy_name("v20") == "V20_NAJS"
+    assert resolve_policy_name("v20.1") == "V20_1_NAJS"
     assert resolve_policy_name("ahg_rl") == "V19_ADAPTIVE_RL"
     assert resolve_policy_name("ahg-rl") == "V19_ADAPTIVE_RL"
     assert resolve_policy_name("core_sched") == "V19_ADAPTIVE_RL"

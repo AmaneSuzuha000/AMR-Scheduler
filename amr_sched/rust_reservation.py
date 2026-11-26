@@ -193,6 +193,11 @@ class RustReservationTable:
         self._node: dict[str, list[tuple[Interval, str]]] = {}
         self._edge: dict[tuple[str, str], list[tuple[Interval, str]]] = {}
 
+    @classmethod
+    def fast(cls) -> "RustReservationTable":
+        """Create a zero-shadow native reservation table (maximum speed, no Python shadow dicts)."""
+        return cls(track_shadow=False)
+
     def __del__(self) -> None:
         if hasattr(self, "_ptr") and self._ptr and _LIB:
             _LIB.reservation_table_destroy(self._ptr)
@@ -327,11 +332,12 @@ class RustReservationTable:
     def restore_from(self, other: "RustReservationTable") -> bool:
         """Restore native table state directly from `other` in a single Rust clone."""
         ok = bool(_LIB.reservation_table_restore_from(self._ptr, other._ptr))
-        if ok and self._track_shadow:
-            self._node = {k: list(v) for k, v in other._node.items()}
-            self._edge = {k: list(v) for k, v in other._edge.items()}
+        if ok:
             self._pinned_nodes = {k: set(v) for k, v in other._pinned_nodes.items()}
             self._pinned_edges = {k: set(v) for k, v in other._pinned_edges.items()}
+            if self._track_shadow:
+                self._node = {k: list(v) for k, v in other._node.items()}
+                self._edge = {k: list(v) for k, v in other._edge.items()}
         return ok
 
     def clone_fast(self) -> "RustReservationTable":
@@ -342,8 +348,8 @@ class RustReservationTable:
         if not inst._ptr:
             raise RuntimeError("reservation_table_clone failed")
         inst._track_shadow = False
-        inst._pinned_nodes = {}
-        inst._pinned_edges = {}
+        inst._pinned_nodes = {k: set(v) for k, v in self._pinned_nodes.items()}
+        inst._pinned_edges = {k: set(v) for k, v in self._pinned_edges.items()}
         inst._node = {}
         inst._edge = {}
         return inst
